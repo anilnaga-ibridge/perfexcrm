@@ -51,4 +51,20 @@ class Client extends Model
     {
         return $this->hasMany(Contact::class);
     }
+
+    /**
+     * Get the files linked to this client.
+     */
+    public function files()
+    {
+        return $this->hasMany(ClientFile::class);
+    }
+
+    /**
+     * Get the vault entries for the client.
+     */
+    public function vaults()
+    {
+        return $this->hasMany(ClientVault::class);
+    }
 }

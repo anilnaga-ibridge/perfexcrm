@@ -24,6 +24,7 @@ class ExpenseController extends Controller
 
         if ($request->filled('status'))      $query->where('status', $request->status);
         if ($request->filled('category_id')) $query->where('category_id', $request->category_id);
+        if ($request->filled('client_id'))   $query->where('client_id', $request->client_id);
 
         $perPage = $request->input('per_page', 25);
         $expenses = $query->orderBy('date', 'desc')->paginate($perPage);
@@ -53,6 +54,13 @@ class ExpenseController extends Controller
             'billable'     => 'nullable|boolean',
         ]);
 
+        if (empty($validated['payment_mode'])) {
+            $validated['payment_mode'] = 'Credit Card';
+        }
+        if (empty($validated['status'])) {
+            $validated['status'] = 'unbilled';
+        }
+
         $expense = Expense::create($validated);
         ActivityLog::log("Recorded expense: {$expense->name} (\${$expense->amount})");
 
@@ -75,10 +83,21 @@ class ExpenseController extends Controller
             'name'         => 'sometimes|string|max:255',
             'amount'       => 'sometimes|numeric|min:0',
             'date'         => 'sometimes|date',
+            'category_id'  => 'nullable|integer',
+            'client_id'    => 'nullable|exists:clients,id',
             'status'       => 'sometimes|string|in:billed,unbilled',
-            'payment_mode' => 'sometimes|string',
+            'payment_mode' => 'nullable|string',
+            'reference'    => 'nullable|string|max:100',
             'note'         => 'nullable|string',
+            'billable'     => 'nullable|boolean',
         ]);
+
+        if (array_key_exists('payment_mode', $validated) && empty($validated['payment_mode'])) {
+            $validated['payment_mode'] = 'Credit Card';
+        }
+        if (array_key_exists('status', $validated) && empty($validated['status'])) {
+            $validated['status'] = 'unbilled';
+        }
 
         $expense->update($validated);
         ActivityLog::log("Updated expense: {$expense->name}");

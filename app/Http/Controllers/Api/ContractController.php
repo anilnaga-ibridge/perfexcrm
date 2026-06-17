@@ -9,9 +9,20 @@ use App\Models\ActivityLog;
 
 class ContractController extends Controller
 {
+    public function getTypes()
+    {
+        return response()->json(
+            \DB::table('contract_types')->get()
+        );
+    }
+
     public function index(Request $request)
     {
-        $query = Contract::with('client:id,company');
+        $query = Contract::with(['client:id,company', 'contractType:id,name']);
+
+        if ($request->filled('client_id')) {
+            $query->where('client_id', $request->client_id);
+        }
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -50,17 +61,19 @@ class ContractController extends Controller
             'status'           => 'nullable|string',
             'description'      => 'nullable|string',
             'signed'           => 'nullable|boolean',
+            'trash'            => 'nullable|boolean',
+            'hide_from_customer'=> 'nullable|boolean',
         ]);
 
         $contract = Contract::create($validated);
         ActivityLog::log("Created contract: {$contract->subject}");
 
-        return response()->json($contract->load('client'), 201);
+        return response()->json($contract->load(['client', 'contractType']), 201);
     }
 
     public function show($id)
     {
-        $contract = Contract::with('client')->find($id);
+        $contract = Contract::with(['client', 'contractType'])->find($id);
         if (!$contract) return response()->json(['message' => 'Not found'], 404);
         return response()->json($contract);
     }
@@ -71,18 +84,23 @@ class ContractController extends Controller
         if (!$contract) return response()->json(['message' => 'Not found'], 404);
 
         $validated = $request->validate([
-            'subject'    => 'sometimes|string|max:255',
-            'status'     => 'sometimes|string',
-            'value'      => 'nullable|numeric|min:0',
+            'subject'          => 'sometimes|string|max:255',
+            'client_id'        => 'nullable|exists:clients,id',
+            'contract_type_id' => 'nullable|integer',
+            'value'            => 'nullable|numeric|min:0',
             'start_date' => 'nullable|date',
             'end_date'   => 'nullable|date',
+            'status'     => 'sometimes|string',
+            'description'      => 'nullable|string',
             'signed'     => 'nullable|boolean',
+            'trash'            => 'nullable|boolean',
+            'hide_from_customer'=> 'nullable|boolean',
         ]);
 
         $contract->update($validated);
         ActivityLog::log("Updated contract: {$contract->subject}");
 
-        return response()->json($contract->load('client'));
+        return response()->json($contract->load(['client', 'contractType']));
     }
 
     public function destroy($id)

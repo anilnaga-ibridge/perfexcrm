@@ -26,6 +26,9 @@ use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\RecurringInvoiceController;
+use App\Http\Controllers\Api\ClientFileController;
+use App\Http\Controllers\Api\ClientVaultController;
+use App\Http\Controllers\Api\ReminderController;
 
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
@@ -101,9 +104,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('projects', ProjectController::class);
 
     // Contracts
+    Route::get('contract-types', [ContractController::class, 'getTypes']);
     Route::apiResource('contracts', ContractController::class);
 
     // Tickets + replies
+    Route::get('tickets/metadata', [TicketController::class, 'metadata']);
     Route::apiResource('tickets', TicketController::class);
     Route::post('tickets/{id}/reply', [TicketController::class, 'addReply']);
 
@@ -118,4 +123,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('reports/expenses',   [ReportController::class, 'expenses']);
     Route::get('reports/finance',    [ReportController::class, 'finance']);
     Route::get('reports/team',       [ReportController::class, 'team']);
+
+    // Client Files
+    Route::get('clients/{client_id}/files', [ClientFileController::class, 'index']);
+    Route::post('clients/{client_id}/files', [ClientFileController::class, 'store']);
+    Route::put('client-files/{id}/status', [ClientFileController::class, 'updateStatus']);
+    Route::delete('client-files/{id}', [ClientFileController::class, 'destroy']);
+
+    // Client Vaults
+    Route::get('clients/{client_id}/vaults', [ClientVaultController::class, 'index']);
+    Route::post('clients/{client_id}/vaults', [ClientVaultController::class, 'store']);
+    Route::put('vault-entries/{id}', [ClientVaultController::class, 'update']);
+    Route::delete('vault-entries/{id}', [ClientVaultController::class, 'destroy']);
+    Route::get('vault-entries/{id}/decrypt', [ClientVaultController::class, 'decrypt']);
+
+    // Client Reminders
+    Route::get('clients/{client_id}/reminders', [ReminderController::class, 'index']);
+    Route::post('clients/{client_id}/reminders', [ReminderController::class, 'store']);
+    Route::delete('reminders/{id}', [ReminderController::class, 'destroy']);
 });

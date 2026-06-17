@@ -12,17 +12,25 @@ class Contract extends Model
     protected $fillable = [
         'subject', 'client_id', 'contract_type_id', 'value',
         'start_date', 'end_date', 'status', 'description', 'signed',
+        'trash', 'hide_from_customer',
     ];
 
     protected $casts = [
-        'value'      => 'float',
-        'start_date' => 'date',
-        'end_date'   => 'date',
-        'signed'     => 'boolean',
+        'value'              => 'float',
+        'start_date'         => 'date',
+        'end_date'           => 'date',
+        'signed'             => 'boolean',
+        'trash'              => 'boolean',
+        'hide_from_customer' => 'boolean',
     ];
 
     public function client()
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function contractType()
+    {
+        return $this->belongsTo(ContractType::class, 'contract_type_id');
     }
 }

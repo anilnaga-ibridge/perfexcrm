@@ -13,11 +13,29 @@ class TaskController extends Controller
     {
         $query = Task::with('assignee:id,name,email');
 
+        // Filter by customer (client_id or related_to_type=Customer with related_to_id)
+        if ($request->filled('client_id')) {
+            $clientId = $request->integer('client_id');
+            $query->where(function ($q) use ($clientId) {
+                $q->where('client_id', $clientId)
+                  ->orWhere(function ($q2) use ($clientId) {
+                      $q2->where('related_to_type', 'Customer')
+                         ->where('related_to_id', $clientId);
+                  });
+            });
+        }
+
+        // Filter by "related_to" type (Customer / Projects / Invoices / etc.)
+        if ($request->filled('related_to_type') && !$request->filled('client_id')) {
+            $query->where('related_to_type', $request->input('related_to_type'));
+        }
+
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('tags', 'like', "%{$search}%");
             });
         }
 
@@ -33,22 +51,33 @@ class TaskController extends Controller
             $query->where('assigned_to', $request->input('assigned_to'));
         }
 
-        // For Kanban board, we might want to load all tasks if requested, or paginate
         if ($request->boolean('all', false)) {
             $tasks = $query->orderBy('due_date', 'asc')->get();
         } else {
             $perPage = $request->input('per_page', 25);
-            $tasks = $query->orderBy('due_date', 'asc')->paginate($perPage);
+            $tasks = $query->orderBy('created_at', 'desc')->paginate($perPage);
         }
 
-        // Summary stats
+        // Summary stats (scoped to client if applicable)
+        $statsQuery = Task::query();
+        if ($request->filled('client_id')) {
+            $clientId = $request->integer('client_id');
+            $statsQuery->where(function ($q) use ($clientId) {
+                $q->where('client_id', $clientId)
+                  ->orWhere(function ($q2) use ($clientId) {
+                      $q2->where('related_to_type', 'Customer')
+                         ->where('related_to_id', $clientId);
+                  });
+            });
+        }
+
         $stats = [
-            'total'             => Task::count(),
-            'not_started'       => Task::where('status', 'Not Started')->count(),
-            'in_progress'       => Task::where('status', 'In Progress')->count(),
-            'testing'           => Task::where('status', 'Testing')->count(),
-            'awaiting_feedback' => Task::where('status', 'Awaiting Feedback')->count(),
-            'complete'          => Task::where('status', 'Complete')->count(),
+            'total'             => (clone $statsQuery)->count(),
+            'not_started'       => (clone $statsQuery)->where('status', 'Not Started')->count(),
+            'in_progress'       => (clone $statsQuery)->where('status', 'In Progress')->count(),
+            'testing'           => (clone $statsQuery)->where('status', 'Testing')->count(),
+            'awaiting_feedback' => (clone $statsQuery)->where('status', 'Awaiting Feedback')->count(),
+            'complete'          => (clone $statsQuery)->where('status', 'Complete')->count(),
         ];
 
         return response()->json([
@@ -69,6 +98,16 @@ class TaskController extends Controller
             'assigned_to'     => 'nullable|exists:users,id',
             'related_to_type' => 'nullable|string',
             'related_to_id'   => 'nullable|integer',
+            'client_id'       => 'nullable|integer',
+            'billable'        => 'nullable|boolean',
+            'is_public'       => 'nullable|boolean',
+            'hourly_rate'     => 'nullable|numeric|min:0',
+            'repeat_every'    => 'nullable|string|max:50',
+            'tags'            => 'nullable|string|max:500',
+            'assignees'       => 'nullable|array',
+            'assignees.*'     => 'integer|exists:users,id',
+            'followers'       => 'nullable|array',
+            'followers.*'     => 'integer|exists:users,id',
         ]);
 
         $task = Task::create($validated);
@@ -97,6 +136,16 @@ class TaskController extends Controller
             'assigned_to'     => 'nullable|exists:users,id',
             'related_to_type' => 'nullable|string',
             'related_to_id'   => 'nullable|integer',
+            'client_id'       => 'nullable|integer',
+            'billable'        => 'nullable|boolean',
+            'is_public'       => 'nullable|boolean',
+            'hourly_rate'     => 'nullable|numeric|min:0',
+            'repeat_every'    => 'nullable|string|max:50',
+            'tags'            => 'nullable|string|max:500',
+            'assignees'       => 'nullable|array',
+            'assignees.*'     => 'integer|exists:users,id',
+            'followers'       => 'nullable|array',
+            'followers.*'     => 'integer|exists:users,id',
         ]);
 
         $task->update($validated);

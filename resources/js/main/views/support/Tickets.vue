@@ -130,18 +130,78 @@
     <!-- Create/Edit Modal -->
     <Teleport to="body">
       <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-        <div class="modal-box">
+        <div class="modal-box modal-wide">
           <div class="modal-header">
             <h2>{{ editingTicket ? 'Edit Ticket' : 'New Support Ticket' }}</h2>
             <button class="close-btn" @click="closeModal">✕</button>
           </div>
           <div class="modal-body">
-            <div class="form-row">
-              <label>Subject *</label>
-              <input v-model="form.subject" placeholder="Ticket subject" class="form-input" />
-            </div>
-            <div class="form-row two-col">
-              <div>
+            <div class="form-grid">
+              <!-- Subject -->
+              <div class="form-row span-2">
+                <label>Subject *</label>
+                <input v-model="form.subject" placeholder="Ticket subject" class="form-input" required />
+              </div>
+
+              <!-- Contact Selection -->
+              <div class="form-row">
+                <label>Contact *</label>
+                <select v-model="form.contact_id" class="form-input" required>
+                  <option :value="null">Select Contact</option>
+                  <option v-for="c in metadata.contacts" :key="c.id" :value="c.id">
+                    {{ c.firstname }} {{ c.lastname }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Customer (Auto-filled) -->
+              <div class="form-row">
+                <label>Customer (Auto-filled)</label>
+                <input :value="selectedClient ? selectedClient.company : ''" class="form-input read-only-input" readonly placeholder="Customer will auto-populate" />
+              </div>
+
+              <!-- Contact Name -->
+              <div class="form-row">
+                <label>Contact Name</label>
+                <input :value="selectedContact ? (selectedContact.firstname + ' ' + (selectedContact.lastname || '')) : ''" class="form-input read-only-input" readonly placeholder="Name will auto-populate" />
+              </div>
+
+              <!-- Contact Email -->
+              <div class="form-row">
+                <label>Email Address</label>
+                <input :value="selectedContact ? selectedContact.email : ''" class="form-input read-only-input" readonly placeholder="Email will auto-populate" />
+              </div>
+
+              <!-- Department -->
+              <div class="form-row">
+                <label>Department *</label>
+                <select v-model="form.department_id" class="form-input" required>
+                  <option :value="null">Select Department</option>
+                  <option v-for="d in metadata.departments" :key="d.id" :value="d.id">
+                    {{ d.name }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- CC -->
+              <div class="form-row">
+                <label>CC</label>
+                <input v-model="form.cc" placeholder="cc@example.com" class="form-input" />
+              </div>
+
+              <!-- Assign Ticket -->
+              <div class="form-row">
+                <label>Assign Ticket (Staff)</label>
+                <select v-model="form.assigned_to" class="form-input">
+                  <option :value="null">Select Staff</option>
+                  <option v-for="s in metadata.staff" :key="s.id" :value="s.id">
+                    {{ s.name }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Priority -->
+              <div class="form-row">
                 <label>Priority</label>
                 <select v-model="form.priority" class="form-input">
                   <option value="Low">Low</option>
@@ -150,20 +210,60 @@
                   <option value="Urgent">Urgent</option>
                 </select>
               </div>
-              <div>
-                <label>Status</label>
-                <select v-model="form.status" class="form-input">
-                  <option value="Open">Open</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Answered">Answered</option>
-                  <option value="On Hold">On Hold</option>
-                  <option value="Closed">Closed</option>
+
+              <!-- Service -->
+              <div class="form-row">
+                <label>Service</label>
+                <select v-model="form.service_id" class="form-input">
+                  <option :value="null">Select Service</option>
+                  <option v-for="s in metadata.services" :key="s.id" :value="s.id">
+                    {{ s.name }}
+                  </option>
                 </select>
               </div>
-            </div>
-            <div class="form-row">
-              <label>Message *</label>
-              <textarea v-model="form.message" rows="5" placeholder="Describe the issue..." class="form-input form-textarea"></textarea>
+
+              <!-- Project -->
+              <div class="form-row">
+                <label>Project</label>
+                <select v-model="form.project_id" class="form-input" :disabled="!form.client_id">
+                  <option :value="null">Select Project</option>
+                  <option v-for="p in filteredProjects" :key="p.id" :value="p.id">
+                    {{ p.name }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Tags -->
+              <div class="form-row span-2">
+                <label>Tags</label>
+                <input v-model="form.tags" placeholder="e.g. support, billing" class="form-input" />
+              </div>
+
+              <!-- Message -->
+              <div class="form-row span-2">
+                <label>Ticket Body *</label>
+                <div class="ticket-body-toolbar mb-2">
+                  <select class="ticket-body-select" v-model="form.predefined_reply" @change="handlePredefinedReplyChange">
+                    <option value="">Insert predefined reply</option>
+                    <option v-for="r in predefinedReplies" :key="r.id" :value="r.id">{{ r.title }}</option>
+                  </select>
+                  <select class="ticket-body-select" v-model="form.kb_link" @change="handleKbLinkChange">
+                    <option value="">Insert knowledge base link</option>
+                    <option v-for="a in kbArticles" :key="a.id" :value="a.id">{{ a.title }}</option>
+                  </select>
+                </div>
+                <textarea v-model="form.message" rows="5" placeholder="Describe the issue..." class="form-input form-textarea" required></textarea>
+              </div>
+
+              <!-- Attachments -->
+              <div class="form-row span-2">
+                <label>Attachments</label>
+                <div class="attachment-upload">
+                  <input type="file" @change="handleFileChange" class="file-input-hidden" id="ticket-file" />
+                  <label for="ticket-file" class="btn-file-select">Choose File</label>
+                  <span class="file-name-display">{{ attachmentFileName || 'No file chosen' }}</span>
+                </div>
+              </div>
             </div>
           </div>
           <div class="modal-footer">
@@ -189,8 +289,45 @@
               <span class="priority-badge" :class="viewingTicket.priority?.toLowerCase()">{{ viewingTicket.priority }}</span>
               <span class="status-badge" :class="statusClass(viewingTicket.status)">{{ viewingTicket.status }}</span>
               <span class="meta-item">📅 {{ formatDate(viewingTicket.created_at) }}</span>
-              <span class="meta-item">👤 {{ viewingTicket.client?.company || 'N/A' }}</span>
+              <span class="meta-item">🏢 Client: <strong>{{ viewingTicket.client?.company || 'N/A' }}</strong></span>
             </div>
+
+            <!-- Detail Grid for Support Ticket Info -->
+            <div class="ticket-info-grid">
+              <div class="info-item">
+                <span class="info-label">Contact:</span>
+                <span class="info-value">{{ viewingTicket.contact ? (viewingTicket.contact.firstname + ' ' + (viewingTicket.contact.lastname || '')) : '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Email:</span>
+                <span class="info-value">{{ viewingTicket.contact?.email || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Department:</span>
+                <span class="info-value">{{ viewingTicket.department?.name || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Assigned To:</span>
+                <span class="info-value">{{ viewingTicket.assignee?.name || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Service:</span>
+                <span class="info-value">{{ getServiceName(viewingTicket.service_id) }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Project:</span>
+                <span class="info-value">{{ viewingTicket.project?.name || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">CC:</span>
+                <span class="info-value">{{ viewingTicket.cc || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Tags:</span>
+                <span class="info-value">{{ viewingTicket.tags || '—' }}</span>
+              </div>
+            </div>
+
             <div class="message-bubble admin">
               <div class="bubble-header">Original Message</div>
               <div class="bubble-content">{{ viewingTicket.message }}</div>
@@ -219,10 +356,15 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
+import { useRoute } from 'vue-router'
+import { useAuthStore } from '../../store/authStore'
 
 const BASE = '/api'
+const route = useRoute()
+const authStore = useAuthStore()
+
 const tickets     = ref([])
 const stats       = ref({})
 const loading     = ref(false)
@@ -240,14 +382,113 @@ const viewingTicket = ref(null)
 const replyMessage  = ref('')
 const sendingReply  = ref(false)
 
-const form = reactive({
-  subject: '', priority: 'Medium', status: 'Open', message: '',
+const metadata = ref({
+  departments: [],
+  staff: [],
+  clients: [],
+  contacts: [],
+  projects: [],
+  services: []
 })
 
-function filterBy(status) {
-  activeFilter.value = status
-  page.value = 1
-  load()
+const selectedContact = ref(null)
+const selectedClient = ref(null)
+const attachmentFile = ref(null)
+const attachmentFileName = ref('')
+
+const form = reactive({
+  subject: '',
+  contact_id: null,
+  client_id: null,
+  priority: 'Medium',
+  status: 'Open',
+  department_id: null,
+  message: '',
+  assigned_to: null,
+  tags: '',
+  service_id: null,
+  project_id: null,
+  cc: '',
+  predefined_reply: '',
+  kb_link: '',
+})
+
+// Watch contact selection to auto-select client and populate details
+watch(() => form.contact_id, (newVal) => {
+  if (newVal) {
+    const contact = metadata.value.contacts.find(c => c.id === newVal)
+    if (contact) {
+      selectedContact.value = contact
+      form.client_id = contact.client_id
+      const client = metadata.value.clients.find(c => c.id === contact.client_id)
+      selectedClient.value = client
+    }
+  } else {
+    selectedContact.value = null
+    selectedClient.value = null
+    form.client_id = null
+  }
+})
+
+const filteredProjects = computed(() => {
+  if (!form.client_id) return []
+  return metadata.value.projects.filter(p => p.client_id === form.client_id)
+})
+
+const kbArticles = ref([])
+
+const predefinedReplies = [
+  { id: 'reply1', title: 'Thank you for contacting us...', content: 'Thank you for contacting us. We have received your ticket and our support team is looking into it. We will get back to you as soon as possible.' },
+  { id: 'reply2', title: 'We have received your request...', content: 'We have received your request. A support representative will review your ticket shortly. Thank you for your patience.' },
+  { id: 'reply3', title: 'SLA / Urgency update', content: 'We are prioritizing your request as per our Service Level Agreement (SLA). Our team is working on a resolution and will provide an update within the next hour.' }
+]
+
+async function loadKbArticles() {
+  try {
+    const res = await axios.get(`${BASE}/kb-articles`, { params: { status: 'published', per_page: 100 } })
+    kbArticles.value = res.data.articles?.data || []
+  } catch (err) {
+    console.error('Failed to load KB articles', err)
+  }
+}
+
+function handlePredefinedReplyChange(e) {
+  const val = e.target.value
+  if (!val) return
+  const reply = predefinedReplies.find(r => r.id === val)
+  if (reply) {
+    if (form.message) {
+      form.message += "\n" + reply.content
+    } else {
+      form.message = reply.content
+    }
+  }
+  form.predefined_reply = ''
+}
+
+function handleKbLinkChange(e) {
+  const articleId = e.target.value
+  if (!articleId) return
+  const article = kbArticles.value.find(a => a.id == articleId)
+  if (article) {
+    const path = window.location.origin + window.config.path + '/knowledge-base/article/' + article.id
+    const linkText = `\nKnowledge Base Article: ${article.title} - ${path}`
+    if (form.message) {
+      form.message += linkText
+    } else {
+      form.message = linkText.trim()
+    }
+  }
+  form.kb_link = ''
+}
+
+async function loadMetadata() {
+  try {
+    const res = await axios.get(`${BASE}/tickets/metadata`)
+    metadata.value = res.data
+  } catch (err) {
+    console.error('Failed to load metadata', err)
+  }
 }
 
 async function load() {
@@ -280,15 +521,70 @@ function onSearch() {
   searchTimer = setTimeout(() => { page.value = 1; load() }, 350)
 }
 
+function handleFileChange(event) {
+  const file = event.target.files[0]
+  if (file) {
+    attachmentFile.value = file
+    attachmentFileName.value = file.name
+  } else {
+    attachmentFile.value = null
+    attachmentFileName.value = ''
+  }
+}
+
 function openCreateModal() {
   editingTicket.value = null
-  Object.assign(form, { subject: '', priority: 'Medium', status: 'Open', message: '' })
+  Object.assign(form, {
+    subject: '',
+    contact_id: null,
+    client_id: null,
+    priority: 'Medium',
+    status: 'Open',
+    department_id: null,
+    message: '',
+    assigned_to: authStore.user?.id || null,
+    tags: '',
+    service_id: null,
+    project_id: null,
+    cc: '',
+  })
+  selectedContact.value = null
+  selectedClient.value = null
+  attachmentFile.value = null
+  attachmentFileName.value = ''
   showModal.value = true
 }
 
 function editTicket(ticket) {
   editingTicket.value = ticket
-  Object.assign(form, { subject: ticket.subject, priority: ticket.priority, status: ticket.status, message: ticket.message })
+  Object.assign(form, {
+    subject: ticket.subject,
+    contact_id: ticket.contact_id || null,
+    client_id: ticket.client_id || null,
+    priority: ticket.priority,
+    status: ticket.status,
+    department_id: ticket.department_id || null,
+    message: ticket.message,
+    assigned_to: ticket.assigned_to || null,
+    tags: ticket.tags || '',
+    service_id: ticket.service_id || null,
+    project_id: ticket.project_id || null,
+    cc: ticket.cc || '',
+  })
+  if (ticket.contact_id) {
+    const contact = metadata.value.contacts.find(c => c.id === ticket.contact_id)
+    selectedContact.value = contact || null
+  } else {
+    selectedContact.value = null
+  }
+  if (ticket.client_id) {
+    const client = metadata.value.clients.find(c => c.id === ticket.client_id)
+    selectedClient.value = client || null
+  } else {
+    selectedClient.value = null
+  }
+  attachmentFile.value = null
+  attachmentFileName.value = ''
   showModal.value = true
 }
 
@@ -302,7 +598,9 @@ async function viewTicket(ticket) {
 }
 
 async function saveTicket() {
-  if (!form.subject || !form.message) return alert('Subject and message are required')
+  if (!form.subject || !form.message || !form.contact_id || !form.department_id) {
+    return alert('Subject, Contact, Department, and Message are required')
+  }
   saving.value = true
   try {
     if (editingTicket.value) {
@@ -368,7 +666,27 @@ function formatDate(d) {
   return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-onMounted(load)
+function getServiceName(serviceId) {
+  if (!serviceId) return '—'
+  const service = metadata.value.services.find(s => s.id === serviceId)
+  return service ? service.name : '—'
+}
+
+onMounted(async () => {
+  await loadMetadata()
+  await loadKbArticles()
+  await load()
+
+  if (route.query.contact_id || route.query.userid) {
+    openCreateModal()
+    if (route.query.contact_id) {
+      form.contact_id = parseInt(route.query.contact_id)
+    }
+    if (route.query.userid) {
+      form.client_id = parseInt(route.query.userid)
+    }
+  }
+})
 </script>
 
 <style scoped>
@@ -445,8 +763,8 @@ onMounted(load)
 .btn-secondary { padding: 9px 18px; border: 1.5px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; font-size: 13px; cursor: pointer; }
 
 /* Modal */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-.modal-box { background: #fff; border-radius: 14px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 9000; display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
+.modal-box { background: #fff; border-radius: 14px; width: 100%; max-width: 600px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); margin-top: auto; margin-bottom: auto; }
 .modal-wide { max-width: 760px; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px 16px; border-bottom: 1.5px solid #f1f5f9; }
 .modal-header h2 { font-size: 18px; font-weight: 700; margin: 0; color: #1e293b; }
@@ -475,4 +793,48 @@ onMounted(load)
 
 @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 640px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .filters-bar { flex-direction: column; } }
+
+/* Form grid and extra styles */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-row.span-2 { grid-column: span 2; }
+.read-only-input { background-color: #f8fafc; color: #64748b; cursor: not-allowed; border-color: #e2e8f0; }
+.attachment-upload { display: flex; align-items: center; gap: 12px; border: 1.5px dashed #cbd5e1; padding: 12px; border-radius: 8px; background-color: #f8fafc; width: 100%; box-sizing: border-box; }
+.file-input-hidden { display: none; }
+.btn-file-select { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+.btn-file-select:hover { background: #f1f5f9; }
+.file-name-display { font-size: 13px; color: #64748b; }
+
+/* Ticket Detail grid */
+.ticket-info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 14px; background: #f8fafc; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+.info-item { display: flex; gap: 8px; font-size: 13px; }
+.info-label { font-weight: 600; color: #475569; min-width: 100px; }
+.info-value { color: #1e293b; }
+
+/* Ticket body toolbar & select styling */
+.ticket-body-toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.ticket-body-select {
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #334155;
+  background-color: #ffffff;
+  cursor: pointer;
+  outline: none;
+  min-width: 200px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+.ticket-body-select:hover {
+  border-color: #94a3b8;
+  background-color: #f8fafc;
+}
+.ticket-body-select:focus {
+  border-color: #1e9aff;
+  box-shadow: 0 0 0 2px rgba(30, 154, 255, 0.1);
+}
 </style>

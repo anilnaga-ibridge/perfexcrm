@@ -13,26 +13,40 @@ class ProjectController extends Controller
     {
         $query = Project::with('client:id,company', 'members:id,name');
 
+        if ($request->filled('client_id')) {
+            $query->where('client_id', $request->client_id);
+        }
+
         if ($request->filled('search')) {
             $s = $request->search;
             $query->where(function($q) use ($s) {
                 $q->where('name', 'like', "%$s%")
                   ->orWhere('description', 'like', "%$s%")
+                  ->orWhere('tags', 'like', "%$s%")
                   ->orWhereHas('client', fn($c) => $c->where('company', 'like', "%$s%"));
             });
         }
 
-        if ($request->filled('status')) $query->where('status', $request->status);
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
 
         $perPage = $request->input('per_page', 25);
         $projects = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
+        // Scope stats query to client_id if present
+        $statsQuery = Project::query();
+        if ($request->filled('client_id')) {
+            $statsQuery->where('client_id', $request->client_id);
+        }
+
         $stats = [
-            'total'       => Project::count(),
-            'not_started' => Project::where('status', 'Not Started')->count(),
-            'in_progress' => Project::where('status', 'In Progress')->count(),
-            'on_hold'     => Project::where('status', 'On Hold')->count(),
-            'finished'    => Project::where('status', 'Finished')->count(),
+            'total'       => (clone $statsQuery)->count(),
+            'not_started' => (clone $statsQuery)->where('status', 'Not Started')->count(),
+            'in_progress' => (clone $statsQuery)->where('status', 'In Progress')->count(),
+            'on_hold'     => (clone $statsQuery)->where('status', 'On Hold')->count(),
+            'cancelled'   => (clone $statsQuery)->where('status', 'Cancelled')->count(),
+            'finished'    => (clone $statsQuery)->where('status', 'Finished')->count(),
         ];
 
         return response()->json(['projects' => $projects, 'stats' => $stats]);
@@ -41,16 +55,22 @@ class ProjectController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'         => 'required|string|max:255',
-            'description'  => 'nullable|string',
-            'client_id'    => 'nullable|exists:clients,id',
-            'billing_type' => 'nullable|string',
-            'budget'       => 'nullable|numeric|min:0',
-            'start_date'   => 'nullable|date',
-            'deadline'     => 'nullable|date',
-            'status'       => 'nullable|string',
-            'member_ids'   => 'nullable|array',
-            'member_ids.*' => 'exists:users,id',
+            'name'                => 'required|string|max:255',
+            'description'         => 'nullable|string',
+            'client_id'           => 'nullable|exists:clients,id',
+            'billing_type'        => 'nullable|string',
+            'budget'              => 'nullable|numeric|min:0',
+            'start_date'          => 'nullable|date',
+            'deadline'            => 'nullable|date',
+            'status'              => 'nullable|string',
+            'progress_from_tasks' => 'nullable|boolean',
+            'progress'            => 'nullable|integer|min:0|max:100',
+            'estimated_hours'     => 'nullable|numeric|min:0',
+            'send_created_email'  => 'nullable|boolean',
+            'tags'                => 'nullable|string',
+            'settings'            => 'nullable|array',
+            'member_ids'          => 'nullable|array',
+            'member_ids.*'        => 'exists:users,id',
         ]);
 
         $memberIds = $validated['member_ids'] ?? [];
@@ -79,11 +99,21 @@ class ProjectController extends Controller
         if (!$project) return response()->json(['message' => 'Not found'], 404);
 
         $validated = $request->validate([
-            'name'        => 'sometimes|string|max:255',
-            'status'      => 'sometimes|string',
-            'deadline'    => 'nullable|date',
-            'description' => 'nullable|string',
-            'member_ids'  => 'nullable|array',
+            'name'                => 'sometimes|required|string|max:255',
+            'description'         => 'nullable|string',
+            'client_id'           => 'nullable|exists:clients,id',
+            'billing_type'        => 'nullable|string',
+            'budget'              => 'nullable|numeric|min:0',
+            'start_date'          => 'nullable|date',
+            'deadline'            => 'nullable|date',
+            'status'              => 'nullable|string',
+            'progress_from_tasks' => 'nullable|boolean',
+            'progress'            => 'nullable|integer|min:0|max:100',
+            'estimated_hours'     => 'nullable|numeric|min:0',
+            'send_created_email'  => 'nullable|boolean',
+            'tags'                => 'nullable|string',
+            'settings'            => 'nullable|array',
+            'member_ids'          => 'nullable|array',
         ]);
 
         $memberIds = $validated['member_ids'] ?? null;
