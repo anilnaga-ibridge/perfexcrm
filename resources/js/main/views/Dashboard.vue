@@ -1,5 +1,7 @@
 <template>
   <div class="dashboard">
+    <div v-if="loading" class="loading-wrap"><div class="loader"></div> Loading...</div>
+    <template v-else>
 
 
 
@@ -182,7 +184,7 @@
         <div class="card calendar-panel">
           <div class="calendar-header">
             <button class="cal-nav-btn">◀</button>
-            <h3 class="calendar-title">June 2026</h3>
+            <h3 class="calendar-title">{{ calendarMonth }}</h3>
             <button class="cal-nav-btn">▶</button>
             <div class="cal-view-modes">
               <button class="btn-outline active">Month</button>
@@ -512,6 +514,7 @@
 
     </div>
 
+  </template>
   </div>
 </template>
 
@@ -526,6 +529,11 @@ export default defineComponent({
     const loading   = ref(true);
     const activeTab = ref('Tasks');
     const tabSearch = ref('');
+    const now       = new Date();
+    const calendarMonth = computed(() => {
+      const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      return months[now.getMonth()] + ' ' + now.getFullYear();
+    });
 
     // ── Helpers ──────────────────────────────────────────────
     const formatCurrency = (v) => {
@@ -765,21 +773,9 @@ export default defineComponent({
   font-size: 13px;
   color: #334155;
 }
-
-/* Demo Banner */
-.demo-banner {
-  background: #f0fdf4;
-  border-left: 4px solid #22c55e;
-  border-radius: 4px;
-  padding: 10px 16px;
-  font-size: 12.5px;
-  color: #166534;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 18px;
-  flex-wrap: wrap;
-}
+.loading-wrap { text-align: center; padding: 80px 40px; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; }
+.loader { width: 20px; height: 20px; border: 2.5px solid #e2e8f0; border-top-color: #1e9aff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── Top Stats ──────────────────────────────────────────── */
 .stats-row {

@@ -26,7 +26,8 @@ class Lead extends Model
         'status_id',
         'source_id',
         'assigned_id',
-        'last_contacted'
+        'last_contacted',
+        'tags'
     ];
 
     protected $casts = [

@@ -367,7 +367,7 @@
                       <th>Item</th>
                       <th style="width:60px;text-align:right">Qty</th>
                       <th style="width:80px;text-align:right">Rate</th>
-                      <th style="width:60px;text-align:right">Tax</th>
+                      <th style="width:60px;text-align:right" v-if="settings.finance_show_tax_per_item">Tax</th>
                       <th style="width:80px;text-align:right">Amount</th>
                     </tr>
                   </thead>
@@ -379,9 +379,9 @@
                         <div v-if="item.long_description" class="item-desc">{{ item.long_description }}</div>
                       </td>
                       <td style="text-align:right">{{ item.qty || 1 }}</td>
-                      <td style="text-align:right">{{ formatCurrency(item.rate) }}</td>
-                      <td style="text-align:right">{{ item.tax || 0 }}%</td>
-                      <td style="text-align:right">{{ formatCurrency((item.qty || 1) * (item.rate || 0)) }}</td>
+                      <td style="text-align:right">{{ formatItemCurrency(item.rate) }}</td>
+                      <td style="text-align:right" v-if="settings.finance_show_tax_per_item">{{ formatTaxValue(item.tax) }}</td>
+                      <td style="text-align:right">{{ formatItemCurrency((item.qty || 1) * (item.rate || 0)) }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -398,6 +398,10 @@
                   <div class="total-row" v-if="activeInvoiceDetail.discount_val"><span>Discount</span><span>-{{ formatCurrency(activeInvoiceDetail.discount_val) }}</span></div>
                   <div class="total-row total-bold"><span>Total</span><span>{{ formatCurrency(activeInvoiceDetail.total) }}</span></div>
                   <div class="total-row total-due"><span>Amount Due</span><span>{{ formatCurrency(activeInvoiceDetail.total) }}</span></div>
+                  
+                  <div v-if="settings.finance_amount_to_words_enabled" class="amount-words-row" style="width: 100%; border-top: 1px dashed #e2e8f0; padding-top: 8px; margin-top: 8px; font-size: 11.5px; color: #64748b; text-align: right;">
+                    <span style="font-weight: 600">Amount in Words:</span> {{ amountInWords(activeInvoiceDetail.total) }}
+                  </div>
                 </div>
 
                 <!-- Notes/Terms -->
@@ -674,7 +678,7 @@
                   <th style="width:100px">{{ qtyLabel }}</th>
                   <th style="width:80px">Unit</th>
                   <th style="width:110px">Rate</th>
-                  <th style="width:120px">Tax</th>
+                  <th style="width:120px" v-if="settings.finance_show_tax_per_item">Tax</th>
                   <th style="width:110px;text-align:right">Amount</th>
                   <th style="width:50px"></th>
                 </tr>
@@ -696,7 +700,7 @@
                   <td>
                     <a-input-number v-model:value="item.rate" :min="0" style="width:100%" @change="recalc" />
                   </td>
-                  <td>
+                  <td v-if="settings.finance_show_tax_per_item">
                     <a-select v-model:value="item.tax_rate" style="width:100%" @change="recalc">
                       <a-select-option :value="0">No Tax</a-select-option>
                       <a-select-option :value="5">5.00%</a-select-option>
@@ -705,7 +709,7 @@
                     </a-select>
                   </td>
                   <td style="text-align:right;font-weight:600;padding-right:8px;font-size:13px;color:#1e293b">
-                    {{ formatCurrency(item.qty * item.rate) }}
+                    {{ formatItemCurrency(item.qty * item.rate) }}
                   </td>
                   <td style="text-align:center">
                     <button type="button" class="btn-delete-row" @click="removeItemRow(index)">
@@ -714,7 +718,7 @@
                   </td>
                 </tr>
                 <tr v-if="!invoiceForm.items.length">
-                  <td colspan="8" class="empty-items-row">
+                  <td :colspan="settings.finance_show_tax_per_item ? 8 : 7" class="empty-items-row">
                     No items added yet. Click Add Row or select a catalog item.
                   </td>
                 </tr>
@@ -792,17 +796,21 @@
 
   </div>
 </template>
-
 <script>
 import { defineComponent, ref, reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { message } from 'ant-design-vue';
+import { useAuthStore } from '../store/authStore';
+import { getFinanceSettings, formatMoney, numberToWords } from '../utils';
 
 export default defineComponent({
   name: 'InvoicesPage',
   setup() {
     const router  = useRouter();
+    const authStore = useAuthStore();
+    const settings = getFinanceSettings();
+
     const loading = ref(false);
     const saving = ref(false);
     const savingPayment = ref(false);
@@ -839,6 +847,17 @@ export default defineComponent({
     const staffOptions = ref([]);
     const catalogItems = ref([]);
 
+    const getInitialSaleAgent = () => {
+      if (settings.finance_auto_sale_agent && authStore.user) {
+        return authStore.user.name || `${authStore.user.first_name} ${authStore.user.last_name}`;
+      }
+      return 'Merl Wintheiser';
+    };
+
+    const getInitialTaxRate = () => {
+      return settings.finance_show_tax_per_item ? (parseFloat(settings.finance_default_tax) || 0) : 0;
+    };
+
     const invoiceForm = reactive({
       client_id: null,
       project_id: null,
@@ -850,7 +869,7 @@ export default defineComponent({
       allowed_payment_modes_list: ['Bank', 'Stripe Checkout'],
       allowed_payment_modes: 'Bank,Stripe Checkout',
       currency: 'USD',
-      sale_agent: 'Merl Wintheiser',
+      sale_agent: getInitialSaleAgent(),
       recurring_type: 'no',
       discount_type: 'no_discount',
       admin_note: '',
@@ -878,7 +897,7 @@ export default defineComponent({
       shipping_zip: '',
       shipping_country: '',
       items: [
-        { description: '', long_description: '', qty: 1, unit: 'Unit', rate: 0, tax_rate: 0 }
+        { description: '', long_description: '', qty: 1, unit: 'Unit', rate: 0, tax_rate: getInitialTaxRate() }
       ],
     });
 
@@ -904,7 +923,7 @@ export default defineComponent({
         qty: 1,
         unit: 'Unit',
         rate: 0,
-        tax_rate: 0
+        tax_rate: getInitialTaxRate()
       });
       recalc();
     };
@@ -917,6 +936,7 @@ export default defineComponent({
     const addPredefinedItem = (itemId) => {
       const item = catalogItems.value.find(i => i.id === itemId);
       if (item) {
+        const itemTax = settings.finance_show_tax_per_item ? (parseFloat(item.tax_rate) || 0) : 0;
         if (invoiceForm.items.length === 1 && !invoiceForm.items[0].description && invoiceForm.items[0].rate === 0) {
           invoiceForm.items[0] = {
             description: item.name,
@@ -924,7 +944,7 @@ export default defineComponent({
             qty: 1,
             unit: item.unit || 'Unit',
             rate: parseFloat(item.rate) || 0,
-            tax_rate: parseFloat(item.tax_rate) || 0
+            tax_rate: itemTax
           };
         } else {
           invoiceForm.items.push({
@@ -933,7 +953,7 @@ export default defineComponent({
             qty: 1,
             unit: item.unit || 'Unit',
             rate: parseFloat(item.rate) || 0,
-            tax_rate: parseFloat(item.tax_rate) || 0
+            tax_rate: itemTax
           });
         }
         recalc();
@@ -986,12 +1006,14 @@ export default defineComponent({
         invoiceForm.items.forEach(item => {
           const itemSub = (item.qty || 0) * (item.rate || 0);
           const itemDiscounted = itemSub * discountFactor;
-          taxAmount += itemDiscounted * ((item.tax_rate || 0) / 100);
+          const tr = settings.finance_show_tax_per_item ? (item.tax_rate || 0) : 0;
+          taxAmount += itemDiscounted * (tr / 100);
         });
       } else {
         invoiceForm.items.forEach(item => {
           const itemSub = (item.qty || 0) * (item.rate || 0);
-          taxAmount += itemSub * ((item.tax_rate || 0) / 100);
+          const tr = settings.finance_show_tax_per_item ? (item.tax_rate || 0) : 0;
+          taxAmount += itemSub * (tr / 100);
         });
       }
       invoiceForm.tax = parseFloat(taxAmount.toFixed(2));
@@ -1236,8 +1258,29 @@ export default defineComponent({
     }[s] || s);
 
     const formatCurrency = (val) => {
-      if (val === undefined || val === null) return '$0.00';
-      return '$' + parseFloat(val).toLocaleString('en-US', { minimumFractionDigits: 2 });
+      return formatMoney(val, {
+        ...settings,
+        finance_exclude_currency_symbol: false
+      });
+    };
+
+    const formatItemCurrency = (val) => {
+      return formatMoney(val, {
+        ...settings,
+        finance_exclude_currency_symbol: settings.finance_exclude_currency_symbol
+      });
+    };
+
+    const formatTaxValue = (tax) => {
+      const taxRate = parseFloat(tax || 0).toFixed(2) + '%';
+      if (settings.finance_remove_tax_name) {
+        return taxRate;
+      }
+      return 'TAX ' + taxRate;
+    };
+
+    const amountInWords = (total) => {
+      return numberToWords(total, settings.finance_amount_to_words_lowercase);
     };
 
     const formatDate = (d) => {
@@ -1276,7 +1319,8 @@ export default defineComponent({
       loadInvoices, createInvoice, markPaid, deleteInvoice,
       editInvoice, sendInvoice, recordPayment,
       selectInvoice, recalc, statusLabel, formatCurrency, formatDate, isOverdue,
-      viewInvoice, editInvoice,
+      formatItemCurrency, formatTaxValue, amountInWords, settings,
+      viewInvoice,
       onClientChange,
       addItemRow,
       removeItemRow,

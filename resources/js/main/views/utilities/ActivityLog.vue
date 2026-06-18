@@ -26,6 +26,12 @@
             style="width:300px"
             @search="loadLogs"
           />
+          <a-popconfirm title="Clear all activity logs? This cannot be undone." @confirm="clearLogs">
+            <a-button size="small" danger>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" class="inline mr-1"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              Clear Log
+            </a-button>
+          </a-popconfirm>
         </div>
       </div>
 
@@ -135,13 +141,23 @@ export default defineComponent({
       return ua.substring(0, 30) + '...';
     };
 
+    const clearLogs = async () => {
+      try {
+        await axios.delete('/api/activity-logs');
+        message.success('Activity log cleared');
+        loadLogs();
+      } catch {
+        message.error('Failed to clear activity log');
+      }
+    };
+
     onMounted(() => {
       loadLogs();
     });
 
     return {
       loading, logs, filters, pagination, columns,
-      loadLogs, handleTableChange, formatDateTime, truncateAgent
+      loadLogs, handleTableChange, formatDateTime, truncateAgent, clearLogs
     };
   }
 });

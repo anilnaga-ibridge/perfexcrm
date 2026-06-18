@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExpenseCategory;
+use App\Models\Expense;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -99,5 +101,70 @@ class ReportController extends Controller
             ->get();
 
         return response()->json(['team' => $users]);
+    }
+
+    /**
+     * Detailed expenses report by category with monthly breakdown
+     */
+    public function expensesDetailed(Request $request)
+    {
+        $year = $request->input('year', now()->year);
+        $excludeBillable = $request->boolean('exclude_billable', false);
+
+        $categories = ExpenseCategory::orderBy('name')->get();
+
+        $monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+        function buildCategoryRows($categories, $year, $billable) {
+            $rows = [];
+            foreach ($categories as $cat) {
+                $expenses = Expense::where('category_id', $cat->id)
+                    ->whereYear('date', $year)
+                    ->where('billable', $billable)
+                    ->get();
+
+                $monthly = array_fill(0, 12, 0.0);
+                $total = 0.0;
+                foreach ($expenses as $e) {
+                    $m = (int) date('n', strtotime($e->date)) - 1;
+                    $monthly[$m] += (float) $e->amount;
+                    $total += (float) $e->amount;
+                }
+                $monthly = array_map(fn($v) => round($v, 2), $monthly);
+                $rows[] = [
+                    'category' => $cat->name,
+                    'monthly'  => $monthly,
+                    'total'    => round($total, 2),
+                ];
+            }
+
+            // Totals row
+            $totals = array_fill(0, 12, 0.0);
+            $grandTotal = 0.0;
+            foreach ($rows as $r) {
+                foreach ($r['monthly'] as $i => $v) {
+                    $totals[$i] += $v;
+                }
+                $grandTotal += $r['total'];
+            }
+            $totals = array_map(fn($v) => round($v, 2), $totals);
+            $rows[] = [
+                'category' => 'Total',
+                'monthly'  => $totals,
+                'total'    => round($grandTotal, 2),
+                'is_total' => true,
+            ];
+
+            return $rows;
+        }
+
+        $notBillableRows = buildCategoryRows($categories, $year, false);
+        $billableRows = buildCategoryRows($categories, $year, true);
+
+        return response()->json([
+            'year'           => $year,
+            'not_billable'   => $notBillableRows,
+            'billable'       => $billableRows,
+        ]);
     }
 }

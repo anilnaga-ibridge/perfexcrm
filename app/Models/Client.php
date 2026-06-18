@@ -37,11 +37,15 @@ class Client extends Model
         'shipping_zip',
         'shipping_country',
         
+        'latitude',
+        'longitude',
         'active'
     ];
 
     protected $casts = [
         'active' => 'boolean',
+        'latitude' => 'decimal:7',
+        'longitude' => 'decimal:7',
     ];
 
     /**
@@ -66,5 +70,13 @@ class Client extends Model
     public function vaults()
     {
         return $this->hasMany(ClientVault::class);
+    }
+
+    /**
+     * Get the invoices for this client.
+     */
+    public function invoices()
+    {
+        return $this->hasMany(\App\Models\Invoice::class, 'client_id');
     }
 }

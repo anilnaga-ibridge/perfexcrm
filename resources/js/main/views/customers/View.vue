@@ -1111,102 +1111,133 @@
 
           <!-- ========== LIST VIEW ========== -->
           <template v-if="subView === 'list'">
-            <h2 class="section-title mb-4">Subscriptions</h2>
-
-            <!-- New Subscription Button -->
-            <div class="mb-4 no-print">
+            <div class="flex items-center justify-between mb-5">
+              <h2 class="section-title mb-0">Subscriptions</h2>
               <button class="btn-new-subscription" @click="openSubscriptionForm()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 New Subscription
               </button>
             </div>
 
+            <!-- Summary Cards -->
+            <div class="sub-summary-cards">
+              <div class="sub-summary-card" v-for="card in subSummaryCards" :key="card.label">
+                <div class="sub-summary-icon" :style="{ background: card.bg }">
+                  <span v-html="card.icon"></span>
+                </div>
+                <div class="sub-summary-info">
+                  <div class="sub-summary-value" :style="{ color: card.color }">{{ card.value }}</div>
+                  <div class="sub-summary-label">{{ card.label }}</div>
+                </div>
+              </div>
+            </div>
+
             <!-- Toolbar -->
-            <div class="table-toolbar no-print flex justify-between items-center mb-4">
-              <div class="toolbar-left flex items-center gap-2">
-                <select class="select-ctrl select-inline-num" style="width:70px; padding:4px 8px; font-size:12.5px;" v-model.number="subPageSize">
+            <div class="sub-toolbar no-print">
+              <div class="sub-toolbar-left">
+                <select class="select-ctrl select-inline-num" v-model.number="subPageSize">
                   <option :value="10">10</option>
                   <option :value="25">25</option>
                   <option :value="50">50</option>
                 </select>
-                <button class="btn-outline" style="padding:4px 12px; font-size:12.5px;" @click="exportSubscriptions">Export</button>
-                <button class="btn-outline sub-refresh-btn" style="padding:5px 9px;" title="Refresh" @click="loadSubscriptions">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                <button class="sub-toolbar-btn" @click="exportSubscriptions">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Export
+                </button>
+                <button class="sub-toolbar-btn" title="Refresh" @click="loadSubscriptions">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
                 </button>
               </div>
-              <div class="toolbar-right">
-                <div class="relative">
-                  <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13" class="text-slate-400"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                  </span>
-                  <input type="text" class="input-ctrl pl-8 text-xs" style="width:220px;" placeholder="Search..." v-model="subSearch" />
+              <div class="sub-toolbar-right">
+                <div class="sub-search-wrap">
+                  <svg class="sub-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="text" class="sub-search-input" placeholder="Search..." v-model="subSearch" />
                 </div>
               </div>
             </div>
 
             <!-- Table -->
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th style="width:50px;">#</th>
-                  <th>Subscription Name</th>
-                  <th>Project</th>
-                  <th>Status</th>
-                  <th>Next Billing Cycle</th>
-                  <th>Date Subscribed</th>
-                  <th>Last Sent</th>
-                  <th style="width:80px;" class="no-print">Options</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(sub, idx) in paginatedSubscriptions" :key="sub.id" class="inv-row">
-                  <td class="text-slate-500">{{ subPageStart + idx + 1 }}</td>
-                  <td>
-                    <div class="inv-num-cell">
-                      <a class="link-blue font-semibold cursor-pointer" @click="openSubscriptionForm(sub)">{{ sub.name }}</a>
-                      <div class="inv-row-actions">
-                        <a class="row-action-link cursor-pointer" @click="openSubscriptionForm(sub)">Edit</a>
-                        <span class="row-action-sep">|</span>
-                        <a class="row-action-link text-rose-600 cursor-pointer" @click="deleteSubscription(sub.id)">Delete</a>
+            <div class="sub-table-wrap">
+              <table class="sub-table">
+                <thead>
+                  <tr>
+                    <th style="width:44px;">#</th>
+                    <th>Subscription Name</th>
+                    <th>Customer</th>
+                    <th>Project</th>
+                    <th>Status</th>
+                    <th>Next Billing Cycle</th>
+                    <th>Date Subscribed</th>
+                    <th>Last Sent</th>
+                    <th style="width:70px;" class="no-print">Options</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="subLoading">
+                    <td colspan="9" class="sub-empty-cell">
+                      <svg class="animate-spin h-5 w-5 text-slate-300 mx-auto" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                    </td>
+                  </tr>
+                  <tr v-for="(sub, idx) in paginatedSubscriptions" :key="sub.id" class="sub-row">
+                    <td class="sub-cell-muted">{{ subPageStart + idx + 1 }}</td>
+                    <td>
+                      <div class="sub-name-cell">
+                        <a class="sub-name-link" @click="openSubscriptionForm(sub)">{{ sub.name }}</a>
+                        <div class="sub-row-actions">
+                          <a @click="openSubscriptionForm(sub)">View Subscription</a>
+                          <span class="sub-action-sep">|</span>
+                          <a @click="openSubscriptionForm(sub)">Edit</a>
+                          <span class="sub-action-sep">|</span>
+                          <a class="sub-action-delete" @click="deleteSubscription(sub.id)">Delete</a>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td>{{ sub.project?.name || '—' }}</td>
-                  <td><span class="badge" :class="subStatusClass(sub.status)">{{ subStatusLabel(sub.status) }}</span></td>
-                  <td>{{ nextBillingCycle(sub) }}</td>
-                  <td>{{ formatDateString(sub.created_at) }}</td>
-                  <td class="text-slate-500">{{ sub.last_sent ? formatDateString(sub.last_sent) : 'Never' }}</td>
-                  <td class="no-print">
-                    <div class="flex items-center gap-2.5">
-                      <button @click="openSubscriptionForm(sub)" class="text-slate-500 hover:text-indigo-600 transition" title="Edit Subscription">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"></path></svg>
-                      </button>
-                      <button @click="deleteSubscription(sub.id)" class="text-slate-500 hover:text-rose-600 transition" title="Delete Subscription">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr v-if="filteredSubscriptions.length === 0">
-                  <td colspan="8" class="empty-cell">No entries found</td>
-                </tr>
-              </tbody>
-            </table>
+                    </td>
+                    <td class="sub-cell-muted">{{ sub.client?.company || '—' }}</td>
+                    <td class="sub-cell-muted">{{ sub.project?.name || '—' }}</td>
+                    <td>
+                      <span class="sub-badge" :class="'sub-badge--' + (sub.status || 'inactive')">{{ subStatusLabel(sub.status) }}</span>
+                    </td>
+                    <td class="sub-cell-muted">{{ nextBillingCycle(sub) }}</td>
+                    <td class="sub-cell-muted">{{ formatDateString(sub.start_date) }}</td>
+                    <td class="sub-cell-muted">{{ sub.last_sent ? formatDateString(sub.last_sent) : '—' }}</td>
+                    <td class="no-print">
+                      <div class="sub-action-group">
+                        <button @click="openSubscriptionForm(sub)" class="sub-action-icon" title="Edit Subscription">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
+                        </button>
+                        <button @click="deleteSubscription(sub.id)" class="sub-action-icon hover:text-rose-600" title="Delete Subscription">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr v-if="!subLoading && filteredSubscriptions.length === 0">
+                    <td colspan="9" class="sub-empty-cell">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" width="36" height="36" class="mb-2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67"/></svg>
+                      <p class="text-slate-400 text-sm">No subscriptions found</p>
+                      <p class="text-slate-300 text-xs mt-0.5">Click "New Subscription" to create one</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
             <!-- Pagination -->
-            <div class="table-pagination" v-if="filteredSubscriptions.length > 0">
-              <span class="pagination-info">
+            <div class="sub-pagination" v-if="filteredSubscriptions.length > 0">
+              <span class="sub-pagination-info">
                 Showing {{ subPageStart + 1 }} to {{ Math.min(subPageStart + subPageSize, filteredSubscriptions.length) }} of {{ filteredSubscriptions.length }} entries
               </span>
-              <div class="pagination-controls">
-                <button class="page-btn" :disabled="subPage === 1" @click="subPage--">Previous</button>
-                <button
-                  v-for="p in subTotalPages" :key="p"
-                  :class="['page-btn', { active: p === subPage }]"
-                  @click="subPage = p"
-                >{{ p }}</button>
-                <button class="page-btn" :disabled="subPage === subTotalPages" @click="subPage++">Next</button>
+              <div class="sub-pagination-btns">
+                <button class="sub-pg-btn" :disabled="subPage === 1" @click="subPage--">Previous</button>
+                <button v-for="p in subTotalPages" :key="p" :class="['sub-pg-btn', { active: p === subPage }]" @click="subPage = p">{{ p }}</button>
+                <button class="sub-pg-btn" :disabled="subPage === subTotalPages" @click="subPage++">Next</button>
               </div>
+            </div>
+
+            <!-- Read more link -->
+            <div class="sub-read-more">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <router-link to="/admin/subscriptions">Click here to read more about subscriptions</router-link>
             </div>
           </template>
 
@@ -2963,6 +2994,10 @@
                 <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input type="text" class="search-input" placeholder="Search..." v-model="reminderSearch" @input="reminderPage = 1" />
               </div>
+              <button class="btn-primary ml-2" @click="openReminderModal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" class="mr-1"><path d="M15 4V2m0 2v2m0-2h-3.5M3 10v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-9"/><path d="M3 10V6a2 2 0 0 1 2-2h2"/><circle cx="18" cy="18" r="3"/><path d="M18 16v2l1 1"/></svg>
+                Set Reminder
+              </button>
             </div>
           </div>
 
@@ -3015,44 +3050,88 @@
             </div>
           </div>
 
-          <!-- Set Reminder Form -->
-          <div class="border-t pt-5 mt-2">
-            <h3 class="text-sm font-semibold text-slate-700 mb-4">Set Reminder</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div class="form-group">
-                <label class="form-label"><span class="text-red-500">*</span> Date to be notified</label>
-                <input type="date" class="form-control" v-model="reminderForm.date" />
-              </div>
-              <div class="form-group">
-                <label class="form-label"><span class="text-red-500">*</span> Set reminder to</label>
-                <select class="form-control" v-model="reminderForm.remind_to">
-                  <option value="">— Select staff member —</option>
-                  <option v-for="s in staffList" :key="s.id" :value="s.id">{{ s.name }}</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group mb-4">
-              <label class="form-label"><span class="text-red-500">*</span> Description</label>
-              <textarea class="form-control" rows="3" v-model="reminderForm.description" placeholder="Enter reminder description..."></textarea>
-            </div>
-            <div class="flex items-center gap-3 mb-4">
-              <label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
-                <input type="checkbox" v-model="reminderForm.send_email" class="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600" />
-                Send also an email for this reminder
-              </label>
-            </div>
-            <button class="btn-primary" :disabled="reminderSaving" @click="saveReminder">
-              <svg v-if="reminderSaving" class="animate-spin h-3 w-3 mr-1 inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-              Set reminder
-            </button>
-          </div>
+
         </div>
 
         <!-- TAB 19: Map -->
         <div class="card" v-if="activeTab === 'map'">
           <h2 class="section-title border-b pb-2 mb-4">Address Map</h2>
-          <div class="p-6 bg-slate-50 border border-slate-200 rounded-md text-center text-xs text-slate-600">
+
+          <!-- Coordinates Info -->
+          <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg text-center text-xs text-slate-600 mb-5">
             📍 Address location: {{ customer.address || '—' }}, {{ customer.city || '—' }}, {{ customer.state || '—' }}
+          </div>
+
+          <!-- Lat/Lng Inputs -->
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="form-group">
+              <label class="form-label">Latitude (Google Maps)</label>
+              <div class="relative">
+                <input
+                  type="text"
+                  class="input-ctrl pl-8"
+                  v-model="customerForm.latitude"
+                  placeholder="e.g. 40.7128"
+                />
+                <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/></svg>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Longitude (Google Maps)</label>
+              <div class="relative">
+                <input
+                  type="text"
+                  class="input-ctrl pl-8"
+                  v-model="customerForm.longitude"
+                  placeholder="e.g. -74.0060"
+                />
+                <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save Coordinates -->
+          <div class="flex items-center gap-3 mb-5">
+            <button class="btn-primary" :disabled="submitting" @click="saveMapCoordinates">
+              <svg v-if="submitting" class="animate-spin h-3 w-3 mr-1 inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+              Save Coordinates
+            </button>
+            <span v-if="customer.latitude && customer.longitude" class="text-xs text-emerald-600 font-medium flex items-center gap-1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>
+              Coordinates saved
+            </span>
+          </div>
+
+          <!-- Google Maps Preview -->
+          <div class="map-container">
+            <div v-if="customer.latitude && customer.longitude" class="map-embed">
+              <iframe
+                :src="`https://maps.google.com/maps?q=${customer.latitude},${customer.longitude}&z=15&output=embed`"
+                width="100%"
+                height="100%"
+                style="border:0; border-radius: 10px;"
+                allowfullscreen
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </div>
+            <div v-else class="map-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36" class="text-slate-300 mb-3"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/></svg>
+              <p class="text-slate-400 text-sm font-medium">No coordinates saved yet</p>
+              <p class="text-slate-400 text-xs mt-1">Enter latitude & longitude above and save to see the map</p>
+            </div>
+          </div>
+
+          <!-- API Key Notice -->
+          <div class="api-key-notice">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="text-amber-500 flex-shrink-0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="10" r="3"/><circle cx="12" cy="10" r="1"/></svg>
+            <div>
+              <span class="text-xs font-semibold text-amber-700">Google API Key Required</span>
+              <p class="text-[11px] text-amber-600 mt-0.5 leading-relaxed">
+                Setup google api key in order to view to customer map. 
+                Add <code class="bg-amber-100 px-1 rounded text-[10px] font-mono">GOOGLE_MAPS_API_KEY</code> to your <code class="bg-amber-100 px-1 rounded text-[10px] font-mono">.env</code> file.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -3289,6 +3368,81 @@
       </a-form>
     </a-modal>
 
+    <!-- Set Reminder Modal -->
+    <a-modal
+      v-model:open="reminderModalVisible"
+      title=""
+      :footer="null"
+      width="560"
+      :destroyOnClose="true"
+      :maskClosable="true"
+      class="reminder-modal"
+    >
+      <div class="reminder-modal-header">
+        <div class="reminder-modal-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="22" height="22"><path d="M15 4V2m0 2v2m0-2h-3.5M3 10v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-9"/><path d="M3 10V6a2 2 0 0 1 2-2h2"/><circle cx="18" cy="18" r="3"/><path d="M18 16v2l1 1"/></svg>
+        </div>
+        <div>
+          <h3 class="reminder-modal-title">Set Reminder</h3>
+          <p class="reminder-modal-subtitle">Schedule a notification for a staff member</p>
+        </div>
+      </div>
+
+      <a-form layout="vertical" @finish="saveReminder" class="reminder-form">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <a-form-item label="Date to be notified" :rules="[{ required: true, message: 'Date is required' }]" class="reminder-form-item">
+            <a-date-picker
+              v-model:value="reminderDate"
+              style="width: 100%"
+              placeholder="dd/mm/yyyy"
+              format="YYYY-MM-DD"
+              :inputReadOnly="true"
+              class="reminder-date-picker"
+            >
+              <template #suffixIcon>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" class="text-slate-400"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </template>
+            </a-date-picker>
+          </a-form-item>
+          <a-form-item label="Set reminder to" :rules="[{ required: true, message: 'Please select a staff member' }]" class="reminder-form-item">
+            <a-select
+              v-model:value="reminderForm.remind_to"
+              placeholder="— Select staff member —"
+              :options="staffList.map(s => ({ label: s.name, value: s.id }))"
+              class="reminder-select"
+            >
+              <template #suffixIcon>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" class="text-slate-400"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+              </template>
+            </a-select>
+          </a-form-item>
+        </div>
+
+        <a-form-item label="Description" :rules="[{ required: true, message: 'Description is required' }]" class="reminder-form-item">
+          <a-textarea
+            v-model:value="reminderForm.description"
+            placeholder="Enter reminder description..."
+            :rows="4"
+            class="reminder-textarea"
+          />
+        </a-form-item>
+
+        <a-form-item class="mb-0">
+          <a-checkbox v-model:checked="reminderForm.send_email" class="reminder-checkbox">
+            <span class="text-xs font-medium text-slate-600">Send also an email for this reminder</span>
+          </a-checkbox>
+        </a-form-item>
+
+        <div class="reminder-modal-footer">
+          <a-button @click="closeReminderModal" class="reminder-cancel-btn">Cancel</a-button>
+          <a-button type="primary" html-type="submit" :loading="reminderSaving" class="reminder-submit-btn">
+            <svg v-if="!reminderSaving" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            {{ reminderSaving ? 'Saving...' : 'Set Reminder' }}
+          </a-button>
+        </div>
+      </a-form>
+    </a-modal>
+
   </div>
   <div v-else-if="loading" class="py-12 text-center">
     <a-spin size="large" />
@@ -3455,6 +3609,7 @@ export default defineComponent({
       default_language: 'system_default', groups: [], currency: 'USD', show_primary_contact: false,
       billing_street: '', billing_city: '', billing_state: '', billing_zip: '', billing_country: '',
       shipping_street: '', shipping_city: '', shipping_state: '', shipping_zip: '', shipping_country: '',
+      latitude: '', longitude: '',
     });
 
     // Mock count details of customer notes matching data requested
@@ -4486,6 +4641,21 @@ export default defineComponent({
       filteredSubscriptions.value.slice(subPageStart.value, subPageStart.value + subPageSize.value)
     );
 
+    const subSummaryCards = computed(() => {
+      const subs = subscriptions.value;
+      const count = (s) => subs.filter(x => x.status === s).length;
+      return [
+        { label: 'Not Subscribed', value: count('inactive'), icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>', color: '#64748b', bg: '#f1f5f9' },
+        { label: 'Active', value: count('active'), icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>', color: '#16a34a', bg: '#f0fdf4' },
+        { label: 'Future', value: 0, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', color: '#2563eb', bg: '#eff6ff' },
+        { label: 'Past Due', value: 0, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>', color: '#d97706', bg: '#fffbeb' },
+        { label: 'Unpaid', value: 0, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/></svg>', color: '#dc2626', bg: '#fef2f2' },
+        { label: 'Incomplete', value: 0, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>', color: '#9333ea', bg: '#faf5ff' },
+        { label: 'Canceled', value: count('cancelled'), icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>', color: '#ef4444', bg: '#fef2f2' },
+        { label: 'Incomplete Expired', value: 0, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', color: '#94a3b8', bg: '#f8fafc' },
+      ];
+    });
+
     const loadSubscriptions = async () => {
       if (!customer.value) return;
       subLoading.value = true;
@@ -4907,6 +5077,8 @@ export default defineComponent({
           shipping_state: response.data.shipping_state || '',
           shipping_zip: response.data.shipping_zip || '',
           shipping_country: response.data.shipping_country || '',
+          latitude: response.data.latitude || '',
+          longitude: response.data.longitude || '',
         });
 
         // Fetch real database Invoices related to this customer
@@ -4995,6 +5167,22 @@ export default defineComponent({
       customerForm.shipping_zip = customerForm.billing_zip;
       customerForm.shipping_country = customerForm.billing_country;
       message.success('Billing address copied.');
+    };
+
+    const saveMapCoordinates = async () => {
+      submitting.value = true;
+      try {
+        await axios.put(`/clients/${customer.value.id}`, {
+          latitude: customerForm.latitude,
+          longitude: customerForm.longitude,
+        });
+        message.success('Map coordinates saved successfully.');
+        fetchCustomerDetails();
+      } catch (err) {
+        message.error('Failed to save coordinates.');
+      } finally {
+        submitting.value = false;
+      }
     };
 
     // Form Drawers
@@ -5991,6 +6179,19 @@ export default defineComponent({
       remind_to: '',
       send_email: false,
     });
+    const reminderModalVisible = ref(false);
+    const reminderDate = ref(null);
+
+    const openReminderModal = () => {
+      reminderDate.value = null;
+      Object.assign(reminderForm, { description: '', date: '', remind_to: '', send_email: false });
+      reminderModalVisible.value = true;
+    };
+
+    const closeReminderModal = () => {
+      if (reminderSaving.value) return;
+      reminderModalVisible.value = false;
+    };
 
     const loadClientReminders = async () => {
       if (!customer.value) return;
@@ -6027,10 +6228,6 @@ export default defineComponent({
         message.error('Description is required.');
         return;
       }
-      if (!reminderForm.date) {
-        message.error('Date to be notified is required.');
-        return;
-      }
       if (!reminderForm.remind_to) {
         message.error('Please select a staff member to remind.');
         return;
@@ -6038,15 +6235,23 @@ export default defineComponent({
 
       reminderSaving.value = true;
       try {
+        const dateVal = reminderDate.value ? reminderDate.value.format('YYYY-MM-DD') : '';
+        if (!dateVal) {
+          message.error('Date to be notified is required.');
+          reminderSaving.value = false;
+          return;
+        }
         await axios.post(`/clients/${customer.value.id}/reminders`, {
           description: reminderForm.description,
-          date:        reminderForm.date,
+          date:        dateVal,
           remind_to:   reminderForm.remind_to,
           send_email:  reminderForm.send_email,
         });
         message.success('Reminder set successfully.');
+        reminderModalVisible.value = false;
         // reset form
         Object.assign(reminderForm, { description: '', date: '', remind_to: '', send_email: false });
+        reminderDate.value = null;
         loadClientReminders();
       } catch (err) {
         const errMsg = err.response?.data?.message || 'Failed to set reminder.';
@@ -6116,6 +6321,7 @@ export default defineComponent({
       saveBillingShipping,
       saveCustomerAdmins,
       copyBillingToShipping,
+      saveMapCoordinates,
 
       notesSearchQuery,
       newNoteText,
@@ -6197,6 +6403,7 @@ export default defineComponent({
       paginatedSubscriptions,
       subTotalPages,
       subPageStart,
+      subSummaryCards,
       loadSubscriptions,
       openSubscriptionForm,
       onBillingPlanChange,
@@ -6377,11 +6584,15 @@ export default defineComponent({
       reminderPage,
       reminderPageSize,
       reminderForm,
+      reminderModalVisible,
+      reminderDate,
       filteredReminders,
       paginatedReminders,
       reminderTotalPages,
       reminderPageStart,
       loadClientReminders,
+      openReminderModal,
+      closeReminderModal,
       saveReminder,
       deleteReminder,
     };
@@ -6688,25 +6899,351 @@ export default defineComponent({
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: #1e293b;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: #fff;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   padding: 9px 16px;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
 }
-.btn-new-subscription:hover { background: #0f172a; }
+.btn-new-subscription:hover {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+}
 
-.sub-refresh-btn {
+/* Summary Cards */
+.sub-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+@media (max-width: 1200px) {
+  .sub-summary-cards { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 700px) {
+  .sub-summary-cards { grid-template-columns: repeat(2, 1fr); }
+}
+.sub-summary-card {
+  background: #fff;
+  border: 1px solid #f1f5f9;
+  border-radius: 10px;
+  padding: 14px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.02);
+}
+.sub-summary-card:hover {
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0,0,0,.04);
+  transform: translateY(-1px);
+}
+.sub-summary-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #64748b;
+}
+.sub-summary-info {
+  min-width: 0;
+}
+.sub-summary-value {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.sub-summary-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Toolbar */
+.sub-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+.sub-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sub-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sub-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px 11px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.12s;
+  font-family: inherit;
+}
+.sub-toolbar-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+.sub-search-wrap {
+  position: relative;
+}
+.sub-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 13px;
+  height: 13px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+.sub-search-input {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 7px 12px 7px 30px;
+  font-size: 12.5px;
+  color: #1e293b;
+  background: #fff;
+  width: 220px;
+  outline: none;
+  transition: border-color 0.12s;
+  font-family: inherit;
+}
+.sub-search-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+}
+
+/* Table */
+.sub-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #f1f5f9;
+  border-radius: 10px;
+}
+.sub-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.sub-table thead th {
+  background: #f8fafc;
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  border-bottom: 1.5px solid #e2e8f0;
+}
+.sub-table tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.sub-row:last-child td {
+  border-bottom: none;
+}
+.sub-row:hover {
+  background: #fafbff;
+}
+.sub-cell-muted {
+  color: #64748b;
+}
+.sub-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.sub-name-link {
+  font-weight: 600;
+  color: #4f46e5;
+  cursor: pointer;
+  transition: color 0.12s;
+  text-decoration: none;
+}
+.sub-name-link:hover {
+  color: #6366f1;
+  text-decoration: underline;
+}
+.sub-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-size: 11px;
+}
+.sub-row-actions a {
+  color: #64748b;
+  cursor: pointer;
+  transition: color 0.12s;
+  text-decoration: none;
+}
+.sub-row-actions a:hover {
+  color: #4f46e5;
+  text-decoration: underline;
+}
+.sub-action-sep {
+  color: #cbd5e1;
+  margin: 0 6px;
+  font-size: 10px;
+}
+.sub-action-delete:hover {
+  color: #ef4444 !important;
+}
+
+/* Badges */
+.sub-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+}
+.sub-badge--active {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+.sub-badge--inactive {
+  background: #f8fafc;
+  color: #94a3b8;
+  border: 1px solid #e2e8f0;
+}
+.sub-badge--cancelled {
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fecaca;
+}
+
+/* Action group */
+.sub-action-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.sub-action-icon {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #475569;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.sub-action-icon:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #6366f1;
 }
 
+/* Empty state */
+.sub-empty-cell {
+  text-align: center;
+  padding: 48px 20px;
+  color: #94a3b8;
+}
+
+/* Pagination */
+.sub-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0 0;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+}
+.sub-pagination-info {
+  font-size: 12px;
+  color: #94a3b8;
+}
+.sub-pagination-btns {
+  display: flex;
+  gap: 4px;
+}
+.sub-pg-btn {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 5px 11px;
+  font-size: 12px;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.12s;
+  font-family: inherit;
+}
+.sub-pg-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+.sub-pg-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.sub-pg-btn.active {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #fff;
+}
+
+/* Read more link */
+.sub-read-more {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 18px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.sub-read-more a {
+  color: #6366f1;
+  font-weight: 500;
+  text-decoration: none;
+}
+.sub-read-more a:hover {
+  text-decoration: underline;
+}
+
+/* Form styles */
 .subscription-form-wrap {
   max-width: 760px;
 }
@@ -7432,4 +7969,205 @@ export default defineComponent({
   padding: 10px 14px;
 }
 
+/* ─── Reminder Modal Premium Styles ─────────────────────────────────── */
+:deep(.reminder-modal .ant-modal-content) {
+  border-radius: 16px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+:deep(.reminder-modal .ant-modal-body) {
+  padding: 0;
+}
+.reminder-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 24px 28px 0;
+}
+.reminder-modal-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+.reminder-modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.3;
+}
+.reminder-modal-subtitle {
+  font-size: 12.5px;
+  color: #94a3b8;
+  margin: 2px 0 0;
+}
+.reminder-form {
+  padding: 20px 28px 24px;
+}
+.reminder-form-item :deep(.ant-form-item-label) {
+  padding-bottom: 4px;
+}
+.reminder-form-item :deep(.ant-form-item-label label) {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #334155;
+  height: auto;
+}
+.reminder-form-item :deep(.ant-form-item-label label::after) {
+  content: ' *';
+  color: #ef4444;
+}
+.reminder-form-item :deep(.ant-form-item) {
+  margin-bottom: 16px;
+}
+:deep(.reminder-date-picker) {
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  height: 42px;
+  transition: all 0.15s;
+}
+:deep(.reminder-date-picker:hover) {
+  border-color: #a5b4fc;
+}
+:deep(.reminder-date-picker.ant-picker-focused) {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+:deep(.reminder-select) {
+  border-radius: 10px;
+}
+:deep(.reminder-select .ant-select-selector) {
+  border-radius: 10px !important;
+  border: 1.5px solid #e2e8f0 !important;
+  height: 42px !important;
+  padding: 0 12px !important;
+  transition: all 0.15s;
+}
+:deep(.reminder-select .ant-select-selector:hover) {
+  border-color: #a5b4fc !important;
+}
+:deep(.reminder-select.ant-select-focused .ant-select-selector) {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+}
+:deep(.reminder-select .ant-select-selection-item) {
+  line-height: 40px !important;
+  font-size: 13px;
+}
+:deep(.reminder-textarea) {
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  transition: all 0.15s;
+  font-size: 13px;
+}
+:deep(.reminder-textarea:hover) {
+  border-color: #a5b4fc;
+}
+:deep(.reminder-textarea:focus) {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+.reminder-checkbox {
+  display: flex;
+  align-items: center;
+}
+.reminder-checkbox :deep(.ant-checkbox-inner) {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border-color: #cbd5e1;
+}
+.reminder-checkbox :deep(.ant-checkbox-checked .ant-checkbox-inner) {
+  background-color: #6366f1;
+  border-color: #6366f1;
+}
+.reminder-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #f1f5f9;
+}
+.reminder-cancel-btn {
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  height: 40px;
+  padding: 0 20px;
+  border: 1.5px solid #e2e8f0;
+  color: #64748b;
+  transition: all 0.15s;
+}
+.reminder-cancel-btn:hover {
+  border-color: #cbd5e1;
+  color: #334155;
+}
+.reminder-submit-btn {
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  height: 40px;
+  padding: 0 22px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.reminder-submit-btn:hover {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+  transform: translateY(-1px);
+}
+.reminder-submit-btn:active {
+  transform: translateY(0);
+}
+:deep(.reminder-submit-btn.ant-btn-loading) {
+  opacity: 0.85;
+}
+
+/* ─── Map Tab Styles ─────────────────────────────────────────────────── */
+.map-container {
+  width: 100%;
+  height: 320px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  margin-bottom: 16px;
+}
+.map-embed {
+  width: 100%;
+  height: 100%;
+}
+.map-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+}
+.api-key-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+}
 </style>

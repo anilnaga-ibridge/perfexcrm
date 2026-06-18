@@ -28,4 +28,10 @@ class ActivityLogController extends Controller
             'total' => ActivityLog::count(),
         ]);
     }
+
+    public function destroy()
+    {
+        ActivityLog::truncate();
+        return response()->json(['message' => 'Activity log cleared']);
+    }
 }

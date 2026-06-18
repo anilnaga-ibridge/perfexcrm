@@ -61,9 +61,13 @@
         @change="handleTableChange"
         row-key="id"
         size="small"
-        :scroll="{ x: 800 }"
+        :scroll="{ x: 1000 }"
       >
-        <template #bodyCell="{ column, record }">
+        <template #bodyCell="{ column, record, index }">
+          <template v-if="column.key === 'index'">
+            <span class="text-slate-400 text-xs">{{ pagination.pageSize * (pagination.current - 1) + index + 1 }}</span>
+          </template>
+
           <template v-if="column.key === 'name'">
             <a class="sub-name" @click="openEditDrawer(record)">{{ record.name }}</a>
           </template>
@@ -72,8 +76,8 @@
             <span>{{ record.client?.company || '—' }}</span>
           </template>
 
-          <template v-if="column.key === 'billing_period'">
-            <span style="text-transform: capitalize;">{{ record.billing_period }}</span>
+          <template v-if="column.key === 'project'">
+            <span>{{ record.project?.name || '—' }}</span>
           </template>
 
           <template v-if="column.key === 'status'">
@@ -82,16 +86,16 @@
             </a-tag>
           </template>
 
-          <template v-if="column.key === 'amount'">
-            <span class="amount">{{ formatCurrency(record.amount) }}</span>
-          </template>
-
-          <template v-if="column.key === 'stripe_plan'">
-            <span class="stripe-plan">{{ record.stripe_plan || '—' }}</span>
+          <template v-if="column.key === 'next_billing'">
+            <span>{{ nextBillingCycle(record) }}</span>
           </template>
 
           <template v-if="column.key === 'start_date'">
             <span>{{ formatDate(record.start_date) }}</span>
+          </template>
+
+          <template v-if="column.key === 'last_sent'">
+            <span>{{ record.last_sent ? formatDate(record.last_sent) : '—' }}</span>
           </template>
 
           <template v-if="column.key === 'actions'">
@@ -269,13 +273,14 @@ export default defineComponent({
     });
 
     const columns = [
+      { title: '#',                  key: 'index',          width: 50 },
       { title: 'Subscription Name', key: 'name' },
-      { title: 'Client',             key: 'client' },
-      { title: 'Billing Period',     key: 'billing_period', width: 130 },
+      { title: 'Customer',           key: 'client' },
+      { title: 'Project',            key: 'project',        width: 140 },
       { title: 'Status',             key: 'status',         width: 120 },
-      { title: 'Amount',             key: 'amount',         width: 120, align: 'right' },
-      { title: 'Stripe Plan ID',     key: 'stripe_plan',    width: 160 },
-      { title: 'Start Date',         key: 'start_date',     width: 120 },
+      { title: 'Next Billing Cycle', key: 'next_billing',   width: 150 },
+      { title: 'Date Subscribed',    key: 'start_date',     width: 130 },
+      { title: 'Last Sent',          key: 'last_sent',      width: 120 },
       { title: '',                   key: 'actions',        width: 60, align: 'center' },
     ];
 
@@ -422,17 +427,29 @@ export default defineComponent({
       return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
+    const nextBillingCycle = (sub) => {
+      if (!sub.start_date) return '—';
+      const d = new Date(sub.start_date);
+      if (isNaN(d.getTime())) return '—';
+      const period = sub.billing_period || 'monthly';
+      if (period === 'yearly') d.setFullYear(d.getFullYear() + 1);
+      else if (period === 'bi-weekly') d.setDate(d.getDate() + 14);
+      else d.setMonth(d.getMonth() + 1);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
     const exportCSV = () => {
       if (!subscriptions.value.length) return message.warning('No subscriptions to export');
-      const headers = ['Subscription Name', 'Client', 'Billing Period', 'Status', 'Amount', 'Stripe Plan ID', 'Start Date'];
-      const rows = subscriptions.value.map(s => [
+      const headers = ['#', 'Subscription Name', 'Customer', 'Project', 'Status', 'Next Billing Cycle', 'Date Subscribed', 'Last Sent'];
+      const rows = subscriptions.value.map((s, i) => [
+        i + 1,
         s.name || '',
         s.client?.company || '',
-        s.billing_period || '',
+        s.project?.name || '',
         s.status || '',
-        s.amount || 0,
-        s.stripe_plan || '',
-        s.start_date || '',
+        nextBillingCycle(s),
+        formatDate(s.start_date),
+        s.last_sent ? formatDate(s.last_sent) : 'Never',
       ]);
       const csvContent = "data:text/csv;charset=utf-8," 
         + [headers.join(','), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))].join('\n');
@@ -454,7 +471,7 @@ export default defineComponent({
       loading, saving, subscriptions, stats, filters, pagination, columns,
       summaryCards, subForm, showDrawer, isEdit, clientOptions,
       openCreateDrawer, openEditDrawer, saveSubscription, updateStatus, deleteSubscription, handleTableChange,
-      statusColor, formatCurrency, formatDate, exportCSV
+      statusColor, formatCurrency, formatDate, nextBillingCycle, exportCSV
     };
   }
 });

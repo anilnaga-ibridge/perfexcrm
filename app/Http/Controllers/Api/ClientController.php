@@ -76,6 +76,8 @@ class ClientController extends Controller
             'default_language' => 'nullable|string|max:255',
             'groups' => 'nullable|string|max:255',
             'currency' => 'nullable|string|max:255',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             
             // Billing
             'billing_street' => 'nullable|string|max:255',
@@ -116,6 +118,8 @@ class ClientController extends Controller
                 'default_language' => $validated['default_language'] ?? 'english',
                 'groups' => $validated['groups'] ?? null,
                 'currency' => $validated['currency'] ?? null,
+                'latitude' => $validated['latitude'] ?? null,
+                'longitude' => $validated['longitude'] ?? null,
                 
                 // Billing
                 'billing_street' => $validated['billing_street'] ?? null,
@@ -195,6 +199,8 @@ class ClientController extends Controller
             'groups' => 'nullable|string|max:255',
             'currency' => 'nullable|string|max:255',
             'active' => 'boolean',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             
             // Billing
             'billing_street' => 'nullable|string|max:255',

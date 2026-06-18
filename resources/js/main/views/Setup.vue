@@ -9,15 +9,30 @@
       <!-- Left Side Menu -->
       <aside class="setup-sidebar">
         <nav class="setup-nav">
-          <a
-            v-for="sec in sections"
-            :key="sec.id"
-            @click="activeSection = sec.id"
-            :class="['setup-nav-item', { 'setup-nav-item--active': activeSection === sec.id }]"
-          >
-            <span class="setup-nav-icon" v-html="sec.icon"></span>
-            <span>{{ sec.label }}</span>
-          </a>
+          <template v-for="sec in sections" :key="sec.id">
+            <a
+              @click="navigateToSection(sec.id, sec.children ? (sec.children[0]?.id || '') : '')"
+              :class="['setup-nav-item', { 'setup-nav-item--active': activeSection === sec.id && !sec.children }]"
+            >
+              <span class="setup-nav-icon" v-html="sec.icon"></span>
+              <span>{{ sec.label }}</span>
+              <span v-if="sec.children" class="setup-nav-arrow" :class="{ 'setup-nav-arrow--rotated': activeSection === sec.id }">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </span>
+            </a>
+            <div v-if="sec.children && activeSection === sec.id" class="setup-nav-children">
+              <a
+                v-for="child in sec.children"
+                :key="child.id"
+                @click="navigateToSection(sec.id, child.id)"
+                :class="['setup-nav-child', { 'setup-nav-child--active': activeSubSection === child.id }]"
+              >
+                {{ child.label }}
+              </a>
+            </div>
+          </template>
         </nav>
       </aside>
 
@@ -47,7 +62,7 @@
               :dataSource="staffList"
               :columns="staffColumns"
               :loading="staffLoading"
-              :pagination="{ pageSize: 15, total: staffTotal }"
+              :pagination="{ pageSize: 25, total: staffTotal, showSizeChanger: true, showTotal: (total, range) => `Showing ${range[0]} to ${range[1]} of ${total} entries` }"
               row-key="id"
               size="small"
             >
@@ -55,21 +70,21 @@
                 <template v-if="column.key === 'name'">
                   <div class="flex-name">
                     <div class="avatar-circle">{{ initials(record.name) }}</div>
-                    <div>
-                      <div class="name-main">{{ record.name }}</div>
-                      <div class="name-sub">{{ record.email }}</div>
-                    </div>
+                    <div class="name-main">{{ record.name }}</div>
                   </div>
                 </template>
                 <template v-if="column.key === 'role'">
-                  <a-tag :color="record.role === 'admin' ? 'blue' : 'default'" style="text-transform:capitalize">{{ record.role || 'staff' }}</a-tag>
+                  <a-tag :color="record.role === 'admin' ? 'blue' : 'default'" style="text-transform:capitalize">{{ record.role || 'Employee' }}</a-tag>
+                </template>
+                <template v-if="column.key === 'last_login'">
+                  {{ formatLastLogin(record.last_login) }}
                 </template>
                 <template v-if="column.key === 'active'">
                   <a-badge :status="record.active ? 'success' : 'default'" :text="record.active ? 'Active' : 'Inactive'" />
                 </template>
                 <template v-if="column.key === 'actions'">
                   <div class="row-actions">
-                    <a-button size="small" type="link" @click="editStaffMember(record)">Edit</a-button>
+                    <a-button size="small" type="link" @click="viewStaff(record)">View</a-button>
                     <a-button size="small" type="link" danger @click="deleteStaff(record.id)">Delete</a-button>
                   </div>
                 </template>
@@ -77,278 +92,292 @@
             </a-table>
           </div>
 
-          <!-- Add Staff Drawer -->
-          <a-drawer
+          <!-- Add/Edit Staff Modal -->
+          <a-modal
             v-model:open="openAddStaff"
-            title="Add Staff Member"
-            placement="right"
-            :width="440"
-            @close="resetStaffForm"
+            :title="editingStaff ? 'Edit Staff Member' : 'Add New Staff Member'"
+            :width="720"
+            :footer="null"
+            :destroyOnClose="true"
+            @cancel="resetStaffForm"
           >
-            <a-form layout="vertical" :model="staffForm" @finish="saveStaff">
-              <a-form-item label="Full Name" name="name" :rules="[{required:true,message:'Name required'}]">
-                <a-input v-model:value="staffForm.name" placeholder="Enter full name" />
-              </a-form-item>
-              <a-form-item label="Email Address" name="email" :rules="[{required:true,type:'email',message:'Valid email required'}]">
-                <a-input v-model:value="staffForm.email" type="email" placeholder="staff@example.com" />
-              </a-form-item>
-              <a-form-item label="Role">
-                <a-select v-model:value="staffForm.role" style="width:100%">
-                  <a-select-option value="admin">Administrator</a-select-option>
-                  <a-select-option value="staff">Staff</a-select-option>
-                  <a-select-option value="manager">Manager</a-select-option>
-                </a-select>
-              </a-form-item>
-              <a-form-item label="Phone Number">
-                <a-input v-model:value="staffForm.phone" placeholder="+1 234 567 8900" />
-              </a-form-item>
-              <a-form-item label="Department">
-                <a-input v-model:value="staffForm.department" placeholder="e.g. Sales, Development" />
-              </a-form-item>
-              <a-form-item label="Password" name="password" :rules="[{required:!staffForm.id,message:'Password required for new staff'}]">
-                <a-input-password v-model:value="staffForm.password" placeholder="Set password" />
-              </a-form-item>
-              <a-form-item label="Confirm Password">
-                <a-input-password v-model:value="staffForm.password_confirmation" placeholder="Confirm password" />
-              </a-form-item>
-              <div class="drawer-footer">
-                <a-button @click="openAddStaff = false">Cancel</a-button>
-                <a-button type="primary" html-type="submit" :loading="staffSaving">
-                  {{ staffForm.id ? 'Update Staff' : 'Add Staff Member' }}
-                </a-button>
+            <a-tabs v-model:activeKey="staffActiveTab">
+              <a-tab-pane key="profile" tab="Profile">
+                <a-form layout="vertical" :model="staffForm">
+                  <div class="profile-image-row">
+                    <div class="profile-image-upload">
+                      <div class="avatar-circle large" v-if="!staffForm.profile_image" :style="{ background: avatarColor(staffForm.first_name + ' ' + staffForm.last_name) }">
+                        {{ initials(staffForm.first_name + ' ' + staffForm.last_name) || '?' }}
+                      </div>
+                      <img v-else :src="staffForm.profile_image" class="profile-preview" />
+                      <div class="upload-actions">
+                        <a-button size="small" @click="$refs.staffFileInput?.click()">Choose File</a-button>
+                        <span class="file-hint">No file chosen</span>
+                      </div>
+                      <input type="file" ref="staffFileInput" accept="image/*" style="display:none" @change="onStaffFileChange" />
+                    </div>
+                    <div class="staff-type-badge">
+                      <a-checkbox :checked="isStaffAdminRole" @change="toggleStaffAdmin">Administrator</a-checkbox>
+                    </div>
+                  </div>
+
+                  <div class="form-row">
+                    <a-form-item label="* First Name" :rules="[{ required: true, message: 'First name required' }]">
+                      <a-input v-model:value="staffForm.first_name" placeholder="First Name" />
+                    </a-form-item>
+                    <a-form-item label="* Last Name" :rules="[{ required: true, message: 'Last name required' }]">
+                      <a-input v-model:value="staffForm.last_name" placeholder="Last Name" />
+                    </a-form-item>
+                  </div>
+
+                  <div class="form-row">
+                    <a-form-item label="* Email" :rules="[{ required: true, type: 'email', message: 'Valid email required' }]">
+                      <a-input v-model:value="staffForm.email" placeholder="Email" />
+                    </a-form-item>
+                    <a-form-item label="Hourly Rate">
+                      <a-input-number v-model:value="staffForm.hourly_rate" :min="0" :precision="2" style="width: 100%">
+                        <template #addonBefore>$</template>
+                      </a-input-number>
+                    </a-form-item>
+                  </div>
+
+                  <div class="form-row">
+                    <a-form-item label="Phone">
+                      <a-input v-model:value="staffForm.phone" placeholder="Phone" />
+                    </a-form-item>
+                    <a-form-item label="Facebook">
+                      <a-input v-model:value="staffForm.facebook" placeholder="Facebook" />
+                    </a-form-item>
+                  </div>
+
+                  <div class="form-row">
+                    <a-form-item label="LinkedIn">
+                      <a-input v-model:value="staffForm.linkedin" placeholder="LinkedIn" />
+                    </a-form-item>
+                    <a-form-item label="Skype">
+                      <a-input v-model:value="staffForm.skype" placeholder="Skype" />
+                    </a-form-item>
+                  </div>
+
+                  <div class="form-row">
+                    <a-form-item label="Default Language">
+                      <a-select v-model:value="staffForm.default_language" style="width: 100%">
+                        <a-select-option value="">System Default</a-select-option>
+                        <a-select-option value="en">English</a-select-option>
+                        <a-select-option value="es">Spanish</a-select-option>
+                        <a-select-option value="fr">French</a-select-option>
+                        <a-select-option value="de">German</a-select-option>
+                      </a-select>
+                    </a-form-item>
+                    <a-form-item label="Direction">
+                      <a-select v-model:value="staffForm.direction" style="width: 100%">
+                        <a-select-option value="">LTR</a-select-option>
+                        <a-select-option value="rtl">RTL</a-select-option>
+                      </a-select>
+                    </a-form-item>
+                  </div>
+
+                  <a-form-item label="Email Signature">
+                    <a-textarea v-model:value="staffForm.email_signature" :rows="3" placeholder="Email signature..." />
+                  </a-form-item>
+
+                  <a-form-item label="Member departments">
+                    <a-checkbox-group v-model:value="staffForm.departments">
+                      <a-checkbox value="Marketing">Marketing</a-checkbox>
+                      <a-checkbox value="Sales">Sales</a-checkbox>
+                      <a-checkbox value="Abuse">Abuse</a-checkbox>
+                    </a-checkbox-group>
+                  </a-form-item>
+
+                  <a-form-item>
+                    <a-checkbox v-model:checked="staffForm.send_welcome_email">Send welcome email</a-checkbox>
+                  </a-form-item>
+
+                  <div class="form-row">
+                    <a-form-item
+                      label="* Password"
+                      :rules="editingStaff ? [] : [{ required: true, message: 'Password required' }]"
+                    >
+                      <a-input-password v-model:value="staffForm.password" placeholder="Password" />
+                    </a-form-item>
+                    <a-form-item label="Confirm Password">
+                      <a-input-password v-model:value="staffForm.password_confirmation" placeholder="Confirm password" />
+                    </a-form-item>
+                  </div>
+                </a-form>
+              </a-tab-pane>
+
+              <a-tab-pane key="permissions" tab="Permissions">
+                <div class="permissions-section">
+                  <div class="perm-info">
+                    <a-typography-link href="#" @click.prevent>Click here to read more about permissions</a-typography-link>
+                  </div>
+
+                  <a-form-item label="Role">
+                    <a-select v-model:value="staffForm.role_id" style="width: 280px" @change="onStaffRoleChange">
+                      <a-select-option v-for="r in staffRoles" :key="r.id" :value="r.id">{{ r.name }}</a-select-option>
+                    </a-select>
+                  </a-form-item>
+
+                  <div v-if="isStaffAdminRole" class="admin-notice">
+                    <a-checkbox checked disabled>Administrator</a-checkbox>
+                    <span class="admin-hint">Administrator has full access to all features</span>
+                  </div>
+
+                  <div class="permissions-grid">
+                    <div class="perm-table">
+                      <div class="perm-table-header">
+                        <div class="perm-cell feature-col">Features</div>
+                        <div class="perm-cell cap-col" v-for="cap in allCapabilities" :key="cap.key">{{ cap.label }}</div>
+                      </div>
+                      <div v-for="feat in featureList" :key="feat.key" class="perm-table-row">
+                        <div class="perm-cell feature-col">{{ feat.label }}</div>
+                        <div class="perm-cell cap-col" v-for="cap in feat.caps" :key="cap.key">
+                          <a-checkbox
+                            v-if="cap.type === 'checkbox'"
+                            :checked="getStaffPerm(feat.key, cap.key)"
+                            @change="e => setStaffPerm(feat.key, cap.key, e.target.checked)"
+                          />
+                          <span v-else-if="cap.type === 'label'" class="cap-label">{{ cap.label }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </a-tab-pane>
+            </a-tabs>
+
+            <div class="modal-footer">
+              <a-button @click="openAddStaff = false">Cancel</a-button>
+              <a-button type="primary" :loading="staffSaving" @click="saveStaff">{{ editingStaff ? 'Update' : 'Add Staff Member' }}</a-button>
+            </div>
+          </a-modal>
+
+          <!-- View Staff Modal -->
+          <a-modal
+            v-model:open="viewStaffModal"
+            title="View Staff Member"
+            :footer="null"
+            :width="560"
+          >
+            <div v-if="viewingStaff" class="view-staff-modal">
+              <div class="view-field">
+                <label>Full Name</label>
+                <a-input :value="viewingStaff.name" disabled />
               </div>
-            </a-form>
-          </a-drawer>
+              <div class="view-field">
+                <label>Email Address</label>
+                <a-input :value="viewingStaff.email" disabled />
+              </div>
+              <div class="view-field">
+                <label>Role</label>
+                <a-input :value="viewingStaff.role || 'Employee'" disabled />
+              </div>
+              <div class="view-field">
+                <label>Last Login</label>
+                <a-input :value="formatLastLogin(viewingStaff.last_login)" disabled />
+              </div>
+              <div class="view-field">
+                <label>Status</label>
+                <a-input :value="viewingStaff.active ? 'Active' : 'Inactive'" disabled />
+              </div>
+            </div>
+          </a-modal>
         </div>
 
         <!-- ── CUSTOMERS (Settings) ── -->
         <div v-if="activeSection === 'customers'">
-          <h2 class="section-title">Customer Settings</h2>
-          <div class="settings-card">
-            <div class="settings-group">
-              <h3 class="settings-group-title">General</h3>
-              <div class="settings-row">
-                <div class="settings-label">
-                  <span>Allow customer registration</span>
-                  <p class="settings-hint">Allow customers to register their own account from the client portal login area</p>
-                </div>
-                <a-switch v-model:checked="customerSettings.allow_registration" />
-              </div>
-              <div class="settings-row">
-                <div class="settings-label">
-                  <span>Require email confirmation on registration</span>
-                  <p class="settings-hint">Customers must confirm their email before gaining access</p>
-                </div>
-                <a-switch v-model:checked="customerSettings.email_confirmation" />
-              </div>
-              <div class="settings-row">
-                <div class="settings-label">
-                  <span>Allow customer to login</span>
-                </div>
-                <a-switch v-model:checked="customerSettings.allow_login" />
-              </div>
-            </div>
-            <div class="settings-group">
-              <h3 class="settings-group-title">Groups</h3>
-              <div class="settings-row">
-                <div class="settings-label">
-                  <span>Default customer groups</span>
-                </div>
-                <a-select mode="tags" style="width:300px" placeholder="Add groups..." v-model:value="customerSettings.groups">
-                  <a-select-option value="VIP">VIP</a-select-option>
-                  <a-select-option value="Wholesaler">Wholesaler</a-select-option>
-                  <a-select-option value="Low Budget">Low Budget</a-select-option>
-                  <a-select-option value="High Budget">High Budget</a-select-option>
-                </a-select>
-              </div>
-            </div>
-            <div class="settings-actions">
-              <a-button type="primary" @click="saveSettings('customer')">Save Settings</a-button>
-            </div>
+          <div v-if="activeSubSection === 'customers-general'">
+            <CustomerGeneralView />
+          </div>
+          <div v-if="activeSubSection === 'customers-groups'">
+            <GroupsView />
+          </div>
+          <div v-if="activeSubSection === 'customers-support'">
+            <CustomerSupportView />
           </div>
         </div>
 
         <!-- ── SUPPORT (Ticket Settings) ── -->
         <div v-if="activeSection === 'support'">
-          <h2 class="section-title">Support Settings</h2>
-          <div class="settings-card">
-            <div class="settings-group">
-              <h3 class="settings-group-title">Tickets</h3>
-              <div class="settings-row">
-                <div class="settings-label">
-                  <span>Allow non-customers to submit tickets</span>
-                </div>
-                <a-switch v-model:checked="supportSettings.allow_non_customer_tickets" />
-              </div>
-              <div class="settings-row">
-                <div class="settings-label">
-                  <span>Auto-close tickets after (days)</span>
-                </div>
-                <a-input-number v-model:value="supportSettings.auto_close_days" :min="1" :max="365" />
-              </div>
-              <div class="settings-row">
-                <div class="settings-label">
-                  <span>Default ticket priority</span>
-                </div>
-                <a-select v-model:value="supportSettings.default_priority" style="width:200px">
-                  <a-select-option value="low">Low</a-select-option>
-                  <a-select-option value="medium">Medium</a-select-option>
-                  <a-select-option value="high">High</a-select-option>
-                  <a-select-option value="critical">Critical</a-select-option>
-                </a-select>
-              </div>
-            </div>
-            <div class="settings-group">
-              <h3 class="settings-group-title">Departments</h3>
-              <div class="settings-hint-block">Configure ticket routing by department. Departments allow you to organize your support tickets.</div>
-              <div class="dept-list">
-                <div v-for="dept in departments" :key="dept" class="dept-item">
-                  <span>{{ dept }}</span>
-                  <button class="dept-remove" @click="removeDept(dept)">×</button>
-                </div>
-                <a-input
-                  v-model:value="newDept"
-                  placeholder="Add department..."
-                  @pressEnter="addDept"
-                  style="width:200px"
-                  size="small"
-                />
-              </div>
-            </div>
-            <div class="settings-actions">
-              <a-button type="primary" @click="saveSettings('support')">Save Settings</a-button>
-            </div>
+          <div v-if="activeSubSection === 'support-departments'">
+            <DepartmentsView />
+          </div>
+
+          <div v-if="activeSubSection === 'support-predefined-replies'">
+            <PredefinedRepliesView />
+          </div>
+
+          <div v-if="activeSubSection === 'support-ticket-priority'">
+            <TicketPriorityView />
+          </div>
+
+          <div v-if="activeSubSection === 'support-ticket-statuses'">
+            <TicketStatusesView />
+          </div>
+
+          <div v-if="activeSubSection === 'support-services'">
+            <ServicesView />
+          </div>
+
+          <div v-if="activeSubSection === 'support-spam-filters'">
+            <SpamFiltersView />
           </div>
         </div>
 
         <!-- ── LEADS (Settings) ── -->
         <div v-if="activeSection === 'leads'">
-          <h2 class="section-title">Leads Settings</h2>
-          <div class="settings-card">
-            <div class="settings-group">
-              <h3 class="settings-group-title">Lead Pipeline</h3>
-              <div class="settings-row">
-                <div class="settings-label">
-                  <span>Allow contact form integration</span>
-                  <p class="settings-hint">Enable web form embed to capture leads automatically</p>
-                </div>
-                <a-switch v-model:checked="leadsSettings.contact_form" />
-              </div>
-              <div class="settings-row">
-                <div class="settings-label">
-                  <span>Auto assign leads to staff</span>
-                </div>
-                <a-switch v-model:checked="leadsSettings.auto_assign" />
-              </div>
-            </div>
-            <div class="settings-group">
-              <h3 class="settings-group-title">Statuses</h3>
-              <div class="status-list">
-                <div v-for="s in leadStatuses" :key="s.id" class="status-item">
-                  <span class="status-dot" :style="{background: s.color}"></span>
-                  <span>{{ s.name }}</span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-actions">
-              <a-button type="primary" @click="saveSettings('leads')">Save Settings</a-button>
-            </div>
+          <div v-if="activeSubSection === 'leads-sources'">
+            <SourcesView />
+          </div>
+
+          <div v-if="activeSubSection === 'leads-statuses'">
+            <StatusesView />
+          </div>
+
+          <div v-if="activeSubSection === 'leads-email-integration'">
+            <EmailIntegrationView />
+          </div>
+
+          <div v-if="activeSubSection === 'leads-web-to-lead'">
+            <WebToLeadView />
           </div>
         </div>
 
         <!-- ── FINANCE ── -->
         <div v-if="activeSection === 'finance'">
-          <h2 class="section-title">Finance Settings</h2>
-          <div class="settings-card">
-            <div class="settings-group">
-              <h3 class="settings-group-title">Currency & Tax</h3>
-              <div class="settings-row">
-                <div class="settings-label"><span>Default Currency</span></div>
-                <a-select v-model:value="financeSettings.currency" style="width:200px">
-                  <a-select-option value="USD">USD - US Dollar</a-select-option>
-                  <a-select-option value="EUR">EUR - Euro</a-select-option>
-                  <a-select-option value="GBP">GBP - British Pound</a-select-option>
-                  <a-select-option value="INR">INR - Indian Rupee</a-select-option>
-                </a-select>
-              </div>
-              <div class="settings-row">
-                <div class="settings-label"><span>Default Tax Rate (%)</span></div>
-                <a-input-number v-model:value="financeSettings.tax_rate" :min="0" :max="100" :step="0.5" />
-              </div>
-              <div class="settings-row">
-                <div class="settings-label"><span>Invoice Prefix</span></div>
-                <a-input v-model:value="financeSettings.invoice_prefix" style="width:120px" />
-              </div>
-              <div class="settings-row">
-                <div class="settings-label"><span>Estimate Prefix</span></div>
-                <a-input v-model:value="financeSettings.estimate_prefix" style="width:120px" />
-              </div>
-            </div>
-            <div class="settings-group">
-              <h3 class="settings-group-title">Payment Methods</h3>
-              <div class="payment-methods">
-                <div v-for="pm in paymentMethods" :key="pm.key" class="payment-method-item">
-                  <div class="pm-info">
-                    <span class="pm-name">{{ pm.name }}</span>
-                    <span class="pm-badge" :class="{'pm-badge--active': pm.active}">{{ pm.active ? 'Active' : 'Inactive' }}</span>
-                  </div>
-                  <a-switch v-model:checked="pm.active" size="small" />
-                </div>
-              </div>
-            </div>
-            <div class="settings-actions">
-              <a-button type="primary" @click="saveSettings('finance')">Save Settings</a-button>
-            </div>
+          <div v-if="activeSubSection === 'finance-tax-rates'">
+            <TaxRatesView />
+          </div>
+
+          <div v-if="activeSubSection === 'finance-currencies'">
+            <CurrenciesView />
+          </div>
+
+          <div v-if="activeSubSection === 'finance-payment-modes'">
+            <PaymentModesView />
+          </div>
+
+          <div v-if="activeSubSection === 'finance-expenses-categories'">
+            <ExpensesCategoriesView />
           </div>
         </div>
 
         <!-- ── CONTRACTS ── -->
         <div v-if="activeSection === 'contracts'">
-          <h2 class="section-title">Contracts Settings</h2>
-          <div class="settings-card">
-            <div class="settings-group">
-              <h3 class="settings-group-title">Contract Types</h3>
-              <div class="type-list">
-                <div v-for="t in contractTypes" :key="t" class="type-item">
-                  <span>{{ t }}</span>
-                  <button class="dept-remove" @click="removeContractType(t)">×</button>
-                </div>
-                <a-input
-                  v-model:value="newContractType"
-                  placeholder="Add type..."
-                  @pressEnter="addContractType"
-                  style="width:200px"
-                  size="small"
-                />
-              </div>
-            </div>
-            <div class="settings-actions">
-              <a-button type="primary" @click="saveSettings('contracts')">Save Settings</a-button>
-            </div>
+          <div v-if="activeSubSection === 'contracts-types'">
+            <ContractTypesView />
           </div>
         </div>
 
         <!-- ── ESTIMATE REQUEST ── -->
         <div v-if="activeSection === 'estimate-request'">
-          <h2 class="section-title">Estimate Request Settings</h2>
-          <div class="settings-card">
-            <div class="settings-group">
-              <h3 class="settings-group-title">Form Configuration</h3>
-              <div class="settings-row">
-                <div class="settings-label">
-                  <span>Enable estimate request form</span>
-                  <p class="settings-hint">Allow visitors to submit estimate requests from your website</p>
-                </div>
-                <a-switch v-model:checked="estimateRequestSettings.enabled" />
-              </div>
-              <div class="settings-row">
-                <div class="settings-label"><span>Notify staff on new request</span></div>
-                <a-switch v-model:checked="estimateRequestSettings.notify_staff" />
-              </div>
-            </div>
-            <div class="settings-actions">
-              <a-button type="primary" @click="saveSettings('estimate-request')">Save Settings</a-button>
-            </div>
+          <div v-if="activeSubSection === 'estimate-request-forms'">
+            <FormsView />
+          </div>
+
+          <div v-if="activeSubSection === 'estimate-request-statuses'">
+            <EstimateStatusesView />
           </div>
         </div>
 
@@ -436,197 +465,43 @@
 
         <!-- ── EMAIL TEMPLATES ── -->
         <div v-if="activeSection === 'email-templates'">
-          <h2 class="section-title">Email Templates</h2>
-          <div class="data-table-wrap">
-            <a-table
-              :dataSource="emailTemplates"
-              :columns="templateColumns"
-              size="small"
-              :pagination="false"
-              row-key="id"
-            >
-              <template #bodyCell="{ column, record }">
-                <template v-if="column.key === 'name'">
-                  <a class="link-blue">{{ record.name }}</a>
-                </template>
-                <template v-if="column.key === 'subject'">
-                  <span class="text-muted">{{ record.subject }}</span>
-                </template>
-                <template v-if="column.key === 'active'">
-                  <a-switch v-model:checked="record.active" size="small" />
-                </template>
-                <template v-if="column.key === 'actions'">
-                  <a-button size="small" type="link">Edit</a-button>
-                </template>
-              </template>
-            </a-table>
-          </div>
+          <EmailTemplatesView />
         </div>
 
         <!-- ── CUSTOM FIELDS ── -->
         <div v-if="activeSection === 'custom-fields'">
-          <div class="section-toolbar">
-            <h2 class="section-title">Custom Fields</h2>
-            <button class="btn-primary">+ Add Custom Field</button>
-          </div>
-          <div class="settings-card" style="text-align:center;padding:60px 20px">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin:0 auto 12px">
-              <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
-            </svg>
-            <p style="color:#64748b;font-size:14px">No custom fields configured yet.</p>
-            <p style="color:#94a3b8;font-size:13px;margin-top:6px">Create custom fields to capture additional information for clients, contacts, leads, invoices and more.</p>
-          </div>
+          <CustomFieldsView />
         </div>
 
         <!-- ── GDPR ── -->
         <div v-if="activeSection === 'gdpr'">
-          <h2 class="section-title">GDPR Settings</h2>
-          <div class="settings-card">
-            <div class="settings-group">
-              <div class="settings-row">
-                <div class="settings-label">
-                  <span>Enable GDPR features</span>
-                  <p class="settings-hint">Enables GDPR compliance tools including consent tracking and data export/deletion requests</p>
-                </div>
-                <a-switch v-model:checked="gdprSettings.enabled" />
-              </div>
-              <div class="settings-row">
-                <div class="settings-label">
-                  <span>Show GDPR notice on registration</span>
-                </div>
-                <a-switch v-model:checked="gdprSettings.show_notice" />
-              </div>
-              <div class="settings-row">
-                <div class="settings-label">
-                  <span>Allow customers to download their data</span>
-                </div>
-                <a-switch v-model:checked="gdprSettings.allow_data_download" />
-              </div>
-            </div>
-            <div class="settings-actions">
-              <a-button type="primary" @click="saveSettings('gdpr')">Save Settings</a-button>
-            </div>
-          </div>
+          <GdprView />
         </div>
 
         <!-- ── ROLES ── -->
         <div v-if="activeSection === 'roles'">
-          <div class="section-toolbar">
-            <h2 class="section-title">Roles & Permissions</h2>
-            <button class="btn-primary">+ Add Role</button>
-          </div>
-          <div class="roles-list">
-            <div v-for="role in roles" :key="role.name" class="role-card">
-              <div class="role-info">
-                <div class="role-name">{{ role.name }}</div>
-                <div class="role-desc">{{ role.description }}</div>
-              </div>
-              <div class="role-count">{{ role.count }} members</div>
-              <div class="role-actions">
-                <a-button size="small" type="link">Edit Permissions</a-button>
-              </div>
-            </div>
-          </div>
+          <RolesView />
         </div>
 
         <!-- ── MENU SETUP ── -->
         <div v-if="activeSection === 'menu-setup'">
-          <h2 class="section-title">Menu Setup</h2>
-          <div class="settings-card">
-            <p class="settings-hint-block">Configure which navigation items are visible in the sidebar. Drag to reorder.</p>
-            <div class="menu-items-list">
-              <div v-for="item in menuSetupItems" :key="item.key" class="menu-setup-item">
-                <span class="drag-handle">⠿</span>
-                <span class="menu-item-label">{{ item.label }}</span>
-                <a-switch v-model:checked="item.visible" size="small" />
-              </div>
-            </div>
-            <div class="settings-actions">
-              <a-button type="primary" @click="saveSettings('menu-setup')">Save Menu</a-button>
-            </div>
+          <div v-if="activeSubSection === 'menu-setup-main'">
+            <MainMenuView />
+          </div>
+
+          <div v-if="activeSubSection === 'menu-setup-setup'">
+            <SetupMenuView />
           </div>
         </div>
 
         <!-- ── THEME STYLE ── -->
         <div v-if="activeSection === 'theme-style'">
-          <h2 class="section-title">Theme Style</h2>
-          <div class="settings-card">
-            <div class="settings-group">
-              <h3 class="settings-group-title">Color Scheme</h3>
-              <div class="theme-swatches">
-                <div
-                  v-for="theme in themes"
-                  :key="theme.value"
-                  @click="financeSettings.theme = theme.value"
-                  :class="['theme-swatch', { 'theme-swatch--active': financeSettings.theme === theme.value }]"
-                  :style="{ background: theme.color }"
-                  :title="theme.label"
-                ></div>
-              </div>
-            </div>
-            <div class="settings-actions">
-              <a-button type="primary" @click="saveSettings('theme')">Apply Theme</a-button>
-            </div>
-          </div>
+          <ThemeStyleView />
         </div>
 
         <!-- ── SETTINGS (General) ── -->
         <div v-if="activeSection === 'settings'">
-          <h2 class="section-title">General Settings</h2>
-          <div class="settings-card">
-            <div class="settings-group">
-              <h3 class="settings-group-title">Company Information</h3>
-              <a-form layout="vertical">
-                <div class="settings-form-grid">
-                  <a-form-item label="Company Name">
-                    <a-input v-model:value="generalSettings.company_name" />
-                  </a-form-item>
-                  <a-form-item label="Company Phone">
-                    <a-input v-model:value="generalSettings.company_phone" />
-                  </a-form-item>
-                  <a-form-item label="Company Email">
-                    <a-input v-model:value="generalSettings.company_email" type="email" />
-                  </a-form-item>
-                  <a-form-item label="Company Website">
-                    <a-input v-model:value="generalSettings.company_website" />
-                  </a-form-item>
-                  <a-form-item label="Address" :span="2">
-                    <a-textarea v-model:value="generalSettings.address" :rows="3" />
-                  </a-form-item>
-                  <a-form-item label="City">
-                    <a-input v-model:value="generalSettings.city" />
-                  </a-form-item>
-                  <a-form-item label="Country">
-                    <a-input v-model:value="generalSettings.country" />
-                  </a-form-item>
-                </div>
-              </a-form>
-            </div>
-            <div class="settings-group">
-              <h3 class="settings-group-title">Localization</h3>
-              <div class="settings-form-grid">
-                <a-form-item label="Default Language">
-                  <a-select v-model:value="generalSettings.language" style="width:100%">
-                    <a-select-option value="english">English</a-select-option>
-                    <a-select-option value="spanish">Spanish</a-select-option>
-                    <a-select-option value="french">French</a-select-option>
-                    <a-select-option value="german">German</a-select-option>
-                  </a-select>
-                </a-form-item>
-                <a-form-item label="Timezone">
-                  <a-select v-model:value="generalSettings.timezone" style="width:100%">
-                    <a-select-option value="UTC">UTC</a-select-option>
-                    <a-select-option value="America/New_York">America/New_York</a-select-option>
-                    <a-select-option value="Europe/London">Europe/London</a-select-option>
-                    <a-select-option value="Asia/Kolkata">Asia/Kolkata</a-select-option>
-                  </a-select>
-                </a-form-item>
-              </div>
-            </div>
-            <div class="settings-actions">
-              <a-button type="primary" @click="saveSettings('general')">Save Settings</a-button>
-            </div>
-          </div>
+          <SettingsView />
         </div>
 
         <!-- ── HELP ── -->
@@ -648,30 +523,228 @@
 </template>
 
 <script>
-import { defineComponent, ref, reactive, computed, onMounted } from 'vue';
+import { defineComponent, ref, reactive, computed, onMounted, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 import { message } from 'ant-design-vue';
 
+// Import Modular Setup Views
+import GroupsView from './setup/Groups.vue';
+import CustomerGeneralView from './setup/CustomerGeneral.vue';
+import CustomerSupportView from './setup/CustomerSupport.vue';
+import DepartmentsView from './setup/Departments.vue';
+import PredefinedRepliesView from './setup/PredefinedReplies.vue';
+import TicketPriorityView from './setup/TicketPriority.vue';
+import TicketStatusesView from './setup/TicketStatuses.vue';
+import ServicesView from './setup/Services.vue';
+import SpamFiltersView from './setup/SpamFilters.vue';
+import SourcesView from './setup/Sources.vue';
+import StatusesView from './setup/Statuses.vue';
+import EmailIntegrationView from './setup/EmailIntegration.vue';
+import WebToLeadView from './setup/WebToLead.vue';
+import TaxRatesView from './setup/TaxRates.vue';
+import CurrenciesView from './setup/Currencies.vue';
+import PaymentModesView from './setup/PaymentModes.vue';
+import ExpensesCategoriesView from './setup/ExpensesCategories.vue';
+import ContractTypesView from './setup/ContractTypes.vue';
+import FormsView from './setup/Forms.vue';
+import EstimateStatusesView from './setup/EstimateStatuses.vue';
+import MainMenuView from './setup/MainMenu.vue';
+import SetupMenuView from './setup/SetupMenu.vue';
+import EmailTemplatesView from './setup/EmailTemplates.vue';
+import CustomFieldsView from './setup/CustomFields.vue';
+import GdprView from './setup/Gdpr.vue';
+import RolesView from './setup/Roles.vue';
+import ThemeStyleView from './setup/ThemeStyle.vue';
+import SettingsView from './setup/Settings.vue';
+
 export default defineComponent({
   name: 'SetupPage',
+  components: {
+    GroupsView,
+    CustomerGeneralView,
+    CustomerSupportView,
+    DepartmentsView,
+    PredefinedRepliesView,
+    TicketPriorityView,
+    TicketStatusesView,
+    ServicesView,
+    SpamFiltersView,
+    SourcesView,
+    StatusesView,
+    EmailIntegrationView,
+    WebToLeadView,
+    TaxRatesView,
+    CurrenciesView,
+    PaymentModesView,
+    ExpensesCategoriesView,
+    ContractTypesView,
+    FormsView,
+    EstimateStatusesView,
+    MainMenuView,
+    SetupMenuView,
+    EmailTemplatesView,
+    CustomFieldsView,
+    GdprView,
+    RolesView,
+    ThemeStyleView,
+    SettingsView,
+  },
   setup() {
+    const router = useRouter();
+    const route = useRoute();
+
     const activeSection = ref('staff');
+    const activeSubSection = ref('');
+
+    const mapUrlToSection = (section) => {
+      if (!section) {
+        return { activeSection: 'staff', activeSubSection: '' };
+      }
+
+      const mappings = {
+        'staff': { activeSection: 'staff', activeSubSection: '' },
+        'modules': { activeSection: 'modules', activeSubSection: '' },
+        'email-templates': { activeSection: 'email-templates', activeSubSection: '' },
+        'custom-fields': { activeSection: 'custom-fields', activeSubSection: '' },
+        'gdpr': { activeSection: 'gdpr', activeSubSection: '' },
+        'roles': { activeSection: 'roles', activeSubSection: '' },
+        'theme-style': { activeSection: 'theme-style', activeSubSection: '' },
+        'settings': { activeSection: 'settings', activeSubSection: '' },
+        'help': { activeSection: 'help', activeSubSection: '' },
+
+        'groups': { activeSection: 'customers', activeSubSection: 'customers-groups' },
+        'departments': { activeSection: 'support', activeSubSection: 'support-departments' },
+        'predefined-replies': { activeSection: 'support', activeSubSection: 'support-predefined-replies' },
+        'ticket-priority': { activeSection: 'support', activeSubSection: 'support-ticket-priority' },
+        'ticket-statuses': { activeSection: 'support', activeSubSection: 'support-ticket-statuses' },
+        'services': { activeSection: 'support', activeSubSection: 'support-services' },
+        'spam-filters': { activeSection: 'support', activeSubSection: 'support-spam-filters' },
+        'sources': { activeSection: 'leads', activeSubSection: 'leads-sources' },
+        'statuses': { activeSection: 'leads', activeSubSection: 'leads-statuses' },
+        'email-integration': { activeSection: 'leads', activeSubSection: 'leads-email-integration' },
+        'web-to-lead': { activeSection: 'leads', activeSubSection: 'leads-web-to-lead' },
+        'tax-rates': { activeSection: 'finance', activeSubSection: 'finance-tax-rates' },
+        'currencies': { activeSection: 'finance', activeSubSection: 'finance-currencies' },
+        'payment-modes': { activeSection: 'finance', activeSubSection: 'finance-payment-modes' },
+        'expenses-categories': { activeSection: 'finance', activeSubSection: 'finance-expenses-categories' },
+        'contract-types': { activeSection: 'contracts', activeSubSection: 'contracts-types' },
+        'forms': { activeSection: 'estimate-request', activeSubSection: 'estimate-request-forms' },
+        'estimate-statuses': { activeSection: 'estimate-request', activeSubSection: 'estimate-request-statuses' },
+        'main-menu': { activeSection: 'menu-setup', activeSubSection: 'menu-setup-main' },
+        'setup-menu': { activeSection: 'menu-setup', activeSubSection: 'menu-setup-setup' },
+      };
+
+      return mappings[section] || { activeSection: 'staff', activeSubSection: '' };
+    };
+
+    const mapSectionToUrl = (activeSection, activeSubSection) => {
+      const reverseMappings = {
+        'staff': { section: 'staff' },
+        'modules': { section: 'modules' },
+        'email-templates': { section: 'email-templates' },
+        'custom-fields': { section: 'custom-fields' },
+        'gdpr': { section: 'gdpr' },
+        'roles': { section: 'roles' },
+        'theme-style': { section: 'theme-style' },
+        'settings': { section: 'settings' },
+        'help': { section: 'help' },
+
+        'customers-groups': { section: 'groups' },
+        'support-departments': { section: 'departments' },
+        'support-predefined-replies': { section: 'predefined-replies' },
+        'support-ticket-priority': { section: 'ticket-priority' },
+        'support-ticket-statuses': { section: 'ticket-statuses' },
+        'support-services': { section: 'services' },
+        'support-spam-filters': { section: 'spam-filters' },
+        'leads-sources': { section: 'sources' },
+        'leads-statuses': { section: 'statuses' },
+        'leads-email-integration': { section: 'email-integration' },
+        'leads-web-to-lead': { section: 'web-to-lead' },
+        'finance-tax-rates': { section: 'tax-rates' },
+        'finance-currencies': { section: 'currencies' },
+        'finance-payment-modes': { section: 'payment-modes' },
+        'finance-expenses-categories': { section: 'expenses-categories' },
+        'contracts-types': { section: 'contract-types' },
+        'estimate-request-forms': { section: 'forms' },
+        'estimate-request-statuses': { section: 'estimate-statuses' },
+        'menu-setup-main': { section: 'main-menu' },
+        'menu-setup-setup': { section: 'setup-menu' },
+      };
+
+      if (activeSubSection) {
+        return reverseMappings[activeSubSection] || { section: activeSection };
+      }
+      return reverseMappings[activeSection] || { section: activeSection };
+    };
+
+    const navigateToSection = (sectionId, subSectionId = '') => {
+      const { section } = mapSectionToUrl(sectionId, subSectionId);
+      router.push({ name: 'admin.setup', params: { section } });
+    };
+
+    watch(() => route.params, (newParams) => {
+      const { activeSection: aSec, activeSubSection: aSub } = mapUrlToSection(newParams.section);
+      activeSection.value = aSec;
+      activeSubSection.value = aSub;
+    }, { immediate: true });
 
     // ── Section nav ────────────────────────────────
     const sections = [
       { id: 'staff',            label: 'Staff',            icon: iconSvg('users') },
-      { id: 'customers',        label: 'Customers',        icon: iconSvg('customer') },
-      { id: 'support',          label: 'Support',          icon: iconSvg('support') },
-      { id: 'leads',            label: 'Leads',            icon: iconSvg('leads') },
-      { id: 'finance',          label: 'Finance',          icon: iconSvg('finance') },
-      { id: 'contracts',        label: 'Contracts',        icon: iconSvg('contracts') },
-      { id: 'estimate-request', label: 'Estimate Request', icon: iconSvg('estimate') },
+      { id: 'customers',        label: 'Customers',        icon: iconSvg('customer'),
+        children: [
+          { id: 'customers-groups',  label: 'Groups' },
+        ]
+      },
+      { id: 'support',          label: 'Support',          icon: iconSvg('support'),
+        children: [
+          { id: 'support-departments',        label: 'Departments' },
+          { id: 'support-predefined-replies',  label: 'Predefined Replies' },
+          { id: 'support-ticket-priority',     label: 'Ticket Priority' },
+          { id: 'support-ticket-statuses',     label: 'Ticket Statuses' },
+          { id: 'support-services',            label: 'Services' },
+          { id: 'support-spam-filters',        label: 'Spam Filters' },
+        ]
+      },
+      { id: 'leads',            label: 'Leads',            icon: iconSvg('leads'),
+        children: [
+          { id: 'leads-sources',           label: 'Sources' },
+          { id: 'leads-statuses',          label: 'Statuses' },
+          { id: 'leads-email-integration', label: 'Email Integration' },
+          { id: 'leads-web-to-lead',       label: 'Web to Lead' },
+        ]
+      },
+      { id: 'finance',          label: 'Finance',          icon: iconSvg('finance'),
+        children: [
+          { id: 'finance-tax-rates',          label: 'Tax Rates' },
+          { id: 'finance-currencies',         label: 'Currencies' },
+          { id: 'finance-payment-modes',      label: 'Payment Modes' },
+          { id: 'finance-expenses-categories',label: 'Expenses Categories' },
+        ]
+      },
+      { id: 'contracts',        label: 'Contracts',        icon: iconSvg('contracts'),
+        children: [
+          { id: 'contracts-types', label: 'Contract Types' },
+        ]
+      },
+      { id: 'estimate-request', label: 'Estimate Request', icon: iconSvg('estimate'),
+        children: [
+          { id: 'estimate-request-forms',    label: 'Forms' },
+          { id: 'estimate-request-statuses', label: 'Statuses' },
+        ]
+      },
       { id: 'modules',          label: 'Modules',          icon: iconSvg('modules') },
       { id: 'email-templates',  label: 'Email Templates',  icon: iconSvg('email') },
       { id: 'custom-fields',    label: 'Custom Fields',    icon: iconSvg('fields') },
       { id: 'gdpr',             label: 'GDPR',             icon: iconSvg('shield') },
       { id: 'roles',            label: 'Roles',            icon: iconSvg('roles') },
-      { id: 'menu-setup',       label: 'Menu Setup',       icon: iconSvg('menu') },
+      { id: 'menu-setup',       label: 'Menu Setup',       icon: iconSvg('menu'),
+        children: [
+          { id: 'menu-setup-main',  label: 'Main Menu' },
+          { id: 'menu-setup-setup', label: 'Setup Menu' },
+        ]
+      },
       { id: 'theme-style',      label: 'Theme Style',      icon: iconSvg('theme') },
       { id: 'settings',         label: 'Settings',         icon: iconSvg('settings') },
       { id: 'help',             label: 'Help',             icon: iconSvg('help') },
@@ -684,16 +757,186 @@ export default defineComponent({
     const staffSearch = ref('');
     const openAddStaff = ref(false);
     const staffSaving = ref(false);
-    const staffForm = reactive({ id: null, name: '', email: '', role: 'staff', phone: '', department: '', password: '', password_confirmation: '' });
+    const editingStaff = ref(false);
+    const staffActiveTab = ref('profile');
+    const staffRoles = ref([]);
+
+    const staffForm = reactive({
+      id: null, first_name: '', last_name: '', email: '', password: '', password_confirmation: '',
+      role_id: null, hourly_rate: 0, phone: '', facebook: '', linkedin: '', skype: '',
+      default_language: '', email_signature: '', direction: '', departments: [],
+      profile_image: '', send_welcome_email: false, not_staff: false, permissions: {},
+    });
+
+    const allCapabilities = [
+      { key: 'view_own', label: 'View (Own)' },
+      { key: 'view_global', label: 'View (Global)' },
+      { key: 'create', label: 'Create' },
+      { key: 'edit', label: 'Edit' },
+      { key: 'delete', label: 'Delete' },
+    ];
+
+    const featureList = [
+      { key: 'Bulk PDF Export', label: 'Bulk PDF Export', caps: [{ key: 'view_global', type: 'checkbox' }] },
+      { key: 'Contracts', label: 'Contracts', caps: [
+        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
+        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'view_all_templates', type: 'label', label: 'View All Templates' },
+      ]},
+      { key: 'Credit Notes', label: 'Credit Notes', caps: [
+        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
+        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+      ]},
+      { key: 'Customers', label: 'Customers', caps: [
+        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
+        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+      ]},
+      { key: 'Email Templates', label: 'Email Templates', caps: [
+        { key: 'view_global', type: 'checkbox' }, { key: 'edit', type: 'checkbox' },
+      ]},
+      { key: 'Estimates', label: 'Estimates', caps: [
+        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
+        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+      ]},
+      { key: 'Expenses', label: 'Expenses', caps: [
+        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
+        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+      ]},
+      { key: 'Invoices', label: 'Invoices', caps: [
+        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
+        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+      ]},
+      { key: 'Items', label: 'Items', caps: [
+        { key: 'view_global', type: 'checkbox' }, { key: 'create', type: 'checkbox' },
+        { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+      ]},
+      { key: 'Knowledge Base', label: 'Knowledge Base', caps: [
+        { key: 'view_global', type: 'checkbox' }, { key: 'create', type: 'checkbox' },
+        { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+      ]},
+      { key: 'Payments', label: 'Payments', caps: [
+        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
+        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+      ]},
+      { key: 'Projects', label: 'Projects', caps: [
+        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
+        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'create_timesheets', type: 'label', label: 'Create Timesheets' },
+        { key: 'edit_milestones', type: 'label', label: 'Edit Milestones' },
+        { key: 'delete_milestones', type: 'label', label: 'Delete Milestones' },
+      ]},
+      { key: 'Proposals', label: 'Proposals', caps: [
+        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
+        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'view_all_templates', type: 'label', label: 'View All Templates' },
+      ]},
+      { key: 'Reports', label: 'Reports', caps: [
+        { key: 'view_global', type: 'checkbox' }, { key: 'view_timesheets', type: 'label', label: 'View Timesheets Report' },
+      ]},
+      { key: 'Staff Roles', label: 'Staff Roles', caps: [
+        { key: 'view_global', type: 'checkbox' }, { key: 'create', type: 'checkbox' },
+        { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+      ]},
+      { key: 'Settings', label: 'Settings', caps: [
+        { key: 'view_global', type: 'checkbox' }, { key: 'edit', type: 'checkbox' },
+      ]},
+      { key: 'Staff', label: 'Staff', caps: [
+        { key: 'view_global', type: 'checkbox' }, { key: 'create', type: 'checkbox' },
+        { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+      ]},
+      { key: 'Subscriptions', label: 'Subscriptions', caps: [
+        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
+        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+      ]},
+      { key: 'Tasks', label: 'Tasks', caps: [
+        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
+        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'edit_timesheets_global', type: 'label', label: 'Edit Timesheets (Global)' },
+        { key: 'edit_own_timesheets', type: 'label', label: 'Edit Own Timesheets' },
+        { key: 'delete_timesheets_global', type: 'label', label: 'Delete Timesheets (Global)' },
+        { key: 'delete_own_timesheets', type: 'label', label: 'Delete own Timesheets' },
+      ]},
+      { key: 'Task Checklist Templates', label: 'Task Checklist Templates', caps: [
+        { key: 'create', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+      ]},
+      { key: 'Estimate Request', label: 'Estimate Request', caps: [
+        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
+        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+      ]},
+      { key: 'Leads', label: 'Leads', caps: [
+        { key: 'view_global', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+      ]},
+      { key: 'Surveys', label: 'Surveys', caps: [
+        { key: 'view_global', type: 'checkbox' }, { key: 'create', type: 'checkbox' },
+        { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+      ]},
+      { key: 'e-Invoice', label: 'e-Invoice', caps: [
+        { key: 'bulk_export', type: 'label', label: 'Bulk export' },
+      ]},
+      { key: 'Goals', label: 'Goals', caps: [
+        { key: 'view_global', type: 'checkbox' }, { key: 'create', type: 'checkbox' },
+        { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+      ]},
+    ];
+
+    const isStaffAdminRole = computed(() => {
+      const r = staffRoles.value.find(x => x.id === staffForm.role_id);
+      return r?.slug === 'admin';
+    });
+
+    const getStaffPerm = (feature, cap) => {
+      const perms = staffForm.permissions || {};
+      return perms[feature]?.[cap] ?? false;
+    };
+
+    const setStaffPerm = (feature, cap, val) => {
+      if (!staffForm.permissions) staffForm.permissions = {};
+      if (!staffForm.permissions[feature]) staffForm.permissions[feature] = {};
+      staffForm.permissions[feature][cap] = val;
+    };
+
+    const toggleStaffAdmin = (e) => {
+      if (e.target.checked) {
+        const adminRole = staffRoles.value.find(r => r.slug === 'admin');
+        if (adminRole) {
+          staffForm.role_id = adminRole.id;
+          staffForm.permissions = adminRole.permissions ? JSON.parse(JSON.stringify(adminRole.permissions)) : {};
+        }
+      } else {
+        const empRole = staffRoles.value.find(r => r.slug === 'employee');
+        staffForm.role_id = empRole ? empRole.id : null;
+        staffForm.permissions = empRole?.permissions ? JSON.parse(JSON.stringify(empRole.permissions)) : {};
+      }
+    };
+
+    const onStaffRoleChange = () => {
+      const r = staffRoles.value.find(x => x.id === staffForm.role_id);
+      staffForm.permissions = r?.permissions ? JSON.parse(JSON.stringify(r.permissions)) : {};
+    };
+
+    const onStaffFileChange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => { staffForm.profile_image = ev.target.result; };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    const avatarColor = (name) => {
+      const colors = ['#2563eb', '#e11d48', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
+      let hash = 0;
+      for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      return colors[Math.abs(hash) % colors.length];
+    };
 
     const staffColumns = [
-      { title: '#',         key: 'id',      dataIndex: 'id',    width: 50 },
-      { title: 'Name',      key: 'name',    dataIndex: 'name' },
-      { title: 'Role',      key: 'role',    dataIndex: 'role',  width: 120 },
-      { title: 'Status',    key: 'active',  dataIndex: 'active',width: 110 },
-      { title: 'Joined',    key: 'created_at', dataIndex: 'created_at', width: 150,
-        customRender: ({value}) => value ? new Date(value).toLocaleDateString() : '—' },
-      { title: 'Actions',   key: 'actions', width: 120 },
+      { title: 'Full Name',    key: 'name',       dataIndex: 'name' },
+      { title: 'Email',        key: 'email',      dataIndex: 'email' },
+      { title: 'Role',         key: 'role',       dataIndex: 'role',       width: 140 },
+      { title: 'Last Login',   key: 'last_login', dataIndex: 'last_login', width: 160 },
+      { title: 'Active',       key: 'active',     dataIndex: 'active',     width: 100 },
+      { title: 'Actions',      key: 'actions',    width: 150 },
     ];
 
     const loadStaff = async () => {
@@ -709,21 +952,80 @@ export default defineComponent({
       }
     };
 
+    const loadRoles = async () => {
+      try {
+        const { data } = await axios.get('/api/roles');
+        staffRoles.value = data;
+      } catch (e) {
+        console.error('Failed to load roles', e);
+      }
+    };
+
     const initials = (name) => (name || '').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
     const editStaffMember = (record) => {
-      Object.assign(staffForm, { ...record, password: '', password_confirmation: '' });
+      editingStaff.value = true;
+      staffActiveTab.value = 'profile';
+      const names = (record.name || '').split(' ');
+      const first = names.shift() || '';
+      const last = names.join(' ') || '';
+      Object.assign(staffForm, {
+        id: record.id,
+        first_name: first,
+        last_name: last,
+        email: record.email || '',
+        password: '',
+        password_confirmation: '',
+        role_id: record.role_id || null,
+        hourly_rate: record.hourly_rate || 0,
+        phone: record.phone || '',
+        facebook: record.facebook || '',
+        linkedin: record.linkedin || '',
+        skype: record.skype || '',
+        default_language: record.default_language || '',
+        email_signature: record.email_signature || '',
+        direction: record.direction || '',
+        departments: record.departments || [],
+        profile_image: record.profile_image || '',
+        send_welcome_email: record.send_welcome_email || false,
+        not_staff: record.not_staff || false,
+        permissions: record.permissions ? JSON.parse(JSON.stringify(record.permissions)) : {},
+      });
       openAddStaff.value = true;
     };
 
     const saveStaff = async () => {
       staffSaving.value = true;
       try {
+        const payload = {
+          first_name: staffForm.first_name,
+          last_name: staffForm.last_name,
+          name: staffForm.first_name + ' ' + staffForm.last_name,
+          email: staffForm.email,
+          role_id: staffForm.role_id,
+          hourly_rate: staffForm.hourly_rate,
+          phone: staffForm.phone,
+          facebook: staffForm.facebook,
+          linkedin: staffForm.linkedin,
+          skype: staffForm.skype,
+          default_language: staffForm.default_language,
+          email_signature: staffForm.email_signature,
+          direction: staffForm.direction,
+          departments: staffForm.departments,
+          profile_image: staffForm.profile_image,
+          send_welcome_email: staffForm.send_welcome_email,
+          not_staff: staffForm.not_staff,
+          permissions: staffForm.permissions,
+        };
+        if (staffForm.password) {
+          payload.password = staffForm.password;
+          payload.password_confirmation = staffForm.password_confirmation;
+        }
         if (staffForm.id) {
-          await axios.put(`/api/staff/${staffForm.id}`, staffForm);
+          await axios.put(`/api/staff/${staffForm.id}`, payload);
           message.success('Staff member updated');
         } else {
-          await axios.post('/api/staff', staffForm);
+          await axios.post('/api/staff', payload);
           message.success('Staff member added');
         }
         openAddStaff.value = false;
@@ -752,49 +1054,36 @@ export default defineComponent({
     };
 
     const resetStaffForm = () => {
-      Object.assign(staffForm, { id: null, name: '', email: '', role: 'staff', phone: '', department: '', password: '', password_confirmation: '' });
+      editingStaff.value = false;
+      staffActiveTab.value = 'profile';
+      Object.assign(staffForm, {
+        id: null, first_name: '', last_name: '', email: '', password: '', password_confirmation: '',
+        role_id: null, hourly_rate: 0, phone: '', facebook: '', linkedin: '', skype: '',
+        default_language: '', email_signature: '', direction: '', departments: [],
+        profile_image: '', send_welcome_email: false, not_staff: false, permissions: {},
+      });
+    };
+
+    const formatLastLogin = (date) => {
+      if (!date) return 'Never';
+      const diff = Math.floor((Date.now() - new Date(date)) / 1000);
+      if (diff < 60) return 'Just now';
+      if (diff < 3600) return Math.floor(diff / 60) + ' minutes ago';
+      if (diff < 86400) return Math.floor(diff / 3600) + ' hours ago';
+      if (diff < 2592000) return Math.floor(diff / 86400) + ' days ago';
+      return new Date(date).toLocaleDateString();
+    };
+
+    const viewingStaff = ref(null);
+    const viewStaffModal = ref(false);
+
+    const viewStaff = (record) => {
+      viewingStaff.value = record;
+      viewStaffModal.value = true;
     };
 
     // ── Settings data ──────────────────────────────
-    const customerSettings = reactive({ allow_registration: true, email_confirmation: false, allow_login: true, groups: ['VIP', 'Wholesaler'] });
-    const supportSettings   = reactive({ allow_non_customer_tickets: true, auto_close_days: 7, default_priority: 'medium' });
-    const leadsSettings     = reactive({ contact_form: true, auto_assign: false });
-    const financeSettings   = reactive({ currency: 'USD', tax_rate: 10, invoice_prefix: 'INV-', estimate_prefix: 'EST-', theme: 'blue' });
-    const gdprSettings      = reactive({ enabled: false, show_notice: true, allow_data_download: true });
-    const estimateRequestSettings = reactive({ enabled: true, notify_staff: true });
 
-    const generalSettings = reactive({
-      company_name: 'My Company', company_phone: '', company_email: '',
-      company_website: '', address: '', city: '', country: '', language: 'english', timezone: 'UTC',
-    });
-
-    const departments = ref(['General Support', 'Technical', 'Billing']);
-    const newDept = ref('');
-    const addDept = () => { if (newDept.value.trim()) { departments.value.push(newDept.value.trim()); newDept.value = ''; } };
-    const removeDept = (d) => { departments.value = departments.value.filter(x => x !== d); };
-
-    const contractTypes = ref(['Ongoing', 'One-time', 'Retainer', 'Custom']);
-    const newContractType = ref('');
-    const addContractType = () => { if (newContractType.value.trim()) { contractTypes.value.push(newContractType.value.trim()); newContractType.value = ''; } };
-    const removeContractType = (t) => { contractTypes.value = contractTypes.value.filter(x => x !== t); };
-
-    const leadStatuses = ref([
-      { id: 1, name: 'New',           color: '#6366f1' },
-      { id: 2, name: 'Contacted',     color: '#0ea5e9' },
-      { id: 3, name: 'Working',       color: '#f59e0b' },
-      { id: 4, name: 'Qualified',     color: '#10b981' },
-      { id: 5, name: 'Proposal Sent', color: '#8b5cf6' },
-      { id: 6, name: 'Customer',      color: '#22c55e' },
-      { id: 7, name: 'Lost',          color: '#ef4444' },
-    ]);
-
-    const paymentMethods = ref([
-      { key: 'stripe',   name: 'Stripe',    active: true  },
-      { key: 'paypal',   name: 'PayPal',    active: false },
-      { key: 'bank',     name: 'Bank Transfer', active: true },
-      { key: 'mollie',   name: 'Mollie',    active: false },
-      { key: 'offline',  name: 'Offline',   active: true  },
-    ]);
 
     // ── Modules (exact Perfex CRM demo data) ──
     const modules = ref([
@@ -882,62 +1171,15 @@ export default defineComponent({
       }
     };
 
-    const emailTemplates = ref([
-      { id: 1, name: 'New Invoice',            subject: 'Invoice #{id} from {company_name}', active: true },
-      { id: 2, name: 'Invoice Overdue',        subject: 'Invoice #{id} is past due',         active: true },
-      { id: 3, name: 'Payment Received',       subject: 'Payment received - Thank you!',     active: true },
-      { id: 4, name: 'New Estimate',           subject: 'Estimate #{id} from {company_name}',active: true },
-      { id: 5, name: 'Estimate Accepted',      subject: 'Your estimate has been accepted',   active: true },
-      { id: 6, name: 'New Support Ticket',     subject: 'Support Ticket #{id} Created',      active: true },
-      { id: 7, name: 'Ticket Reply',           subject: 'Reply to your support ticket #{id}',active: true },
-      { id: 8, name: 'Lead Assigned',          subject: 'New lead assigned to you',          active: false },
-      { id: 9, name: 'Staff Welcome',          subject: 'Welcome to {company_name}',         active: true },
-    ]);
 
-    const templateColumns = [
-      { title: 'Template Name', key: 'name',    dataIndex: 'name' },
-      { title: 'Subject',       key: 'subject', dataIndex: 'subject' },
-      { title: 'Active',        key: 'active',  dataIndex: 'active', width: 80 },
-      { title: '',              key: 'actions', width: 80 },
-    ];
 
-    const roles = ref([
-      { name: 'Administrator', description: 'Full access to all features and settings',         count: 1 },
-      { name: 'Manager',       description: 'Can manage clients, projects, leads and reports',  count: 0 },
-      { name: 'Staff',         description: 'Standard staff access — tasks, time logs, tickets',count: 2 },
-    ]);
 
-    const menuSetupItems = ref([
-      { key: 'dashboard',   label: 'Dashboard',        visible: true },
-      { key: 'customers',   label: 'Customers',        visible: true },
-      { key: 'sales',       label: 'Sales',            visible: true },
-      { key: 'subscriptions',label: 'Subscriptions',   visible: true },
-      { key: 'expenses',    label: 'Expenses',         visible: true },
-      { key: 'contracts',   label: 'Contracts',        visible: true },
-      { key: 'projects',    label: 'Projects',         visible: true },
-      { key: 'tasks',       label: 'Tasks',            visible: true },
-      { key: 'support',     label: 'Support',          visible: true },
-      { key: 'leads',       label: 'Leads',            visible: true },
-      { key: 'kb',          label: 'Knowledge Base',   visible: false },
-      { key: 'utilities',   label: 'Utilities',        visible: true },
-      { key: 'reports',     label: 'Reports',          visible: true },
-      { key: 'setup',       label: 'Setup',            visible: true },
-    ]);
 
-    const themes = [
-      { value: 'blue',   label: 'Blue',   color: '#0d6efd' },
-      { value: 'indigo', label: 'Indigo', color: '#6366f1' },
-      { value: 'green',  label: 'Green',  color: '#22c55e' },
-      { value: 'teal',   label: 'Teal',   color: '#14b8a6' },
-      { value: 'orange', label: 'Orange', color: '#f97316' },
-      { value: 'red',    label: 'Red',    color: '#ef4444' },
-      { value: 'dark',   label: 'Dark',   color: '#1e293b' },
-    ];
+
 
     const helpItems = [
       { title: 'Documentation', desc: 'Read the full documentation for Perfex CRM setup and usage guides.', link: '#', icon: iconSvg('help') },
       { title: 'Video Tutorials', desc: 'Watch step-by-step video tutorials for key features.', link: '#', icon: iconSvg('theme') },
-      { title: 'Support Forum', desc: 'Join the community forum to get help from other users and developers.', link: '#', icon: iconSvg('support') },
       { title: 'Submit Ticket', desc: 'Open a support ticket for technical issues or feature requests.', link: '#', icon: iconSvg('email') },
     ];
 
@@ -947,22 +1189,21 @@ export default defineComponent({
 
     onMounted(() => {
       loadStaff();
+      loadRoles();
     });
 
     return {
-      activeSection, sections,
+      activeSection, activeSubSection, sections,
       staffList, staffTotal, staffLoading, staffSearch, staffColumns,
-      openAddStaff, staffForm, staffSaving,
-      loadStaff, editStaffMember, saveStaff, deleteStaff, resetStaffForm, initials,
-      customerSettings, supportSettings, leadsSettings, financeSettings, gdprSettings,
-      estimateRequestSettings, generalSettings,
-      departments, newDept, addDept, removeDept,
-      contractTypes, newContractType, addContractType, removeContractType,
-      leadStatuses, paymentMethods, modules, filteredModules,
+      openAddStaff, staffForm, staffSaving, editingStaff, staffActiveTab, staffRoles,
+      allCapabilities, featureList, isStaffAdminRole,
+      getStaffPerm, setStaffPerm, toggleStaffAdmin, onStaffRoleChange, onStaffFileChange, avatarColor,
+      loadStaff, loadRoles, editStaffMember, saveStaff, deleteStaff, resetStaffForm, initials,
+      formatLastLogin, viewingStaff, viewStaffModal, viewStaff,
+      modules, filteredModules,
       modSearch, modPerPage, moduleFileName, onModuleFileChange, uploadModule, handleModuleAction,
-      emailTemplates, templateColumns,
-      roles, menuSetupItems, themes, helpItems,
-      saveSettings,
+      helpItems,
+      saveSettings, navigateToSection,
     };
   }
 });
@@ -1021,8 +1262,8 @@ function iconSvg(type) {
 .setup-sidebar {
   width: 200px;
   min-width: 200px;
-  border-right: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border-right: none;
+  background: linear-gradient(135deg, #d35400 0%, #7e1e8e 50%, #0b579f 100%);
 }
 .setup-nav {
   padding: 8px 0;
@@ -1033,7 +1274,7 @@ function iconSvg(type) {
   gap: 9px;
   padding: 8px 14px;
   font-size: 13px;
-  color: #475569;
+  color: rgba(255, 255, 255, 0.85);
   cursor: pointer;
   border-left: 3px solid transparent;
   text-decoration: none;
@@ -1041,14 +1282,14 @@ function iconSvg(type) {
   user-select: none;
 }
 .setup-nav-item:hover {
-  background: #f1f5f9;
-  color: #1e293b;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 .setup-nav-item--active {
-  background: #fff;
-  color: #0d6efd;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
   font-weight: 600;
-  border-left-color: #0d6efd;
+  border-left-color: #ffffff;
 }
 .setup-nav-icon {
   width: 16px;
@@ -1060,6 +1301,7 @@ function iconSvg(type) {
 .setup-nav-icon :deep(svg) {
   width: 16px;
   height: 16px;
+  stroke: currentColor;
 }
 
 /* ── Right Content ────────────────────────────────────── */
@@ -1129,7 +1371,6 @@ function iconSvg(type) {
   flex-shrink: 0;
 }
 .name-main { font-size: 13px; font-weight: 600; color: #1e293b; }
-.name-sub  { font-size: 11px; color: #94a3b8; }
 .row-actions { display: flex; gap: 2px; }
 
 /* ── Drawer Footer ────────────────────────────────────── */
@@ -1178,15 +1419,6 @@ function iconSvg(type) {
   color: #94a3b8;
   margin: 2px 0 0;
 }
-.settings-hint-block {
-  font-size: 12.5px;
-  color: #64748b;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 10px 14px;
-  margin-bottom: 12px;
-}
 .settings-actions {
   margin-top: 20px;
   padding-top: 16px;
@@ -1200,63 +1432,7 @@ function iconSvg(type) {
   gap: 0 20px;
 }
 
-/* ── Departments ──────────────────────────────────────── */
-.dept-list, .type-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  margin-top: 8px;
-}
-.dept-item, .type-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  padding: 4px 10px;
-  font-size: 12px;
-  color: #334155;
-}
-.dept-remove {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #94a3b8;
-  font-size: 14px;
-  line-height: 1;
-  padding: 0 2px;
-}
-.dept-remove:hover { color: #ef4444; }
-
-/* ── Lead Statuses ────────────────────────────────────── */
-.status-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
-.status-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
-.status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-
-/* ── Payment Methods ──────────────────────────────────── */
-.payment-methods { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
-.payment-method-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-}
-.pm-info { display: flex; align-items: center; gap: 10px; }
-.pm-name { font-weight: 500; font-size: 13px; color: #1e293b; }
-.pm-badge { font-size: 11px; padding: 2px 7px; border-radius: 3px; background: #f1f5f9; color: #94a3b8; }
-.pm-badge--active { background: #dcfce7; color: #16a34a; }
-
 /* ── Modules Grid ─────────────────────────────────────── */
-.modules-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 12px;
-}
 .module-card {
   display: flex;
   align-items: center;
@@ -1266,18 +1442,7 @@ function iconSvg(type) {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
 }
-.module-icon {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  color: #6366f1;
-  flex-shrink: 0;
-}
-.module-icon :deep(svg) { width: 20px; height: 20px; }
-.module-info { flex: 1; }
 .module-name { font-size: 13px; font-weight: 600; color: #1e293b; }
-.module-desc { font-size: 11.5px; color: #94a3b8; margin-top: 2px; }
 
 /* ── Email Templates ──────────────────────────────────── */
 .link-blue { color: #0d6efd; cursor: pointer; }
@@ -1298,21 +1463,6 @@ function iconSvg(type) {
 .role-name { font-size: 13px; font-weight: 600; color: #1e293b; }
 .role-desc { font-size: 12px; color: #64748b; margin-top: 2px; }
 .role-count { font-size: 12px; color: #94a3b8; white-space: nowrap; }
-.role-actions { }
-
-/* ── Menu Setup ───────────────────────────────────────── */
-.menu-items-list { display: flex; flex-direction: column; gap: 2px; }
-.menu-setup-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-}
-.drag-handle { color: #cbd5e1; font-size: 16px; cursor: grab; }
-.menu-item-label { flex: 1; font-size: 13px; color: #334155; }
 
 /* ── Theme ────────────────────────────────────────────── */
 .theme-swatches {
@@ -1357,6 +1507,7 @@ function iconSvg(type) {
 .help-desc { font-size: 12.5px; color: #64748b; flex: 1; }
 .help-link { font-size: 12px; color: #0d6efd; text-decoration: none; font-weight: 600; }
 .help-link:hover { text-decoration: underline; }
+
 /* ── Module Upload Card ─────────────────────────────────────── */
 .mod-upload-card {
   background: #fff;
@@ -1485,7 +1636,6 @@ function iconSvg(type) {
   font-size: 11px;
   padding: 0 1px;
 }
-.mod-desc-cell {}
 .mod-desc-text {
   font-size: 13px;
   color: #475569;
@@ -1502,5 +1652,167 @@ function iconSvg(type) {
   color: #64748b;
   margin-top: 12px;
   padding: 6px 0;
+}
+.view-staff-modal .view-field {
+  margin-bottom: 16px;
+}
+.view-staff-modal .view-field:last-child {
+  margin-bottom: 0;
+}
+.view-staff-modal label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 4px;
+}
+.row-actions {
+  display: flex;
+  gap: 4px;
+}
+.profile-image-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.profile-image-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.profile-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.file-hint {
+  font-size: 12px;
+  color: #94a3b8;
+}
+.staff-type-badge {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 10px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+  margin-top: 16px;
+}
+.permissions-section {
+  padding: 8px 0;
+}
+.perm-info {
+  margin-bottom: 16px;
+}
+.admin-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #f0f5ff;
+  border-radius: 6px;
+  border: 1px solid #d6e4ff;
+}
+.admin-hint {
+  font-size: 13px;
+  color: #475569;
+}
+.permissions-grid {
+  overflow-x: auto;
+}
+.perm-table {
+  min-width: 600px;
+}
+.perm-table-header,
+.perm-table-row {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+}
+.perm-table-header {
+  background: #f8fafc;
+  font-weight: 600;
+  font-size: 12px;
+  color: #64748b;
+}
+.perm-cell {
+  padding: 8px 10px;
+  font-size: 13px;
+}
+.feature-col {
+  width: 180px;
+  flex-shrink: 0;
+}
+.cap-col {
+  width: 100px;
+  text-align: center;
+}
+.cap-label {
+  font-size: 11px;
+  color: #64748b;
+}
+.avatar-circle.large {
+  width: 80px;
+  height: 80px;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 600;
+}
+/* Sidebar Nav Children */
+.setup-nav-children {
+  background: linear-gradient(135deg, #d35400 0%, #7e1e8e 50%, #0b579f 100%);
+  padding: 2px 0 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+.setup-nav-child {
+  display: block;
+  padding: 6px 14px 6px 39px;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.12s, background 0.12s;
+}
+.setup-nav-child:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+.setup-nav-child--active {
+  color: #ffffff !important;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.18);
+  border-right: 2px solid #ffffff;
+}
+.setup-nav-arrow {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  color: #94a3b8;
+  transition: transform 0.2s ease;
+}
+.setup-nav-arrow--rotated {
+  transform: rotate(90deg);
 }
 </style>

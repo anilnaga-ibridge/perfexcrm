@@ -45,41 +45,252 @@
       </button>
     </div>
 
-    <!-- Sales Report -->
+    <!-- Sales Report (comprehensive) -->
     <div v-if="activeTab === 'sales'" class="report-section">
       <div class="section-header">
-        <h2>Sales Report — {{ selectedYear }}</h2>
+        <h2>Sales Report</h2>
+        <div class="header-filters">
+          <select v-model="srPeriod" @change="loadSalesReport" class="year-select">
+            <option value="this_month">This Month</option>
+            <option value="last_month">Last Month</option>
+            <option value="this_year">This Year</option>
+            <option value="last_year">Last Year</option>
+            <option value="custom">Custom</option>
+          </select>
+          <select v-model="selectedYear" @change="loadSalesReport" class="year-select">
+            <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+          </select>
+        </div>
       </div>
-      <div v-if="loadingSales" class="loading-wrap"><div class="loader"></div> Loading...</div>
-      <div v-else class="chart-and-table">
-        <div class="bar-chart">
-          <div class="chart-title">Monthly Invoiced Amount ($)</div>
-          <div class="bars">
-            <div v-for="row in salesData" :key="row.month" class="bar-wrap">
-              <div class="bar-label-top">${{ formatMoney(row.total) }}</div>
-              <div class="bar-col">
-                <div class="bar" :style="{ height: barHeight(row.total, maxSales) + 'px' }" :class="{ active: row.month === currentMonth }"></div>
-              </div>
-              <div class="bar-label">{{ monthName(row.month) }}</div>
-            </div>
+
+      <!-- Sub-tabs -->
+      <div class="sub-tabs">
+        <button v-for="st in salesSubTabs" :key="st.key" class="sub-tab-btn" :class="{ active: salesSubTab === st.key }" @click="salesSubTab = st.key">{{ st.label }}</button>
+      </div>
+
+      <!-- Invoices -->
+      <div v-if="salesSubTab === 'invoices'">
+        <div class="report-toolbar">
+          <div class="toolbar-left">
+            <a-select v-model:value="srFilters.perPage" size="small" style="width:70px" @change="loadSalesReport">
+              <a-select-option :value="10">10</a-select-option>
+              <a-select-option :value="25">25</a-select-option>
+              <a-select-option :value="50">50</a-select-option>
+            </a-select>
+            <a-input-search v-model:value="srFilters.search" placeholder="Search..." size="small" style="width:220px" @search="loadSalesReport" />
+            <a-select v-model:value="srFilters.status" mode="multiple" :max-tag-count="1" size="small" style="width:160px" placeholder="Status" @change="loadSalesReport" allow-clear>
+              <a-select-option v-for="s in ['Unpaid','Paid','Partially Paid','Overdue','Draft']" :key="s" :value="s">{{ s }}</a-select-option>
+            </a-select>
+            <a-select v-model:value="srFilters.sale_agent" size="small" style="width:180px" placeholder="Sale Agent" @change="loadSalesReport" allow-clear>
+              <a-select-option v-for="a in agents" :key="a.id" :value="a.id">{{ a.name }}</a-select-option>
+            </a-select>
           </div>
         </div>
-        <div class="summary-table">
+        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
+        <div v-else class="table-responsive">
           <table class="data-table">
-            <thead>
-              <tr><th>Month</th><th>Invoices</th><th>Total ($)</th></tr>
-            </thead>
+            <thead><tr><th>Invoice #</th><th>Customer</th><th>Date</th><th>Due Date</th><th>Amount</th><th>Amount with tax</th><th>Total Tax</th><th>TAX1 18.00%</th><th>Discount</th><th>Adjustment</th><th>Applied Credits</th><th>Amount open</th><th>Status</th></tr></thead>
             <tbody>
-              <tr v-for="row in salesData" :key="row.month" :class="{ 'highlight-row': row.month === currentMonth }">
-                <td>{{ monthName(row.month) }}</td>
-                <td>{{ row.count }}</td>
-                <td>${{ formatMoney(row.total) }}</td>
+              <tr v-for="r in srInvoices" :key="r.id">
+                <td>{{ r.number }}</td><td>{{ r.customer }}</td><td>{{ r.date }}</td><td>{{ r.duedate }}</td>
+                <td>${{ fm(r.amount) }}</td><td>${{ fm(r.amount_with_tax) }}</td><td>${{ fm(r.total_tax) }}</td><td>${{ fm(r.tax1) }}</td>
+                <td>${{ fm(r.discount) }}</td><td>${{ fm(r.adjustment) }}</td><td>${{ fm(r.applied_credits) }}</td><td>${{ fm(r.amount_open) }}</td>
+                <td><span class="status-tag" :class="statusClass(r.status)">{{ r.status }}</span></td>
+            </tr>
+            <tr v-if="!srInvoices.length"><td colspan="13" class="empty-cell">No entries found</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Items -->
+      <div v-if="salesSubTab === 'items'">
+        <div class="report-toolbar">
+          <a-input-search v-model:value="srFilters.search" placeholder="Search..." size="small" style="width:220px" @search="loadSalesReport" />
+        </div>
+        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
+        <div v-else class="table-responsive">
+          <table class="data-table">
+            <thead><tr><th>Item #</th><th>Name</th><th>Description</th><th>Rate</th><th>Tax Rate</th><th>Unit</th></tr></thead>
+            <tbody>
+              <tr v-for="r in srItems" :key="r.id"><td>{{ r.id }}</td><td>{{ r.name }}</td><td>{{ r.description || '—' }}</td><td>${{ fm(r.rate) }}</td><td>{{ r.tax_rate }}%</td><td>{{ r.unit || '—' }}</td></tr>
+              <tr v-if="!srItems.length"><td colspan="6" class="empty-cell">No entries found</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Payments -->
+      <div v-if="salesSubTab === 'payments'">
+        <div class="report-toolbar">
+          <a-input-search v-model:value="srFilters.search" placeholder="Search..." size="small" style="width:220px" @search="loadSalesReport" />
+        </div>
+        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
+        <div v-else class="table-responsive">
+          <table class="data-table">
+            <thead><tr><th>Payment #</th><th>Date</th><th>Invoice #</th><th>Customer</th><th>Payment Mode</th><th>Transaction ID</th><th>Note</th><th>Amount</th></tr></thead>
+            <tbody>
+              <tr v-for="r in srPayments" :key="r.id">
+                <td>{{ r.number }}</td><td>{{ r.date }}</td><td>{{ r.invoice_number }}</td><td>{{ r.customer }}</td>
+                <td>{{ r.payment_mode }}</td><td>{{ r.transaction_id }}</td><td>{{ trunc(r.note, 40) }}</td><td>${{ fm(r.amount) }}</td>
               </tr>
-              <tr class="total-row">
-                <td><strong>Total</strong></td>
-                <td><strong>{{ salesData.reduce((a,r) => a+r.count, 0) }}</strong></td>
-                <td><strong>${{ formatMoney(salesData.reduce((a,r) => a+r.total, 0)) }}</strong></td>
+              <tr v-if="!srPayments.length"><td colspan="8" class="empty-cell">No entries found</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Credit Notes -->
+      <div v-if="salesSubTab === 'credit-notes'">
+        <div class="report-toolbar">
+          <a-input-search v-model:value="srFilters.search" placeholder="Search..." size="small" style="width:220px" @search="loadSalesReport" />
+          <a-select v-model:value="srFilters.status" mode="multiple" :max-tag-count="1" size="small" style="width:140px" placeholder="Status" @change="loadSalesReport" allow-clear>
+            <a-select-option v-for="s in ['Open','Closed','Void']" :key="s" :value="s">{{ s }}</a-select-option>
+          </a-select>
+        </div>
+        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
+        <div v-else class="table-responsive">
+          <table class="data-table">
+            <thead><tr><th>Credit Note #</th><th>Date</th><th>Customer</th><th>Reference #</th><th>Amount</th><th>Amount with tax</th><th>Total Tax</th><th>Discount</th><th>Adjustment</th><th>Remaining</th><th>Refunded</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr v-for="r in srCreditNotes" :key="r.id">
+                <td>{{ r.number }}</td><td>{{ r.date }}</td><td>{{ r.customer }}</td><td>{{ r.reference }}</td>
+                <td>${{ fm(r.amount) }}</td><td>${{ fm(r.amount_with_tax) }}</td><td>${{ fm(r.total_tax) }}</td><td>${{ fm(r.discount) }}</td>
+                <td>${{ fm(r.adjustment) }}</td><td>${{ fm(r.remaining_amount) }}</td><td>${{ fm(r.refunded_amount) }}</td>
+                <td><span class="status-tag" :class="statusClass(r.status)">{{ r.status }}</span></td>
               </tr>
+              <tr v-if="!srCreditNotes.length"><td colspan="12" class="empty-cell">No entries found</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Proposals -->
+      <div v-if="salesSubTab === 'proposals'">
+        <div class="report-toolbar">
+          <a-input-search v-model:value="srFilters.search" placeholder="Search..." size="small" style="width:220px" @search="loadSalesReport" />
+          <a-select v-model:value="srFilters.status" mode="multiple" :max-tag-count="1" size="small" style="width:160px" placeholder="Status" @change="loadSalesReport" allow-clear>
+            <a-select-option v-for="s in ['Draft','Sent','Open','Revised','Declined','Accepted']" :key="s" :value="s">{{ s }}</a-select-option>
+          </a-select>
+        </div>
+        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
+        <div v-else class="table-responsive">
+          <table class="data-table">
+            <thead><tr><th>Proposal #</th><th>Subject</th><th>To</th><th>Date</th><th>Open Till</th><th>Amount</th><th>Amount with tax</th><th>Total Tax</th><th>TAX1 18%</th><th>TAX1 20%</th><th>TAX3 5%</th><th>Discount</th><th>Adjustment</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr v-for="r in srProposals" :key="r.number">
+                <td>{{ r.number }}</td><td>{{ r.subject }}</td><td>{{ r.to }}</td><td>{{ r.date }}</td><td>{{ r.open_till }}</td>
+                <td>${{ fm(r.amount) }}</td><td>${{ fm(r.amount_with_tax) }}</td><td>${{ fm(r.total_tax) }}</td><td>${{ fm(r.tax1_18) }}</td>
+                <td>${{ fm(r.tax1_20) }}</td><td>${{ fm(r.tax3_5) }}</td><td>${{ fm(r.discount) }}</td><td>${{ fm(r.adjustment) }}</td>
+                <td><span class="status-tag" :class="statusClass(r.status)">{{ r.status }}</span></td>
+              </tr>
+              <tr v-if="!srProposals.length"><td colspan="14" class="empty-cell">No entries found</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Estimates -->
+      <div v-if="salesSubTab === 'estimates'">
+        <div class="report-toolbar">
+          <a-input-search v-model:value="srFilters.search" placeholder="Search..." size="small" style="width:220px" @search="loadSalesReport" />
+          <a-select v-model:value="srFilters.status" mode="multiple" :max-tag-count="1" size="small" style="width:160px" placeholder="Status" @change="loadSalesReport" allow-clear>
+            <a-select-option v-for="s in ['Draft','Sent','Open','Revised','Declined','Accepted']" :key="s" :value="s">{{ s }}</a-select-option>
+          </a-select>
+        </div>
+        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
+        <div v-else class="table-responsive">
+          <table class="data-table">
+            <thead><tr><th>Estimate #</th><th>Subject</th><th>To</th><th>Date</th><th>Open Till</th><th>Amount</th><th>Amount with tax</th><th>Total Tax</th><th>TAX1 18%</th><th>TAX1 20%</th><th>TAX3 5%</th><th>Discount</th><th>Adjustment</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr v-for="r in srEstimates" :key="r.number">
+                <td>{{ r.number }}</td><td>{{ r.subject }}</td><td>{{ r.to }}</td><td>{{ r.date }}</td><td>{{ r.open_till }}</td>
+                <td>${{ fm(r.amount) }}</td><td>${{ fm(r.amount_with_tax) }}</td><td>${{ fm(r.total_tax) }}</td><td>${{ fm(r.tax1_18) }}</td>
+                <td>${{ fm(r.tax1_20) }}</td><td>${{ fm(r.tax3_5) }}</td><td>${{ fm(r.discount) }}</td><td>${{ fm(r.adjustment) }}</td>
+                <td><span class="status-tag" :class="statusClass(r.status)">{{ r.status }}</span></td>
+              </tr>
+              <tr v-if="!srEstimates.length"><td colspan="14" class="empty-cell">No entries found</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Customers -->
+      <div v-if="salesSubTab === 'customers'">
+        <div class="report-toolbar">
+          <a-input-search v-model:value="srFilters.search" placeholder="Search..." size="small" style="width:220px" @search="loadSalesReport" />
+        </div>
+        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
+        <div v-else class="table-responsive">
+          <table class="data-table">
+            <thead><tr><th>Customer</th><th>Total Invoices</th><th>Amount</th><th>Amount with Tax</th></tr></thead>
+            <tbody>
+              <tr v-for="r in srCustomers" :key="r.id"><td>{{ r.company }}</td><td>{{ r.total_invoices }}</td><td>${{ fm(r.amount) }}</td><td>${{ fm(r.amount_with_tax) }}</td></tr>
+              <tr v-if="!srCustomers.length"><td colspan="4" class="empty-cell">No entries found</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div v-if="salesSubTab === 'charts'">
+        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
+        <div v-else class="chart-and-table">
+          <div class="bar-chart">
+            <div class="chart-title">Monthly Sales vs Payments ($)</div>
+            <div class="bars">
+              <div v-for="row in srCharts" :key="row.month" class="bar-wrap">
+                <div class="bar-label-top">${{ fm(row.invoice_total) }}</div>
+                <div class="bar-col"><div class="bar" :style="{ height: srChartMax ? Math.round((row.invoice_total / srChartMax) * 160) + 'px' : '4px' }"></div></div>
+                <div class="bar-label">{{ monthName(row.month) }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="summary-table">
+            <table class="data-table">
+              <thead><tr><th>Month</th><th>Invoices</th><th>Invoice $</th><th>Payments</th><th>Payment $</th></tr></thead>
+              <tbody>
+                <tr v-for="row in srCharts" :key="row.month"><td>{{ monthName(row.month) }}</td><td>{{ row.invoices }}</td><td>${{ fm(row.invoice_total) }}</td><td>{{ row.payments }}</td><td>${{ fm(row.payment_total) }}</td></tr>
+                <tr v-if="!srCharts.length"><td colspan="5" class="empty-cell">No data</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Income -->
+      <div v-if="salesSubTab === 'total-income'">
+        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
+        <div v-else class="finance-cards">
+          <div class="finance-card income"><div class="card-label">Total Invoiced</div><div class="card-value">${{ fm(srIncome?.invoiced) }}</div><div class="card-sub">{{ selectedYear }}</div></div>
+          <div class="finance-card payments"><div class="card-label">Total Paid</div><div class="card-value">${{ fm(srIncome?.paid) }}</div><div class="card-sub">{{ selectedYear }}</div></div>
+          <div class="finance-card expenses"><div class="card-label">Outstanding</div><div class="card-value">${{ fm(srIncome?.outstanding) }}</div><div class="card-sub">{{ selectedYear }}</div></div>
+        </div>
+      </div>
+
+      <!-- Payment Modes -->
+      <div v-if="salesSubTab === 'payment-modes'">
+        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
+        <div v-else class="table-responsive">
+          <table class="data-table">
+            <thead><tr><th>Payment Mode</th><th>Transactions</th><th>Total Amount</th></tr></thead>
+            <tbody>
+              <tr v-for="r in srModes" :key="r.mode"><td>{{ r.mode }}</td><td>{{ r.count }}</td><td>${{ fm(r.total) }}</td></tr>
+              <tr v-if="!srModes.length"><td colspan="3" class="empty-cell">No entries found</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Customer Groups -->
+      <div v-if="salesSubTab === 'customer-groups'">
+        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
+        <div v-else class="table-responsive">
+          <table class="data-table">
+            <thead><tr><th>Customer</th><th>Total Invoices</th><th>Total Value</th></tr></thead>
+            <tbody>
+              <tr v-for="r in srGroups" :key="r.company"><td>{{ r.company }}</td><td>{{ r.total_invoices }}</td><td>${{ fm(r.total_value) }}</td></tr>
+              <tr v-if="!srGroups.length"><td colspan="3" class="empty-cell">No entries found</td></tr>
             </tbody>
           </table>
         </div>
@@ -90,39 +301,106 @@
     <div v-if="activeTab === 'expenses'" class="report-section">
       <div class="section-header">
         <h2>Expenses Report — {{ selectedYear }}</h2>
+        <div class="header-filters">
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="excludeBillable" @change="loadExpensesDetailed" />
+            Exclude Billable Expenses
+          </label>
+          <select v-model="selectedYear" @change="loadExpensesDetailed" class="year-select">
+            <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+          </select>
+        </div>
       </div>
-      <div v-if="loadingExpenses" class="loading-wrap"><div class="loader"></div> Loading...</div>
-      <div v-else class="chart-and-table">
-        <div class="bar-chart expenses-chart">
-          <div class="chart-title">Monthly Expenses ($)</div>
-          <div class="bars">
-            <div v-for="row in expensesData" :key="row.month" class="bar-wrap">
-              <div class="bar-label-top">${{ formatMoney(row.total) }}</div>
-              <div class="bar-col">
-                <div class="bar exp-bar" :style="{ height: barHeight(row.total, maxExpenses) + 'px' }"></div>
+      <div v-if="expLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
+      <div v-else class="expenses-detailed">
+        <!-- Chart area -->
+        <div class="exp-charts-row">
+          <div class="exp-chart-box">
+            <div class="chart-title">Monthly Expenses — Not Billable ($)</div>
+            <div class="bars" style="height:160px">
+              <div v-for="(v, i) in expNotBillableTotal" :key="i" class="bar-wrap">
+                <div class="bar-label-top">${{ fm(v) }}</div>
+                <div class="bar-col"><div class="bar exp-bar" :style="{ height: expBarHeight(v, expMaxNotBillable) + 'px' }"></div></div>
+                <div class="bar-label">{{ shortMonth(i) }}</div>
               </div>
-              <div class="bar-label">{{ monthName(row.month) }}</div>
+            </div>
+          </div>
+          <div v-if="!excludeBillable" class="exp-chart-box">
+            <div class="chart-title">Monthly Expenses — Billable ($)</div>
+            <div class="bars" style="height:160px">
+              <div v-for="(v, i) in expBillableTotal" :key="i" class="bar-wrap">
+                <div class="bar-label-top">${{ fm(v) }}</div>
+                <div class="bar-col"><div class="bar" :style="{ height: expBarHeight(v, expMaxBillable) + 'px' }"></div></div>
+                <div class="bar-label">{{ shortMonth(i) }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="exp-chart-box">
+            <div class="chart-title">Category Breakdown — Not Billable</div>
+            <div class="pie-legend">
+              <div v-for="r in expChartCategories(expNotBillable)" :key="r.label" class="legend-item">
+                <span class="legend-dot" :style="{ background: r.color }"></span>
+                <span class="legend-label">{{ r.label }}</span>
+                <span class="legend-val">${{ fm(r.value) }}</span>
+              </div>
+            </div>
+          </div>
+          <div v-if="!excludeBillable" class="exp-chart-box">
+            <div class="chart-title">Category Breakdown — Billable</div>
+            <div class="pie-legend">
+              <div v-for="r in expChartCategories(expBillable)" :key="r.label" class="legend-item">
+                <span class="legend-dot" :style="{ background: r.color }"></span>
+                <span class="legend-label">{{ r.label }}</span>
+                <span class="legend-val">${{ fm(r.value) }}</span>
+              </div>
             </div>
           </div>
         </div>
-        <div class="summary-table">
-          <table class="data-table">
-            <thead>
-              <tr><th>Month</th><th>Entries</th><th>Total ($)</th></tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in expensesData" :key="row.month">
-                <td>{{ monthName(row.month) }}</td>
-                <td>{{ row.count }}</td>
-                <td>${{ formatMoney(row.total) }}</td>
-              </tr>
-              <tr class="total-row">
-                <td><strong>Total</strong></td>
-                <td><strong>{{ expensesData.reduce((a,r) => a+r.count, 0) }}</strong></td>
-                <td><strong>${{ formatMoney(expensesData.reduce((a,r) => a+r.total, 0)) }}</strong></td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- Not billable expenses -->
+        <div class="exp-section-group">
+          <h3 class="exp-section-title">Not billable expenses by categories</h3>
+          <div class="table-responsive">
+            <table class="data-table exp-cat-table">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th v-for="m in monthNames" :key="m">{{ m }}</th>
+                  <th>Year ({{ selectedYear }})</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="r in expNotBillable" :key="r.category" :class="{ 'total-row': r.is_total }">
+                  <td><strong>{{ r.category }}</strong></td>
+                  <td v-for="(v, i) in r.monthly" :key="i">${{ fm(v) }}</td>
+                  <td><strong>${{ fm(r.total) }}</strong></td>
+                </tr>
+                <tr v-if="!expNotBillable.length"><td :colspan="14" class="empty-cell">No entries found</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Billable expenses -->
+        <div class="exp-section-group">
+          <h3 class="exp-section-title">Billable expenses by categories</h3>
+          <div class="table-responsive">
+            <table class="data-table exp-cat-table">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th v-for="m in monthNames" :key="m">{{ m }}</th>
+                  <th>Year ({{ selectedYear }})</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="r in expBillable" :key="r.category" :class="{ 'total-row': r.is_total }">
+                  <td><strong>{{ r.category }}</strong></td>
+                  <td v-for="(v, i) in r.monthly" :key="i">${{ fm(v) }}</td>
+                  <td><strong>${{ fm(r.total) }}</strong></td>
+                </tr>
+                <tr v-if="!expBillable.length"><td :colspan="14" class="empty-cell">No entries found</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -174,6 +452,118 @@
       </div>
     </div>
 
+    <!-- Leads Report -->
+    <div v-if="activeTab === 'leads'" class="report-section">
+      <div class="section-header">
+        <h2>Leads Report — {{ selectedYear }}</h2>
+      </div>
+      <div class="chart-and-table">
+        <div class="bar-chart">
+          <div class="chart-title">Monthly Leads Created</div>
+          <div class="bars">
+            <div v-for="row in leadsData" :key="row.month" class="bar-wrap">
+              <div class="bar-label-top">{{ row.count }}</div>
+              <div class="bar-col">
+                <div class="bar" :style="{ height: barHeight(row.count, maxLeads) + 'px' }"></div>
+              </div>
+              <div class="bar-label">{{ monthName(row.month) }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="summary-table">
+          <table class="data-table">
+            <thead><tr><th>Month</th><th>Leads</th><th>Converted</th></tr></thead>
+            <tbody>
+              <tr v-for="row in leadsData" :key="row.month">
+                <td>{{ monthName(row.month) }}</td>
+                <td>{{ row.count }}</td>
+                <td>{{ row.converted }}</td>
+              </tr>
+              <tr class="total-row">
+                <td><strong>Total</strong></td>
+                <td><strong>{{ leadsData.reduce((a,r) => a+r.count, 0) }}</strong></td>
+                <td><strong>{{ leadsData.reduce((a,r) => a+r.converted, 0) }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timesheets Report -->
+    <div v-if="activeTab === 'timesheets'" class="report-section">
+      <div class="section-header">
+        <h2>Timesheets Overview — {{ selectedYear }}</h2>
+      </div>
+      <div class="chart-and-table">
+        <div class="bar-chart">
+          <div class="chart-title">Monthly Hours Logged</div>
+          <div class="bars">
+            <div v-for="row in timesheetsData" :key="row.month" class="bar-wrap">
+              <div class="bar-label-top">{{ row.hours }}h</div>
+              <div class="bar-col">
+                <div class="bar" :style="{ height: barHeight(row.hours, maxTimesheets) + 'px' }"></div>
+              </div>
+              <div class="bar-label">{{ monthName(row.month) }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="summary-table">
+          <table class="data-table">
+            <thead><tr><th>Month</th><th>Hours</th><th>Tasks</th></tr></thead>
+            <tbody>
+              <tr v-for="row in timesheetsData" :key="row.month">
+                <td>{{ monthName(row.month) }}</td>
+                <td>{{ row.hours }}h</td>
+                <td>{{ row.tasks }}</td>
+              </tr>
+              <tr class="total-row">
+                <td><strong>Total</strong></td>
+                <td><strong>{{ timesheetsData.reduce((a,r) => a+r.hours, 0) }}h</strong></td>
+                <td><strong>{{ timesheetsData.reduce((a,r) => a+r.tasks, 0) }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- KB Articles Report -->
+    <div v-if="activeTab === 'kb'" class="report-section">
+      <div class="section-header">
+        <h2>KB Articles — Voting Report</h2>
+        <select v-model="kbCategoryId" @change="loadKbReport" class="year-select">
+          <option value="">All Groups</option>
+          <option v-for="c in kbCategories" :key="c.id" :value="c.id">{{ c.name }}</option>
+        </select>
+      </div>
+      <div v-if="kbLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
+      <div v-else class="kb-vote-list">
+        <div class="kb-group-label" v-if="selectedKbGroup">Group: {{ selectedKbGroup }}</div>
+        <div v-for="a in kbArticles" :key="a.id" class="kb-vote-card">
+          <div class="kb-vote-title">{{ a.title }} <span class="kb-total">(Total: {{ a.total }})</span></div>
+          <div v-if="a.total === 0" class="kb-no-votes">No votes yet</div>
+          <div v-else class="kb-vote-bars">
+            <div class="kb-vote-row">
+              <span class="kb-vote-label">Yes:</span>
+              <span class="kb-vote-count">{{ a.yes }}</span>
+              <div class="kb-bar-wrap"><div class="kb-bar yes-bar" :style="{ width: a.yes_pct + '%' }"></div></div>
+              <span class="kb-vote-pct">{{ a.yes_pct }}%</span>
+            </div>
+            <div class="kb-vote-row">
+              <span class="kb-vote-label">No:</span>
+              <span class="kb-vote-count">{{ a.no }}</span>
+              <div class="kb-bar-wrap"><div class="kb-bar no-bar" :style="{ width: a.no_pct + '%' }"></div></div>
+              <span class="kb-vote-pct">{{ a.no_pct }}%</span>
+            </div>
+          </div>
+        </div>
+        <div v-if="!kbArticles.length" class="empty-state">
+          <p>No articles found</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Team Report -->
     <div v-if="activeTab === 'team'" class="report-section">
       <div class="section-header">
@@ -203,29 +593,111 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { useRoute } from 'vue-router'
 
 const BASE = '/api'
 const route = useRoute()
 
-const selectedYear  = ref(new Date().getFullYear())
-const currentMonth  = new Date().getMonth() + 1
-const activeTab     = ref('sales')
-const finance       = ref(null)
-const salesData     = ref([])
-const expensesData  = ref([])
-const teamData      = ref([])
-const loadingSales    = ref(false)
-const loadingExpenses = ref(false)
-const loadingTeam     = ref(false)
+const selectedYear   = ref(new Date().getFullYear())
+const currentMonth   = new Date().getMonth() + 1
+const activeTab      = ref('sales')
+const finance        = ref(null)
+const salesData        = ref([])
+const expensesData     = ref([])
+const leadsData        = ref([])
+const timesheetsData   = ref([])
+const teamData         = ref([])
+const loadingSales     = ref(false)
+const loadingExpenses  = ref(false)
+const loadingTeam      = ref(false)
+const expLoading      = ref(false)
+const expNotBillable  = ref([])
+const expBillable     = ref([])
+const excludeBillable = ref(false)
+const monthNames      = ['January','February','March','April','May','June','July','August','September','October','November','December']
+const kbArticles    = ref([])
+const kbCategories  = ref([])
+const kbCategoryId  = ref('')
+const kbLoading     = ref(false)
+
+const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+function shortMonth(i) { return SHORT_MONTHS[i] || '' }
+
+const CAT_COLORS = ['#1e9aff','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#f97316','#14b8a6','#6366f1','#d946ef','#22c55e','#eab308','#3b82f6']
+
+const selectedKbGroup = computed(() => {
+  if (!kbCategoryId.value) return ''
+  const c = kbCategories.value.find(c => c.id === Number(kbCategoryId.value))
+  return c?.name ?? ''
+})
+
+function expChartCategories(rows) {
+  if (!rows?.length) return []
+  return rows.filter(r => !r.is_total).map((r, i) => ({
+    label: r.category,
+    value: r.total,
+    color: CAT_COLORS[i % CAT_COLORS.length],
+  }))
+}
+
+const expNotBillableTotal = computed(() => {
+  const totalRow = expNotBillable.value.find(r => r.is_total)
+  return totalRow?.monthly ?? Array(12).fill(0)
+})
+
+const expBillableTotal = computed(() => {
+  const totalRow = expBillable.value.find(r => r.is_total)
+  return totalRow?.monthly ?? Array(12).fill(0)
+})
+
+const expMaxNotBillable = computed(() => Math.max(...expNotBillableTotal.value, 1))
+const expMaxBillable = computed(() => Math.max(...expBillableTotal.value, 1))
+
+function expBarHeight(v, max) {
+  return Math.max(4, Math.round((v / max) * 130))
+}
+
+const salesSubTab   = ref('invoices')
+const srLoading     = ref(false)
+const srInvoices    = ref([])
+const srItems       = ref([])
+const srPayments    = ref([])
+const srCreditNotes = ref([])
+const srProposals   = ref([])
+const srEstimates   = ref([])
+const srCustomers   = ref([])
+const srCharts      = ref([])
+const srIncome      = ref(null)
+const srModes       = ref([])
+const srGroups      = ref([])
+const agents        = ref([])
+const srFilters     = ref({ search: '', status: [], sale_agent: null, perPage: 10 })
+const srPeriod      = ref('this_month')
+
+const salesSubTabs = [
+  { key: 'invoices',      label: 'Invoices Report' },
+  { key: 'items',         label: 'Items Report' },
+  { key: 'payments',      label: 'Payments Received' },
+  { key: 'credit-notes',  label: 'Credit Notes Report' },
+  { key: 'proposals',     label: 'Proposals Report' },
+  { key: 'estimates',     label: 'Estimates Report' },
+  { key: 'customers',     label: 'Customers Report' },
+  { key: 'charts',        label: 'Charts Based Report' },
+  { key: 'total-income',  label: 'Total Income' },
+  { key: 'payment-modes', label: 'Payment Modes (Transactions)' },
+  { key: 'customer-groups', label: 'Total Value By Customer Groups' },
+]
 
 const tabs = [
-  { key: 'sales',    label: 'Sales',    icon: '💰' },
-  { key: 'expenses', label: 'Expenses', icon: '💸' },
-  { key: 'finance',  label: 'Finance',  icon: '📊' },
-  { key: 'team',     label: 'Team',     icon: '👥' },
+  { key: 'sales',      label: 'Sales',              icon: '💰' },
+  { key: 'expenses',   label: 'Expenses',           icon: '💸' },
+  { key: 'finance',    label: 'Expenses vs Income', icon: '📊' },
+  { key: 'leads',      label: 'Leads',              icon: '🔍' },
+  { key: 'timesheets', label: 'Timesheets',         icon: '⏱' },
+  { key: 'kb',         label: 'KB Articles',        icon: '📚' },
+  { key: 'team',       label: 'Team',               icon: '👥' },
 ]
 
 const years = computed(() => {
@@ -233,9 +705,11 @@ const years = computed(() => {
   return [y, y-1, y-2, y-3]
 })
 
-const maxSales    = computed(() => Math.max(...salesData.value.map(r => r.total), 1))
-const maxExpenses = computed(() => Math.max(...expensesData.value.map(r => r.total), 1))
-const maxTeam     = computed(() => Math.max(...teamData.value.map(m => m.task_count), 1))
+const maxSales       = computed(() => Math.max(...salesData.value.map(r => r.total), 1))
+const maxExpenses    = computed(() => Math.max(...expensesData.value.map(r => r.total), 1))
+const maxLeads       = computed(() => Math.max(...leadsData.value.map(r => r.count), 1))
+const maxTimesheets  = computed(() => Math.max(...timesheetsData.value.map(r => r.hours), 1))
+const maxTeam        = computed(() => Math.max(...teamData.value.map(m => m.task_count), 1))
 
 function barHeight(val, max) {
   return Math.max(4, Math.round((val / max) * 160))
@@ -256,6 +730,100 @@ function monthName(m) { return MONTHS[m - 1] || '' }
 function formatMoney(v) {
   if (!v) return '0.00'
   return Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+const fm = formatMoney
+
+function statusClass(s) {
+  return s ? s.toLowerCase().replace(/\s+/g, '') : ''
+}
+
+function trunc(s, n) {
+  if (!s) return '—'
+  return s.length > n ? s.slice(0, n) + '...' : s
+}
+
+const srChartMax = computed(() => Math.max(...srCharts.value.map(r => r.invoice_total), 1))
+
+async function loadSalesReport() {
+  srLoading.value = true
+  const tab = salesSubTab.value
+  const params = { year: selectedYear.value, period: srPeriod.value }
+  if (srFilters.value.search) params.search = srFilters.value.search
+  if (srFilters.value.status?.length) params.status = srFilters.value.status.join(',')
+  if (srFilters.value.sale_agent) params.sale_agent = srFilters.value.sale_agent
+  if (srFilters.value.perPage) params.per_page = srFilters.value.perPage
+  const endpoints = {
+    invoices: 'sales-report/invoices',
+    items: 'sales-report/items',
+    payments: 'sales-report/payments',
+    'credit-notes': 'sales-report/credit-notes',
+    proposals: 'sales-report/proposals',
+    estimates: 'sales-report/estimates',
+    customers: 'sales-report/customers',
+    charts: 'sales-report/charts',
+    'total-income': 'sales-report/total-income',
+    'payment-modes': 'sales-report/payment-modes',
+    'customer-groups': 'sales-report/customer-groups',
+  }
+  try {
+    const res = await axios.get(`${BASE}/${endpoints[tab]}`, { params })
+    const d = res.data
+    let items
+    switch (tab) {
+      case 'invoices': items = d.invoices?.data ?? d.invoices ?? []; break
+      case 'items': items = d.items?.data ?? d.items ?? []; break
+      case 'payments': items = d.payments?.data ?? d.payments ?? []; break
+      case 'credit-notes': items = d.credit_notes?.data ?? d.credit_notes ?? []; break
+      case 'proposals': items = d.proposals?.data ?? d.proposals ?? []; break
+      case 'estimates': items = d.estimates?.data ?? d.estimates ?? []; break
+      case 'customers': items = d.customers?.data ?? d.customers ?? []; break
+      case 'charts': items = d.monthly ?? []; break
+      case 'total-income': srIncome.value = d; return
+      case 'payment-modes': items = d.modes ?? []; break
+      case 'customer-groups': items = d.groups ?? []; break
+      default: items = []
+    }
+    switch (tab) {
+      case 'invoices': srInvoices.value = items; break
+      case 'items': srItems.value = items; break
+      case 'payments': srPayments.value = items; break
+      case 'credit-notes': srCreditNotes.value = items; break
+      case 'proposals': srProposals.value = items; break
+      case 'estimates': srEstimates.value = items; break
+      case 'customers': srCustomers.value = items; break
+      case 'charts': srCharts.value = items; break
+      case 'payment-modes': srModes.value = items; break
+      case 'customer-groups': srGroups.value = items; break
+    }
+  } catch {
+    if (tab === 'total-income') {
+      srIncome.value = { invoiced: 0, paid: 0, outstanding: 0 }
+    } else {
+      const arr = tab === 'charts'
+        ? Array.from({ length: 12 }, (_, i) => ({ month: i + 1, invoices: 0, invoice_total: 0, payments: 0, payment_total: 0 }))
+        : []
+      switch (tab) {
+        case 'invoices': srInvoices.value = arr; break
+        case 'items': srItems.value = arr; break
+        case 'payments': srPayments.value = arr; break
+        case 'credit-notes': srCreditNotes.value = arr; break
+        case 'proposals': srProposals.value = arr; break
+        case 'estimates': srEstimates.value = arr; break
+        case 'customers': srCustomers.value = arr; break
+        case 'charts': srCharts.value = arr; break
+        case 'payment-modes': srModes.value = arr; break
+        case 'customer-groups': srGroups.value = arr; break
+      }
+    }
+  } finally { srLoading.value = false }
+}
+
+async function loadAgents() {
+  try {
+    const res = await axios.get(`${BASE}/sales-report/agents`)
+    agents.value = res.data.data ?? res.data
+  } catch { agents.value = [] }
 }
 
 function sampleMonthly() {
@@ -284,6 +852,21 @@ async function loadExpenses() {
   } finally { loadingExpenses.value = false }
 }
 
+async function loadExpensesDetailed() {
+  expLoading.value = true
+  try {
+    const res = await axios.get(`${BASE}/reports/expenses-detailed`, {
+      params: { year: selectedYear.value, exclude_billable: excludeBillable.value }
+    })
+    const d = res.data
+    expNotBillable.value = d.not_billable ?? []
+    expBillable.value = excludeBillable.value ? [] : (d.billable ?? [])
+  } catch {
+    expNotBillable.value = []
+    expBillable.value = []
+  } finally { expLoading.value = false }
+}
+
 async function loadFinance() {
   try {
     const res = await axios.get(`${BASE}/reports/finance`, { params: { year: selectedYear.value } })
@@ -310,11 +893,44 @@ async function loadTeam() {
   } finally { loadingTeam.value = false }
 }
 
+async function loadKbReport() {
+  kbLoading.value = true
+  try {
+    const res = await axios.get(`${BASE}/kb-articles/report`, { params: { category_id: kbCategoryId.value || undefined } })
+    kbArticles.value = res.data.articles ?? []
+    kbCategories.value = res.data.categories ?? []
+  } catch {
+    kbArticles.value = []
+    kbCategories.value = []
+  } finally { kbLoading.value = false }
+}
+
+function sampleLeads() {
+  return Array.from({ length: 12 }, (_, i) => ({
+    month: i + 1,
+    count: Math.floor(Math.random() * 30 + 5),
+    converted: Math.floor(Math.random() * 10 + 1),
+  }))
+}
+
+function sampleTimesheets() {
+  return Array.from({ length: 12 }, (_, i) => ({
+    month: i + 1,
+    hours: Math.floor(Math.random() * 200 + 50),
+    tasks: Math.floor(Math.random() * 40 + 10),
+  }))
+}
+ 
 async function loadAll() {
   await Promise.all([loadSales(), loadExpenses()])
   await loadFinance()
+  leadsData.value = sampleLeads()
+  timesheetsData.value = sampleTimesheets()
   await loadTeam()
+  await Promise.all([loadSalesReport(), loadAgents(), loadExpensesDetailed(), loadKbReport()])
 }
+
+watch(salesSubTab, () => { srFilters.value = { search: '', status: [], sale_agent: null, perPage: 10 }; loadSalesReport() })
 
 function exportReport() {
   alert(`Exporting ${activeTab.value} report for ${selectedYear.value} as PDF...`)
@@ -323,6 +939,9 @@ function exportReport() {
 // Auto-set active tab from route
 if (route.path.includes('/expenses')) activeTab.value = 'expenses'
 else if (route.path.includes('/finance')) activeTab.value = 'finance'
+else if (route.path.includes('/leads')) activeTab.value = 'leads'
+else if (route.path.includes('/timesheets')) activeTab.value = 'timesheets'
+else if (route.path.includes('/kb-articles')) activeTab.value = 'kb'
 else if (route.path.includes('/team')) activeTab.value = 'team'
 
 onMounted(loadAll)
@@ -359,7 +978,51 @@ onMounted(loadAll)
 
 /* Report section */
 .report-section { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 24px; }
-.section-header h2 { font-size: 17px; font-weight: 700; color: #1e293b; margin: 0 0 20px; }
+.section-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.section-header h2 { font-size: 17px; font-weight: 700; color: #1e293b; margin: 0; }
+.header-filters { display: flex; gap: 8px; align-items: center; }
+.sub-tabs { display: flex; flex-wrap: wrap; gap: 4px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 3px; margin-bottom: 16px; }
+.sub-tab-btn { padding: 6px 12px; border: none; background: transparent; border-radius: 6px; font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.15s; }
+.sub-tab-btn:hover { background: #e2e8f0; }
+.sub-tab-btn.active { background: #fff; color: #1e9aff; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+.report-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.toolbar-left { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.table-responsive { overflow-x: auto; }
+.status-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.status-tag.unpaid { background: #fef2f2; color: #dc2626; }
+.status-tag.paid { background: #f0fdf4; color: #16a34a; }
+.status-tag.partiallypaid { background: #fffbeb; color: #d97706; }
+.status-tag.overdue { background: #fef2f2; color: #dc2626; }
+.status-tag.draft { background: #f1f5f9; color: #64748b; }
+.status-tag.open { background: #eff6ff; color: #2563eb; }
+.status-tag.sent { background: #f0fdf4; color: #16a34a; }
+.status-tag.revised { background: #fffbeb; color: #d97706; }
+.status-tag.declined { background: #fef2f2; color: #dc2626; }
+.status-tag.accepted { background: #f0fdf4; color: #16a34a; }
+.status-tag.closed { background: #f1f5f9; color: #64748b; }
+.status-tag.void { background: #f1f5f9; color: #64748b; }
+.empty-cell { text-align: center; color: #94a3b8; padding: 24px !important; }
+.checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #475569; cursor: pointer; }
+.checkbox-label input { width: 16px; height: 16px; cursor: pointer; }
+.expenses-detailed { display: flex; flex-direction: column; gap: 28px; }
+.exp-charts-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.exp-chart-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
+.exp-chart-box .chart-title { font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 10px; }
+.exp-chart-box .bars { display: flex; align-items: flex-end; gap: 3px; padding-bottom: 18px; border-bottom: 1px solid #e2e8f0; }
+.exp-chart-box .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; position: relative; }
+.exp-chart-box .bar-label-top { font-size: 7px; color: #94a3b8; position: absolute; top: -4px; white-space: nowrap; }
+.exp-chart-box .bar-col { display: flex; align-items: flex-end; flex: 1; width: 100%; padding-top: 12px; }
+.exp-chart-box .bar { width: 100%; min-height: 4px; background: linear-gradient(180deg, #ef4444, #dc2626); border-radius: 3px 3px 0 0; }
+.pie-legend { display: flex; flex-direction: column; gap: 5px; max-height: 180px; overflow-y: auto; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.legend-label { color: #475569; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.legend-val { color: #1e293b; font-weight: 700; white-space: nowrap; }
+.exp-section-group h3 { font-size: 14px; font-weight: 700; color: #1e293b; margin: 0 0 12px; }
+.exp-cat-table th, .exp-cat-table td { white-space: nowrap; font-size: 11px; padding: 6px 8px; }
+.exp-cat-table th:first-child, .exp-cat-table td:first-child { position: sticky; left: 0; background: #fff; z-index: 1; min-width: 140px; }
+.exp-cat-table thead th:first-child { background: #f8fafc; }
+.exp-cat-table .total-row td { background: #f8fafc; font-weight: 700; }
 .loading-wrap { text-align: center; padding: 40px; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .loader { width: 18px; height: 18px; border: 2px solid #e2e8f0; border-top-color: #1e9aff; border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -425,6 +1088,22 @@ onMounted(loadAll)
 
 .empty-state { text-align: center; padding: 40px; color: #94a3b8; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .empty-icon { font-size: 36px; }
+
+.kb-vote-list { display: flex; flex-direction: column; gap: 16px; }
+.kb-group-label { font-size: 14px; font-weight: 700; color: #1e293b; padding-bottom: 4px; border-bottom: 2px solid #e2e8f0; margin-bottom: 4px; }
+.kb-vote-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; }
+.kb-vote-title { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 8px; }
+.kb-total { font-weight: 400; color: #94a3b8; font-size: 12px; }
+.kb-no-votes { font-size: 12px; color: #94a3b8; font-style: italic; }
+.kb-vote-bars { display: flex; flex-direction: column; gap: 6px; }
+.kb-vote-row { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.kb-vote-label { min-width: 30px; color: #64748b; font-weight: 600; }
+.kb-vote-count { min-width: 24px; font-weight: 700; color: #1e293b; text-align: right; }
+.kb-bar-wrap { flex: 1; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+.kb-bar { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+.yes-bar { background: linear-gradient(90deg, #10b981, #059669); }
+.no-bar { background: linear-gradient(90deg, #ef4444, #dc2626); }
+.kb-vote-pct { min-width: 48px; text-align: right; color: #64748b; font-weight: 600; }
 
 @media (max-width: 1024px) {
   .finance-cards { grid-template-columns: repeat(2, 1fr); }

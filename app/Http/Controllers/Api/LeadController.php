@@ -168,6 +168,33 @@ class LeadController extends Controller
     }
 
     /**
+     * Import leads from CSV data.
+     */
+    public function import(Request $request)
+    {
+        $validated = $request->validate([
+            'leads' => 'required|array',
+            'leads.*.name' => 'required|string|max:255',
+            'leads.*.email' => 'nullable|email|max:255',
+            'leads.*.phonenumber' => 'nullable|string|max:255',
+            'leads.*.company' => 'nullable|string|max:255',
+            'leads.*.lead_value' => 'nullable|numeric',
+            'leads.*.status_id' => 'nullable|exists:lead_statuses,id',
+            'leads.*.source_id' => 'nullable|exists:lead_sources,id',
+            'leads.*.assigned_id' => 'nullable|exists:users,id',
+        ]);
+
+        $created = [];
+        foreach ($validated['leads'] as $data) {
+            $data['status_id'] ??= LeadStatus::first()->id;
+            $data['source_id'] ??= LeadSource::first()->id;
+            $created[] = Lead::create($data);
+        }
+
+        return response()->json(['message' => count($created) . ' leads imported', 'leads' => $created], 201);
+    }
+
+    /**
      * Remove the specified lead from database.
      */
     public function destroy($id)

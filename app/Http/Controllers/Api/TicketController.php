@@ -36,8 +36,9 @@ class TicketController extends Controller
             });
         }
 
-        if ($request->filled('status'))   $query->where('status',   $request->input('status'));
-        if ($request->filled('priority')) $query->where('priority', $request->input('priority'));
+        if ($request->filled('status'))        $query->where('status',        $request->input('status'));
+        if ($request->filled('priority'))      $query->where('priority',      $request->input('priority'));
+        if ($request->filled('department_id')) $query->where('department_id', $request->integer('department_id'));
 
         $perPage = $request->input('per_page', 25);
         $tickets = $query->orderBy('created_at', 'desc')->paginate($perPage);
@@ -167,5 +168,16 @@ class TicketController extends Controller
                 ['id' => 5, 'name' => 'Billing & Finance'],
             ]
         ]);
+    }
+
+    public function weeklyStats()
+    {
+        $days = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $count = \App\Models\Ticket::whereDate('created_at', $date)->count();
+            $days[] = ['date' => $date, 'label' => now()->subDays($i)->format('D'), 'count' => $count];
+        }
+        return response()->json(['days' => $days]);
     }
 }

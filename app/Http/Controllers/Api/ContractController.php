@@ -38,12 +38,15 @@ class ContractController extends Controller
         $perPage = $request->input('per_page', 25);
         $contracts = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
+        $today = now()->startOfDay();
         $stats = [
-            'total'       => Contract::count(),
-            'active'      => Contract::whereIn('status', ['In Progress', 'Active'])->count(),
-            'not_started' => Contract::where('status', 'Not Started')->count(),
-            'finished'    => Contract::where('status', 'Finished')->count(),
-            'total_value' => Contract::sum('value'),
+            'total'            => Contract::count(),
+            'active'           => Contract::whereIn('status', ['In Progress', 'Active'])->count(),
+            'expired'          => Contract::where('end_date', '<', $today)->where('status', '!=', 'Finished')->count(),
+            'about_to_expire'  => Contract::whereBetween('end_date', [$today, $today->copy()->addDays(30)])->count(),
+            'recently_added'   => Contract::where('created_at', '>=', $today->copy()->subDays(7))->count(),
+            'trash'            => Contract::where('trash', true)->count(),
+            'total_value'      => Contract::sum('value'),
         ];
 
         return response()->json(['contracts' => $contracts, 'stats' => $stats]);

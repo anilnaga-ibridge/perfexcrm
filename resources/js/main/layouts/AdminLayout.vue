@@ -5,12 +5,7 @@
       <!-- Logo Header -->
       <div class="crm-sidebar__logo">
         <div class="crm-sidebar__logo-inner">
-          <!-- Perfex "R" Logo SVG -->
-          <svg class="crm-logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 5h10a8 8 0 018 8 8 8 0 01-5 7.4L28 35H18l-6-13H8v13H0V5h8zm0 7v8h9a4 4 0 000-8H8z" fill="#2563eb"/>
-            <path d="M30 5h10v30H30z" fill="#e11d48"/>
-          </svg>
-          <span v-if="!sidebarCollapsed" class="crm-logo-text">Perfex</span>
+          <img :src="resolvedLogoUrl" alt="iBRIDGE Logo" class="crm-logo-img" />
         </div>
         <button class="crm-hamburger" @click="toggleSidebar" title="Toggle Sidebar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -227,6 +222,7 @@ import { defineComponent, ref, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../store/authStore';
 import { message } from 'ant-design-vue';
+import logoUrl from '../assets/logo.png';
 
 // ── Icon SVG strings ────────────────────────────────────────────────
 const icons = {
@@ -244,6 +240,7 @@ const icons = {
   knowledgeBase: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>`,
   utilities: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>`,
   reports: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+  staff: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
   setup: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>`,
 };
 
@@ -285,24 +282,32 @@ export default defineComponent({
       { name: 'Leads',            path: '/admin/leads',           icon: icons.leads },
       { name: 'Estimate Request', path: '/admin/estimate-request',icon: icons.estimateRequest },
       { name: 'Knowledge Base',   path: '/admin/knowledge-base',  icon: icons.knowledgeBase },
+
       {
         name: 'Utilities', icon: icons.utilities,
         children: [
-          { name: 'Media Library',   path: '/admin/media' },
-          { name: 'Calendar',        path: '/admin/calendar' },
-          { name: 'Announcements',   path: '/admin/announcements' },
-          { name: 'Activity Log',    path: '/admin/activity' },
-          { name: 'Goals',           path: '/admin/goals' },
+          { name: 'Media',              path: '/admin/media' },
+          { name: 'Bulk PDF Export',    path: '/admin/utilities/bulk-pdf-export' },
+          { name: 'e-Invoice Export',   path: '/admin/utilities/e-invoice-export' },
+          { name: 'CSV Export',         path: '/admin/utilities/csv-export' },
+          { name: 'Calendar',           path: '/admin/calendar' },
+          { name: 'Announcements',      path: '/admin/announcements' },
+          { name: 'Goals',              path: '/admin/goals' },
+          { name: 'Activity Log',       path: '/admin/activity' },
+          { name: 'Surveys',            path: '/admin/utilities/surveys' },
+          { name: 'Database Backup',    path: '/admin/utilities/database-backup' },
+          { name: 'Ticket Pipe Log',    path: '/admin/utilities/ticket-pipe-log' },
         ],
       },
       {
         name: 'Reports', icon: icons.reports,
         children: [
-          { name: 'Sales',           path: '/admin/reports/sales' },
-          { name: 'Expenses',        path: '/admin/reports/expenses' },
-          { name: 'Timesheets',      path: '/admin/reports/timesheets' },
-          { name: 'Finance Report',  path: '/admin/reports/finance' },
-          { name: 'Team Report',     path: '/admin/reports/team' },
+          { name: 'Sales',              path: '/admin/reports/sales' },
+          { name: 'Expenses',           path: '/admin/reports/expenses' },
+          { name: 'Expenses vs Income', path: '/admin/reports/finance' },
+          { name: 'Leads',              path: '/admin/reports/leads' },
+          { name: 'Timesheets overview', path: '/admin/reports/timesheets' },
+          { name: 'KB Articles',        path: '/admin/reports/kb-articles' },
         ],
       },
       { name: 'Setup', path: '/admin/setup', icon: icons.setup },
@@ -321,7 +326,15 @@ export default defineComponent({
       router.push({ name: 'admin.login' });
     };
 
-    return { sidebarCollapsed, expandedGroups, menuItems, toggleSidebar, toggleGroup, handleLogout, user };
+    const resolvedLogoUrl = computed(() => {
+      if (logoUrl && logoUrl.startsWith('/')) {
+        const basePath = window.config?.path?.replace(/\/$/, '') || '';
+        return basePath + logoUrl;
+      }
+      return logoUrl;
+    });
+
+    return { sidebarCollapsed, expandedGroups, menuItems, toggleSidebar, toggleGroup, handleLogout, user, resolvedLogoUrl };
   },
 });
 </script>
@@ -344,8 +357,8 @@ export default defineComponent({
 .crm-sidebar {
   width: 210px;
   min-width: 210px;
-  background: #fff;
-  border-right: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #d35400 0%, #7e1e8e 50%, #0b579f 100%);
+  border-right: none;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -366,7 +379,7 @@ export default defineComponent({
   align-items: center;
   justify-content: space-between;
   padding: 0 12px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   flex-shrink: 0;
 }
 .crm-sidebar__logo-inner {
@@ -375,23 +388,24 @@ export default defineComponent({
   gap: 8px;
   overflow: hidden;
 }
-.crm-logo-icon {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
+.crm-logo-img {
+  height: 34px;
+  max-width: 130px;
+  object-fit: contain;
+  transition: all 0.2s ease;
+  display: block;
 }
-.crm-logo-text {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1e293b;
-  white-space: nowrap;
-  letter-spacing: -0.3px;
+.crm-sidebar--collapsed .crm-logo-img {
+  height: 28px;
+  max-width: 28px;
+  object-fit: cover;
+  object-position: left;
 }
 .crm-hamburger {
   background: none;
   border: none;
   cursor: pointer;
-  color: #94a3b8;
+  color: rgba(255, 255, 255, 0.8);
   padding: 4px;
   display: flex;
   align-items: center;
@@ -399,20 +413,20 @@ export default defineComponent({
   flex-shrink: 0;
 }
 .crm-hamburger svg { width: 20px; height: 20px; }
-.crm-hamburger:hover { color: #475569; background: #f1f5f9; }
+.crm-hamburger:hover { color: #ffffff; background: rgba(255, 255, 255, 0.15); }
 
 /* Profile */
 .crm-sidebar__profile {
   padding: 10px 10px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   flex-shrink: 0;
 }
 .crm-profile-card {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 6px;
   padding: 8px 10px;
 }
@@ -422,7 +436,7 @@ export default defineComponent({
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 .crm-profile-info {
   display: flex;
@@ -432,7 +446,7 @@ export default defineComponent({
 .crm-profile-name {
   font-size: 12px;
   font-weight: 700;
-  color: #1e293b;
+  color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -440,7 +454,7 @@ export default defineComponent({
 }
 .crm-profile-email {
   font-size: 10px;
-  color: #94a3b8;
+  color: rgba(255, 255, 255, 0.7);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -454,11 +468,11 @@ export default defineComponent({
   overflow-y: auto;
   padding: 6px 0;
   scrollbar-width: thin;
-  scrollbar-color: #e2e8f0 transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 .crm-sidebar__nav::-webkit-scrollbar { width: 3px; }
 .crm-sidebar__nav::-webkit-scrollbar-track { background: transparent; }
-.crm-sidebar__nav::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 3px; }
+.crm-sidebar__nav::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
 
 /* Nav item */
 .crm-nav-item {
@@ -469,7 +483,7 @@ export default defineComponent({
   gap: 10px;
   font-size: 13.5px;
   font-weight: 500;
-  color: #475569;
+  color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
   border: none;
   background: none;
@@ -481,17 +495,17 @@ export default defineComponent({
   line-height: 1.4;
 }
 .crm-nav-item:hover {
-  background: #f1f5f9;
-  color: #1e293b;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 .crm-nav-item--active {
-  background: #f8fafc;
-  color: #1e293b;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
   font-weight: 600;
-  border-left-color: #0d6efd;
+  border-left-color: #ffffff;
 }
-.crm-nav-item--active .crm-nav-icon :deep(svg) { color: #0d6efd; stroke: #0d6efd; }
-.crm-nav-item--active .crm-nav-icon svg { color: #0d6efd; stroke: #0d6efd; }
+.crm-nav-item--active .crm-nav-icon :deep(svg) { color: #ffffff; stroke: #ffffff; }
+.crm-nav-item--active .crm-nav-icon svg { color: #ffffff; stroke: #ffffff; }
 
 /* Icon */
 .crm-nav-icon {
@@ -501,10 +515,10 @@ export default defineComponent({
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: #94a3b8;
+  color: rgba(255, 255, 255, 0.75);
 }
-.crm-nav-item--active .crm-nav-icon { color: #0d6efd; }
-.crm-nav-item:hover .crm-nav-icon { color: #475569; }
+.crm-nav-item--active .crm-nav-icon { color: #ffffff; }
+.crm-nav-item:hover .crm-nav-icon { color: #ffffff; }
 .crm-nav-icon :deep(svg) { width: 17px; height: 17px; }
 
 /* Chevron */
@@ -512,7 +526,7 @@ export default defineComponent({
   width: 14px;
   height: 14px;
   margin-left: auto;
-  color: #94a3b8;
+  color: rgba(255, 255, 255, 0.75);
   flex-shrink: 0;
   transition: transform 0.2s ease;
 }
@@ -525,46 +539,47 @@ export default defineComponent({
 
 /* Submenu */
 .crm-submenu {
-  background: #f8fafc;
+  background: rgba(0, 0, 0, 0.15);
 }
 .crm-submenu-item {
   display: block;
   padding: 6px 12px 6px 40px;
   font-size: 13px;
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.75);
   text-decoration: none;
   cursor: pointer;
   transition: background 0.12s, color 0.12s;
 }
 .crm-submenu-item:hover {
-  background: #f1f5f9;
-  color: #1e293b;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
 .crm-submenu-item--active {
-  color: #0d6efd;
-  font-weight: 600;
+  color: #ffffff;
+  font-weight: 700;
 }
 
 /* Sidebar Footer */
 .crm-sidebar__footer {
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
   padding: 10px 12px;
   flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.1);
 }
 .crm-pinned-project { display: flex; flex-direction: column; gap: 2px; }
-.crm-pinned-name { font-size: 12px; font-weight: 600; color: #1e293b; }
-.crm-pinned-client { font-size: 11px; color: #94a3b8; }
+.crm-pinned-name { font-size: 12px; font-weight: 600; color: #ffffff; }
+.crm-pinned-client { font-size: 11px; color: rgba(255, 255, 255, 0.7); }
 .crm-pinned-bar {
   width: 100%;
   height: 3px;
-  background: #e2e8f0;
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 99px;
   margin-top: 4px;
   overflow: hidden;
 }
 .crm-pinned-bar__fill {
   height: 100%;
-  background: #0d6efd;
+  background: #ffffff;
   border-radius: 99px;
 }
 
@@ -578,8 +593,8 @@ export default defineComponent({
 }
 .crm-header {
   height: 57px;
-  background: #fff;
-  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #d35400 0%, #7e1e8e 50%, #0b579f 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -664,14 +679,14 @@ export default defineComponent({
 /* Header links */
 .crm-header-link {
   font-size: 13px;
-  color: #475569;
+  color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
   padding: 4px 8px;
   border-radius: 4px;
   white-space: nowrap;
   transition: color 0.12s;
 }
-.crm-header-link:hover { color: #0d6efd; }
+.crm-header-link:hover { color: #ffffff; }
 @media (max-width: 900px) { .crm-header-link { display: none; } }
 
 /* Header Actions */
@@ -679,7 +694,7 @@ export default defineComponent({
   display: flex;
   align-items: center;
   gap: 4px;
-  border-left: 1px solid #e2e8f0;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
   padding-left: 12px;
   margin-left: 8px;
 }
@@ -697,18 +712,18 @@ export default defineComponent({
   transition: color 0.12s, background 0.12s;
 }
 .crm-action-btn svg { width: 17px; height: 17px; }
-.crm-action-btn:hover { color: #475569; background: #f1f5f9; }
+.crm-action-btn:hover { color: #ffffff; background: rgba(255, 255, 255, 0.12); }
 .crm-header-avatar {
   width: 30px;
   height: 30px;
   border-radius: 50%;
   object-fit: cover;
   cursor: pointer;
-  border: 2px solid #e2e8f0;
+  border: 2px solid rgba(255, 255, 255, 0.2);
   margin-left: 4px;
   transition: border-color 0.12s;
 }
-.crm-header-avatar:hover { border-color: #0d6efd; }
+.crm-header-avatar:hover { border-color: #ffffff; }
 
 /* ── Demo Bar ─────────────────────────────────────────────────────── */
 .crm-demo-bar {

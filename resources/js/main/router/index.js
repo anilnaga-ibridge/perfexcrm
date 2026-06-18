@@ -34,6 +34,7 @@ import CreditNoteForm  from '../views/sales/CreditNoteForm.vue';
 import ItemsCatalogPage from '../views/sales/ItemsCatalog.vue';
 import SubscriptionsPage from '../views/sales/Subscriptions.vue';
 import TasksPage from '../views/tasks/Tasks.vue';
+import TasksOverviewPage from '../views/tasks/TasksOverview.vue';
 
 // Phase 3: Utilities
 import MediaPage from '../views/utilities/Media.vue';
@@ -41,11 +42,23 @@ import CalendarPage from '../views/utilities/Calendar.vue';
 import AnnouncementsPage from '../views/utilities/Announcements.vue';
 import GoalsPage from '../views/utilities/Goals.vue';
 import ActivityLogPage from '../views/utilities/ActivityLog.vue';
+import BulkPdfExportPage from '../views/utilities/BulkPdfExport.vue';
+import EInvoiceExportPage from '../views/utilities/EInvoiceExport.vue';
+import CsvExportPage from '../views/utilities/CsvExport.vue';
+import SurveysPage from '../views/utilities/Surveys.vue';
+import MailListsPage from '../views/utilities/MailLists.vue';
+import DatabaseBackupPage from '../views/utilities/DatabaseBackup.vue';
+import TicketPipeLogPage from '../views/utilities/TicketPipeLog.vue';
+
 
 // Phase 4: Support
 import EstimateRequestsPage from '../views/support/EstimateRequests.vue';
 import KnowledgeBasePage from '../views/support/KnowledgeBase.vue';
+import KnowledgeBaseGroupsPage from '../views/support/Groups.vue';
 import TicketsPage from '../views/support/Tickets.vue';
+
+// Staff Members
+import StaffMembersPage from '../views/StaffMembers.vue';
 
 // Phase 5: Reports
 import ReportsPage from '../views/reports/Reports.vue';
@@ -105,7 +118,8 @@ const routes = [
       { path: 'invoices/create',     name: 'admin.invoices.create',    component: InvoiceForm },
       { path: 'invoices/:id',        name: 'admin.invoices.view',      component: InvoiceView  },
       { path: 'invoices/:id/edit',   name: 'admin.invoices.edit',      component: InvoiceForm  },
-      { path: 'setup',            name: 'admin.setup',            component: SetupPage },
+      { path: 'setup/:section?/:subsection?', name: 'admin.setup',            component: SetupPage },
+      { path: 'staff',            name: 'admin.staff',            component: StaffMembersPage },
 
       // Sales sub-items
       { path: 'estimates',        name: 'admin.estimates',        component: EstimatesPage },
@@ -129,24 +143,37 @@ const routes = [
       { path: 'contracts',        name: 'admin.contracts',        component: ContractsPage },
       { path: 'projects',         name: 'admin.projects',         component: ProjectsPage },
       { path: 'tasks',            name: 'admin.tasks',            component: TasksPage },
+      { path: 'tasks/overview',   name: 'admin.tasks.overview',   component: TasksOverviewPage },
       { path: 'support',          name: 'admin.support',          component: TicketsPage },
       { path: 'estimate-request', name: 'admin.estimate-request', component: EstimateRequestsPage },
-      { path: 'knowledge-base',   name: 'admin.knowledge-base',   component: KnowledgeBasePage },
+      { path: 'knowledge-base',         name: 'admin.knowledge-base',        component: KnowledgeBasePage },
+      { path: 'knowledge-base/groups',  name: 'admin.knowledge-base.groups', component: KnowledgeBaseGroupsPage },
 
       // Utilities sub-items
       { path: 'media',            name: 'admin.media',            component: MediaPage },
+      { path: 'utilities/bulk-pdf-export',    name: 'admin.utilities.bulk-pdf-export',    component: BulkPdfExportPage },
+      { path: 'utilities/e-invoice-export',   name: 'admin.utilities.e-invoice-export',   component: EInvoiceExportPage },
+      { path: 'utilities/csv-export',         name: 'admin.utilities.csv-export',          component: CsvExportPage },
       { path: 'calendar',         name: 'admin.calendar',         component: CalendarPage },
       { path: 'announcements',    name: 'admin.announcements',    component: AnnouncementsPage },
-      { path: 'activity',         name: 'admin.activity',         component: ActivityLogPage },
       { path: 'goals',            name: 'admin.goals',            component: GoalsPage },
+      { path: 'activity',         name: 'admin.activity',         component: ActivityLogPage },
+      { path: 'utilities/surveys',            name: 'admin.utilities.surveys',            component: SurveysPage },
+      { path: 'utilities/mail-lists',        name: 'admin.utilities.mail-lists',        component: MailListsPage },
+      { path: 'utilities/database-backup',    name: 'admin.utilities.database-backup',    component: DatabaseBackupPage },
+      { path: 'utilities/ticket-pipe-log',    name: 'admin.utilities.ticket-pipe-log',    component: TicketPipeLogPage },
 
       // Reports
-      { path: 'reports',              name: 'admin.reports',           component: ReportsPage },
-      { path: 'reports/sales',        name: 'admin.reports.sales',     component: ReportsPage },
-      { path: 'reports/expenses',     name: 'admin.reports.expenses',  component: ReportsPage },
-      { path: 'reports/timesheets',   name: 'admin.reports.timesheets',component: ReportsPage },
-      { path: 'reports/finance',      name: 'admin.reports.finance',   component: ReportsPage },
-      { path: 'reports/team',         name: 'admin.reports.team',      component: ReportsPage },
+      { path: 'reports',                name: 'admin.reports',             component: ReportsPage },
+      { path: 'reports/sales',          name: 'admin.reports.sales',       component: ReportsPage },
+      { path: 'reports/expenses',       name: 'admin.reports.expenses',    component: ReportsPage },
+      { path: 'reports/timesheets',     name: 'admin.reports.timesheets',  component: ReportsPage },
+      { path: 'reports/finance',        name: 'admin.reports.finance',     component: ReportsPage },
+      { path: 'reports/leads',          name: 'admin.reports.leads',       component: ReportsPage },
+      { path: 'reports/kb-articles',    name: 'admin.reports.kb-articles', component: ReportsPage },
+      { path: 'reports/team',           name: 'admin.reports.team',        component: ReportsPage },
+
+
     ]
   },
   // Catch-all

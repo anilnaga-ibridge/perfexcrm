@@ -86,6 +86,31 @@ class TaskController extends Controller
         ]);
     }
 
+    public function overview(Request $request)
+    {
+        $query = Task::with('assignee:id,name');
+
+        if ($request->filled('assigned_to')) {
+            $query->where('assigned_to', $request->input('assigned_to'));
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('month')) {
+            $query->whereMonth('created_at', $request->input('month'));
+        }
+
+        if ($request->filled('year')) {
+            $query->whereYear('created_at', $request->input('year'));
+        }
+
+        $tasks = $query->orderBy('due_date', 'asc')->get();
+
+        return response()->json(['tasks' => $tasks]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

@@ -658,12 +658,11 @@
         </div>
 
         <div class="drawer-footer">
-          <a-button @click="showEditModal = false">Cancel</a-button>
-          <a-button type="primary" html-type="submit" :loading="savingPay">Save Changes</a-button>
+          <a-button @click="showEditDrawer = false">Cancel</a-button>
+          <a-button type="primary" @click="submitEdit">Save Changes</a-button>
         </div>
       </a-form>
     </a-drawer>
-
   </div>
 </template>
 
@@ -672,12 +671,15 @@ import { defineComponent, ref, reactive, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { message, Modal } from 'ant-design-vue';
+import { getFinanceSettings, formatMoney, numberToWords } from '../../utils';
 
 export default defineComponent({
   name: 'InvoiceViewPage',
   setup() {
     const route  = useRoute();
     const router = useRouter();
+    const settings = getFinanceSettings();
+
     const loading    = ref(true);
     const savingPay  = ref(false);
     const isPrinting = ref(false);
@@ -741,13 +743,14 @@ export default defineComponent({
     });
 
     const addEditItemRow = () => {
+      const defaultTax = settings.finance_show_tax_per_item ? (parseFloat(settings.finance_default_tax) || 0) : 0;
       editForm.items.push({
         description: '',
         long_description: '',
         qty: 1,
         unit: 'Unit',
         rate: 0,
-        tax_rate: 0
+        tax_rate: defaultTax
       });
       recalcEdit();
     };
@@ -760,6 +763,7 @@ export default defineComponent({
     const addEditPredefinedItem = (itemId) => {
       const item = catalogItems.value.find(i => i.id === itemId);
       if (item) {
+        const itemTax = settings.finance_show_tax_per_item ? (parseFloat(item.tax_rate) || 0) : 0;
         if (editForm.items.length === 1 && !editForm.items[0].description && editForm.items[0].rate === 0) {
           editForm.items[0] = {
             description: item.name,
@@ -767,7 +771,7 @@ export default defineComponent({
             qty: 1,
             unit: item.unit || 'Unit',
             rate: parseFloat(item.rate) || 0,
-            tax_rate: parseFloat(item.tax_rate) || 0
+            tax_rate: itemTax
           };
         } else {
           editForm.items.push({
@@ -776,7 +780,7 @@ export default defineComponent({
             qty: 1,
             unit: item.unit || 'Unit',
             rate: parseFloat(item.rate) || 0,
-            tax_rate: parseFloat(item.tax_rate) || 0
+            tax_rate: itemTax
           });
         }
         recalcEdit();

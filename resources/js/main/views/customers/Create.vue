@@ -114,6 +114,15 @@
                 allow-clear
               />
             </a-form-item>
+
+            <div class="grid grid-cols-2 gap-4">
+              <a-form-item label="Latitude (Google Maps)" name="latitude">
+                <a-input v-model:value="form.latitude" placeholder="e.g. 40.7128" />
+              </a-form-item>
+              <a-form-item label="Longitude (Google Maps)" name="longitude">
+                <a-input v-model:value="form.longitude" placeholder="e.g. -74.0060" />
+              </a-form-item>
+            </div>
           </div>
 
           <!-- Tab 2: Billing & Shipping -->
@@ -246,6 +255,9 @@ export default defineComponent({
       shipping_state: '',
       shipping_zip: '',
       shipping_country: undefined,
+      
+      latitude: '',
+      longitude: '',
       
       active: true
     });
