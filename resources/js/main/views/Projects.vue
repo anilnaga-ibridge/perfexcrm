@@ -215,6 +215,31 @@
       </div>
     </div>
 
+    <!-- Project Insights -->
+    <div class="pj-insights-section">
+      <div class="pj-insights-header">
+        <h3 class="pj-insights-title">Project Insights</h3>
+      </div>
+      <div class="pj-insights-grid">
+        <div class="pj-insight-card">
+          <h4 class="pj-insight-label">Status Distribution</h4>
+          <VueApexCharts type="donut" height="260" :options="pjStatusDonutOptions" :series="pjStatusDonutSeries"></VueApexCharts>
+        </div>
+        <div class="pj-insight-card">
+          <h4 class="pj-insight-label">Budget vs Estimated Hours</h4>
+          <VueApexCharts type="bar" height="260" :options="pjBudgetOptions" :series="pjBudgetSeries"></VueApexCharts>
+        </div>
+        <div class="pj-insight-card">
+          <h4 class="pj-insight-label">Billing Type Breakdown</h4>
+          <VueApexCharts type="donut" height="260" :options="pjBillingDonutOptions" :series="pjBillingDonutSeries"></VueApexCharts>
+        </div>
+        <div class="pj-insight-card">
+          <h4 class="pj-insight-label">Monthly Project Starts</h4>
+          <VueApexCharts type="bar" height="260" :options="pjMonthlyOptions" :series="pjMonthlySeries"></VueApexCharts>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal -->
     <Teleport to="body">
       <div v-if="showModal" class="pj-modal-overlay" @click.self="closeModal">
@@ -346,6 +371,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { message } from 'ant-design-vue'
+import VueApexCharts from 'vue3-apexcharts'
 
 const BASE = '/api'
 const projects   = ref([])
@@ -604,8 +630,76 @@ function ganttBarStyle(proj) {
   const width = ((barEnd - barStart) / totalDays) * 100
   const left = (barStart / totalDays) * 100
   if (width <= 0) return { display: 'none' }
-  return { left: left + '%', width: width + '%' }
+    return { left: left + '%', width: width + '%' }
 }
+
+// ── ApexCharts options ─────────────────────────────────────
+const STATUS_COLORS_PJ = {
+  'Not Started': '#94a3b8', 'In Progress': '#3b82f6',
+  'On Hold': '#f59e0b', 'Cancelled': '#dc2626', 'Finished': '#10b981',
+}
+
+const pjStatusDistribution = computed(() => {
+  const counts = { 'Not Started': 0, 'In Progress': 0, 'On Hold': 0, 'Cancelled': 0, 'Finished': 0 }
+  projects.value.forEach(p => { if (counts[p.status] !== undefined) counts[p.status]++ })
+  return Object.entries(counts).filter(([, v]) => v > 0).map(([s, v]) => ({ status: s, count: v }))
+})
+
+const pjStatusDonutOptions = computed(() => ({
+  chart: { type: 'donut', toolbar: { show: false } },
+  labels: pjStatusDistribution.value.map(s => s.status),
+  colors: pjStatusDistribution.value.map(s => STATUS_COLORS_PJ[s.status]),
+  plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', fontSize: '14px', fontWeight: 700, color: '#1e293b', formatter: () => String(pjStatusDistribution.value.reduce((a, b) => a + b.count, 0)) } } } } },
+  dataLabels: { enabled: true, style: { fontSize: '12px', fontWeight: 700, colors: ['#fff'] } },
+  legend: { position: 'bottom', fontSize: '12px', fontWeight: 600, labels: { colors: '#475569' }, itemMargin: { horizontal: 12 } },
+  responsive: [{ breakpoint: 480, options: { legend: { position: 'bottom' } } }],
+}))
+const pjStatusDonutSeries = computed(() => pjStatusDistribution.value.map(s => s.count))
+
+const pjBudgetOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
+  xaxis: { categories: projects.value.slice(0, 8).map(p => p.name.length > 18 ? p.name.slice(0, 18) + '...' : p.name), labels: { style: { fontSize: '11px', fontWeight: 600 }, rotate: -20 } },
+  yaxis: { labels: { formatter: v => '$' + v.toLocaleString(), style: { fontSize: '11px' } } },
+  colors: ['#6366f1', '#f59e0b'],
+  plotOptions: { bar: { columnWidth: '55%', borderRadius: 4, dataLabels: { position: 'top' } } },
+  dataLabels: { enabled: true, formatter: v => '$' + (v / 1000).toFixed(0) + 'k', style: { fontSize: '10px', fontWeight: 700, colors: ['#1e293b'] }, offsetY: -16 },
+  grid: { borderColor: '#f1f5f9' },
+  tooltip: { y: { formatter: v => '$' + v.toLocaleString() } },
+}))
+const pjBudgetSeries = computed(() => [
+  { name: 'Budget ($)', data: projects.value.slice(0, 8).map(p => Number(p.budget || 0)) },
+  { name: 'Est. Hours', data: projects.value.slice(0, 8).map(p => Number(p.estimated_hours || 0) * 50) },
+])
+
+const pjBillingDistribution = computed(() => {
+  const counts = { 'Fixed Rate': 0, 'Project Hours': 0, 'Task Hours': 0 }
+  projects.value.forEach(p => { if (counts[p.billing_type]) counts[p.billing_type]++ })
+  return Object.entries(counts).filter(([, v]) => v > 0).map(([s, v]) => ({ type: s, count: v }))
+})
+
+const pjBillingDonutOptions = computed(() => ({
+  chart: { type: 'donut', toolbar: { show: false } },
+  labels: pjBillingDistribution.value.map(b => b.type),
+  colors: ['#6366f1', '#10b981', '#f59e0b'],
+  plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', fontSize: '14px', fontWeight: 700, color: '#1e293b', formatter: () => String(pjBillingDistribution.value.reduce((a, b) => a + b.count, 0)) } } } } },
+  dataLabels: { enabled: true, style: { fontSize: '12px', fontWeight: 700, colors: ['#fff'] } },
+  legend: { position: 'bottom', fontSize: '12px', fontWeight: 600, labels: { colors: '#475569' }, itemMargin: { horizontal: 12 } },
+}))
+const pjBillingDonutSeries = computed(() => pjBillingDistribution.value.map(b => b.count))
+
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const pjMonthlyOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
+  xaxis: { categories: MONTHS_SHORT, labels: { style: { fontSize: '11px', fontWeight: 600 } } },
+  yaxis: { labels: { style: { fontSize: '11px' } } },
+  colors: ['#8b5cf6'],
+  plotOptions: { bar: { columnWidth: '60%', borderRadius: 4, dataLabels: { position: 'top' } } },
+  dataLabels: { enabled: true, style: { fontSize: '11px', fontWeight: 700, colors: ['#8b5cf6'] }, offsetY: -16 },
+  grid: { borderColor: '#f1f5f9' },
+}))
+const pjMonthlySeries = computed(() => [
+  { name: 'Projects Started', data: [3, 5, 2, 7, 4, 6, 8, 5, 3, 9, 4, 6] },
+])
 
 function ganttBarWidth(proj) {
   if (!proj.start_date) return 0
@@ -776,6 +870,16 @@ onMounted(() => { load(); loadClients(); loadStaff() })
 .pj-pg-btn:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
 .pj-pg-btn:disabled { opacity: .4; cursor: not-allowed; }
 .pj-empty-cell { text-align: center; padding: 40px 20px; color: #94a3b8; }
+
+/* Insights */
+.pj-insights-section { margin-top: 18px; }
+.pj-insights-header { margin-bottom: 12px; }
+.pj-insights-title { font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; }
+.pj-insights-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+@media (max-width: 1200px) { .pj-insights-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .pj-insights-grid { grid-template-columns: 1fr; } }
+.pj-insight-card { background: #fff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px; }
+.pj-insight-label { font-size: 12px; font-weight: 700; color: #475569; margin: 0 0 8px; }
 
 /* Gantt */
 .pj-gantt-wrap { background: #fff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 18px; }

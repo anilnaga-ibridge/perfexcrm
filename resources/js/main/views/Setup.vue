@@ -6,36 +6,6 @@
     </div>
 
     <div class="setup-layout">
-      <!-- Left Side Menu -->
-      <aside class="setup-sidebar">
-        <nav class="setup-nav">
-          <template v-for="sec in sections" :key="sec.id">
-            <a
-              @click="navigateToSection(sec.id, sec.children ? (sec.children[0]?.id || '') : '')"
-              :class="['setup-nav-item', { 'setup-nav-item--active': activeSection === sec.id && !sec.children }]"
-            >
-              <span class="setup-nav-icon" v-html="sec.icon"></span>
-              <span>{{ sec.label }}</span>
-              <span v-if="sec.children" class="setup-nav-arrow" :class="{ 'setup-nav-arrow--rotated': activeSection === sec.id }">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
-              </span>
-            </a>
-            <div v-if="sec.children && activeSection === sec.id" class="setup-nav-children">
-              <a
-                v-for="child in sec.children"
-                :key="child.id"
-                @click="navigateToSection(sec.id, child.id)"
-                :class="['setup-nav-child', { 'setup-nav-child--active': activeSubSection === child.id }]"
-              >
-                {{ child.label }}
-              </a>
-            </div>
-          </template>
-        </nav>
-      </aside>
-
       <!-- Right Content Panel -->
       <div class="setup-content">
 
@@ -1258,51 +1228,6 @@ function iconSvg(type) {
   min-height: 600px;
 }
 
-/* ── Setup Sidebar ────────────────────────────────────── */
-.setup-sidebar {
-  width: 200px;
-  min-width: 200px;
-  border-right: none;
-  background: linear-gradient(135deg, #d35400 0%, #7e1e8e 50%, #0b579f 100%);
-}
-.setup-nav {
-  padding: 8px 0;
-}
-.setup-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 8px 14px;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
-  cursor: pointer;
-  border-left: 3px solid transparent;
-  text-decoration: none;
-  transition: background 0.12s, color 0.12s;
-  user-select: none;
-}
-.setup-nav-item:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-}
-.setup-nav-item--active {
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-  font-weight: 600;
-  border-left-color: #ffffff;
-}
-.setup-nav-icon {
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-.setup-nav-icon :deep(svg) {
-  width: 16px;
-  height: 16px;
-  stroke: currentColor;
-}
 
 /* ── Right Content ────────────────────────────────────── */
 .setup-content {
@@ -1779,40 +1704,5 @@ function iconSvg(type) {
   border-radius: 50%;
   color: #fff;
   font-weight: 600;
-}
-/* Sidebar Nav Children */
-.setup-nav-children {
-  background: linear-gradient(135deg, #d35400 0%, #7e1e8e 50%, #0b579f 100%);
-  padding: 2px 0 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-}
-.setup-nav-child {
-  display: block;
-  padding: 6px 14px 6px 39px;
-  font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.85);
-  cursor: pointer;
-  text-decoration: none;
-  transition: color 0.12s, background 0.12s;
-}
-.setup-nav-child:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-}
-.setup-nav-child--active {
-  color: #ffffff !important;
-  font-weight: 600;
-  background: rgba(255, 255, 255, 0.18);
-  border-right: 2px solid #ffffff;
-}
-.setup-nav-arrow {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  color: #94a3b8;
-  transition: transform 0.2s ease;
-}
-.setup-nav-arrow--rotated {
-  transform: rotate(90deg);
 }
 </style>

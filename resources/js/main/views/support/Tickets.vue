@@ -507,22 +507,7 @@
             </button>
           </div>
           <div class="tk-modal-body">
-            <div class="tk-weekly-chart">
-              <div class="tk-chart-yaxis">
-                <span>{{ maxWeeklyCount }}</span>
-                <span>{{ Math.round(maxWeeklyCount / 2) }}</span>
-                <span>0</span>
-              </div>
-              <div class="tk-chart-bars">
-                <div v-for="day in weeklyStats" :key="day.date" class="tk-chart-col">
-                  <div class="tk-chart-bar-wrap">
-                    <div class="tk-chart-bar" :style="{ height: barHeight(day.count) }" :title="day.count + ' tickets'"></div>
-                  </div>
-                  <div class="tk-chart-lbl">{{ day.label }}</div>
-                  <div class="tk-chart-val">{{ day.count }}</div>
-                </div>
-              </div>
-            </div>
+            <apexchart type="bar" height="260" :options="weeklyChartOptions" :series="weeklyChartSeries"></apexchart>
           </div>
         </div>
       </div>
@@ -535,6 +520,7 @@ import { ref, reactive, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../../store/authStore'
+import VueApexCharts from 'vue3-apexcharts'
 
 const BASE = '/api'
 const route = useRoute()
@@ -729,13 +715,17 @@ function priClass(p) { return { Low: 'low', Medium: 'med', High: 'high', Urgent:
 function fmtDate(d) { if (!d) return '—'; return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) }
 function getServiceName(id) { if (!id) return '—'; const s = metadata.value.services.find(s => s.id === id); return s ? s.name : '—' }
 
-const maxWeeklyCount = computed(() => {
-  const counts = weeklyStats.value.map(d => d.count)
-  return Math.max(...counts, 1)
-})
-function barHeight(count) {
-  return Math.max((count / maxWeeklyCount.value) * 100, 4) + '%'
-}
+const weeklyChartOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
+  xaxis: { categories: weeklyStats.value.map(d => d.label), labels: { style: { fontSize: '13px', fontWeight: 600 } } },
+  yaxis: { labels: { style: { fontSize: '13px' } } },
+  colors: ['#6366f1'],
+  plotOptions: { bar: { columnWidth: '55%', borderRadius: 4, dataLabels: { position: 'top' } } },
+  dataLabels: { enabled: true, style: { fontSize: '14px', fontWeight: 700, colors: ['#1e293b'] }, offsetY: -20 },
+  grid: { borderColor: '#f1f5f9' },
+}))
+const weeklyChartSeries = computed(() => [{ name: 'Tickets', data: weeklyStats.value.map(d => d.count) }])
+
 async function loadWeeklyStats() {
   try { const r = await axios.get(`${BASE}/tickets/weekly-stats`); weeklyStats.value = r.data.days || [] }
   catch {
@@ -1032,16 +1022,9 @@ watch(currentView, () => { if (currentView.value === 'kanban') statusFilter.valu
 .tk-replies-hd { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 12px; }
 .tk-reply-form { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
 
-/* ── WEEKLY CHART ── */
+/* ── WEEKLY ANALYTICS ── */
 .tk-modal-narrow { max-width: 520px; }
-.tk-weekly-chart { display: flex; gap: 0; padding: 16px 0 8px; align-items: stretch; }
-.tk-chart-yaxis { display: flex; flex-direction: column; justify-content: space-between; padding-right: 10px; font-size: 10px; color: #94a3b8; font-weight: 500; min-width: 30px; text-align: right; padding-bottom: 36px; }
-.tk-chart-bars { display: flex; flex: 1; gap: 8px; align-items: flex-end; justify-content: space-around; border-left: 1.5px solid #e2e8f0; border-bottom: 1.5px solid #e2e8f0; padding-left: 8px; }
-.tk-chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.tk-chart-bar-wrap { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; min-height: 120px; }
-.tk-chart-bar { width: 28px; background: linear-gradient(180deg, #6366f1, #818cf8); border-radius: 5px 5px 0 0; min-height: 4px; transition: height .4s ease; }
-.tk-chart-lbl { font-size: 10px; font-weight: 600; color: #64748b; }
-.tk-chart-val { font-size: 11px; font-weight: 700; color: #6366f1; }
+.tk-modal-body :deep(.apexcharts-canvas) { margin: 0 auto; }
 
 /* ── UTILITY ── */
 .text-slate-300 { color: #cbd5e1; }

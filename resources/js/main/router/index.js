@@ -56,9 +56,24 @@ import EstimateRequestsPage from '../views/support/EstimateRequests.vue';
 import KnowledgeBasePage from '../views/support/KnowledgeBase.vue';
 import KnowledgeBaseGroupsPage from '../views/support/Groups.vue';
 import TicketsPage from '../views/support/Tickets.vue';
+import SeoOptimisation from '../views/SeoOptimisation.vue';
 
 // Staff Members
 import StaffMembersPage from '../views/StaffMembers.vue';
+
+// Profile
+import ProfileLayout from '../views/Profile.vue';
+import ProfileOverview from '../views/profile/ProfileOverview.vue';
+import ProfileEdit from '../views/profile/ProfileEdit.vue';
+
+// Timesheets
+import TimesheetsPage from '../views/Timesheets.vue';
+
+// My Todos
+import MyTodosPage from '../views/MyTodos.vue';
+
+// Notifications
+import NotificationsPage from '../views/Notifications.vue';
 
 // Phase 5: Reports
 import ReportsPage from '../views/reports/Reports.vue';
@@ -121,6 +136,21 @@ const routes = [
       { path: 'setup/:section?/:subsection?', name: 'admin.setup',            component: SetupPage },
       { path: 'staff',            name: 'admin.staff',            component: StaffMembersPage },
 
+      // Profile
+      {
+        path: 'profile',
+        component: ProfileLayout,
+        children: [
+          { path: '', name: 'admin.profile', component: ProfileOverview },
+          { path: 'edit', name: 'admin.profile.edit', component: ProfileEdit },
+        ]
+      },
+
+      // Timesheets
+      { path: 'timesheets', name: 'admin.timesheets', component: TimesheetsPage },
+      { path: 'my-todos', name: 'admin.my-todos', component: MyTodosPage },
+      { path: 'notifications', name: 'admin.notifications', component: NotificationsPage },
+
       // Sales sub-items
       { path: 'estimates',        name: 'admin.estimates',        component: EstimatesPage },
       { path: 'estimates/estimate', name: 'admin.estimates.create', component: EstimateForm },
@@ -148,6 +178,7 @@ const routes = [
       { path: 'estimate-request', name: 'admin.estimate-request', component: EstimateRequestsPage },
       { path: 'knowledge-base',         name: 'admin.knowledge-base',        component: KnowledgeBasePage },
       { path: 'knowledge-base/groups',  name: 'admin.knowledge-base.groups', component: KnowledgeBaseGroupsPage },
+      { path: 'seo', name: 'admin.seo', component: SeoOptimisation },
 
       // Utilities sub-items
       { path: 'media',            name: 'admin.media',            component: MediaPage },

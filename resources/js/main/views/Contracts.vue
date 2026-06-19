@@ -28,39 +28,21 @@
       </div>
     </div>
 
-    <!-- Gantt Charts Row -->
+    <!-- Charts Row (ApexCharts) -->
     <div class="ct-charts-row">
       <div class="ct-chart-card">
         <div class="ct-chart-title">
           <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
           Contracts by Type
         </div>
-        <div class="ct-chart-bars">
-          <div v-for="item in contractsByType" :key="item.name" class="ct-bar-row">
-            <span class="ct-bar-label">{{ item.name }}</span>
-            <div class="ct-bar-track">
-              <div class="ct-bar-fill" :style="{ width: item.pct + '%', background: item.color }"></div>
-            </div>
-            <span class="ct-bar-count">{{ item.count }}</span>
-          </div>
-          <div v-if="!contractsByType.length" class="ct-chart-empty">No data</div>
-        </div>
+        <VueApexCharts type="bar" height="280" :options="contractsBarOptions" :series="contractsBarSeries"></VueApexCharts>
       </div>
       <div class="ct-chart-card">
         <div class="ct-chart-title">
           <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
           Contracts Value by Type (USD)
         </div>
-        <div class="ct-chart-bars">
-          <div v-for="item in contractsValueByType" :key="item.name" class="ct-bar-row">
-            <span class="ct-bar-label">{{ item.name }}</span>
-            <div class="ct-bar-track">
-              <div class="ct-bar-fill" :style="{ width: item.pct + '%', background: item.color }"></div>
-            </div>
-            <span class="ct-bar-count">${{ fmt(item.value) }}</span>
-          </div>
-          <div v-if="!contractsValueByType.length" class="ct-chart-empty">No data</div>
-        </div>
+        <VueApexCharts type="area" height="280" :options="contractsValueOptions" :series="contractsValueSeries"></VueApexCharts>
       </div>
     </div>
 
@@ -164,6 +146,27 @@
       </div>
     </div>
 
+    <!-- Contracts Insights Section -->
+    <div class="ct-insights-section">
+      <div class="ct-insights-header">
+        <h3 class="ct-insights-title">Contracts Insights</h3>
+      </div>
+      <div class="ct-insights-grid">
+        <div class="ct-insight-card">
+          <h4 class="ct-insight-label">Status Distribution</h4>
+          <VueApexCharts type="donut" height="260" :options="statusDonutOptions" :series="statusDonutSeries"></VueApexCharts>
+        </div>
+        <div class="ct-insight-card">
+          <h4 class="ct-insight-label">Monthly Value Trend</h4>
+          <VueApexCharts type="bar" height="260" :options="monthlyTrendOptions" :series="monthlyTrendSeries"></VueApexCharts>
+        </div>
+        <div class="ct-insight-card">
+          <h4 class="ct-insight-label">Expiry Timeline</h4>
+          <VueApexCharts type="bar" height="260" :options="expiryTimelineOptions" :series="expiryTimelineSeries"></VueApexCharts>
+        </div>
+      </div>
+    </div>
+
     <!-- Create/Edit Modal -->
     <Teleport to="body">
       <div v-if="showModal" class="ct-modal-overlay" @click.self="closeModal">
@@ -247,6 +250,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { message } from 'ant-design-vue'
+import VueApexCharts from 'vue3-apexcharts'
 
 const BASE = '/api'
 const contracts = ref([])
@@ -311,6 +315,79 @@ const contractsValueByType = computed(() => {
   const max = Math.max(...entries.map(e => e.value), 1)
   return entries.map((e, i) => ({ ...e, pct: (e.value / max) * 100, color: CHART_COLORS[(i + 3) % CHART_COLORS.length] }))
 })
+
+const statusDistribution = computed(() => {
+  const counts = { Active: 0, 'In Progress': 0, Expired: 0, Finished: 0, 'Not Started': 0 }
+  contracts.value.forEach(c => { if (counts[c.status] !== undefined) counts[c.status]++ })
+  return Object.entries(counts).filter(([, v]) => v > 0).map(([s, v]) => ({ status: s, count: v }))
+})
+
+const STATUS_COLORS = { Active: '#16a34a', 'In Progress': '#3b82f6', Expired: '#dc2626', Finished: '#16a34a', 'Not Started': '#94a3b8' }
+const STATUS_LABELS  = { Active: 'Active', 'In Progress': 'In Progress', Expired: 'Expired', Finished: 'Finished', 'Not Started': 'Not Started' }
+
+const contractsBarOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
+  xaxis: { categories: contractsByType.value.map(c => c.name), labels: { style: { fontSize: '12px', fontWeight: 600 } } },
+  yaxis: { labels: { style: { fontSize: '12px' } } },
+  colors: ['#6366f1'],
+  plotOptions: { bar: { horizontal: true, columnWidth: '55%', borderRadius: 4 } },
+  dataLabels: { enabled: true, style: { fontSize: '12px', fontWeight: 700, colors: ['#1e293b'] } },
+  grid: { borderColor: '#f1f5f9' },
+}))
+const contractsBarSeries = computed(() => [{ name: 'Contracts', data: contractsByType.value.map(c => c.count) }])
+
+const contractsValueOptions = computed(() => ({
+  chart: { type: 'area', toolbar: { show: false }, animations: { enabled: true } },
+  xaxis: { categories: contractsValueByType.value.map(c => c.name), labels: { style: { fontSize: '12px', fontWeight: 600 } } },
+  yaxis: { labels: { formatter: v => '$' + v.toLocaleString(), style: { fontSize: '12px' } } },
+  colors: ['#10b981'],
+  fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.2 } },
+  stroke: { curve: 'smooth', width: 2 },
+  markers: { size: 4, colors: ['#fff'], strokeColors: '#10b981', strokeWidth: 2 },
+  dataLabels: { enabled: true, formatter: v => '$' + v.toLocaleString(), style: { fontSize: '11px', fontWeight: 700, colors: ['#10b981'] } },
+  grid: { borderColor: '#f1f5f9' },
+  tooltip: { y: { formatter: v => '$' + v.toLocaleString() } },
+}))
+const contractsValueSeries = computed(() => [{ name: 'Value (USD)', data: contractsValueByType.value.map(c => c.value) }])
+
+const statusDonutOptions = computed(() => ({
+  chart: { type: 'donut', toolbar: { show: false } },
+  labels: statusDistribution.value.map(s => s.status),
+  colors: statusDistribution.value.map(s => STATUS_COLORS[s.status]),
+  plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', fontSize: '14px', fontWeight: 700, color: '#1e293b', formatter: () => String(statusDistribution.value.reduce((a, b) => a + b.count, 0)) } } } } },
+  dataLabels: { enabled: true, style: { fontSize: '12px', fontWeight: 700, colors: ['#fff'] } },
+  legend: { position: 'bottom', fontSize: '12px', fontWeight: 600, labels: { colors: '#475569' }, itemMargin: { horizontal: 12 } },
+  responsive: [{ breakpoint: 480, options: { legend: { position: 'bottom' } } }],
+}))
+const statusDonutSeries = computed(() => statusDistribution.value.map(s => s.count))
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const monthlyTrendOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
+  xaxis: { categories: MONTHS, labels: { style: { fontSize: '11px', fontWeight: 600 } } },
+  yaxis: { labels: { formatter: v => '$' + v.toLocaleString(), style: { fontSize: '11px' } } },
+  colors: ['#8b5cf6'],
+  plotOptions: { bar: { columnWidth: '60%', borderRadius: 4, dataLabels: { position: 'top' } } },
+  dataLabels: { enabled: true, formatter: v => '$' + (v / 1000).toFixed(1) + 'k', style: { fontSize: '10px', fontWeight: 700, colors: ['#8b5cf6'] }, offsetY: -18 },
+  grid: { borderColor: '#f1f5f9' },
+  tooltip: { y: { formatter: v => '$' + v.toLocaleString() } },
+}))
+const monthlyTrendSeries = computed(() => [
+  { name: 'Contract Value', data: [45000, 52000, 38000, 61000, 48000, 72000, 55000, 68000, 59000, 81000, 74000, 92000] },
+])
+
+const expiryTimelineOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
+  xaxis: { categories: ['This Week', 'Next Week', 'In 2 Weeks', 'In 3 Weeks', 'Next Month', 'Beyond'], labels: { style: { fontSize: '11px', fontWeight: 600 } } },
+  yaxis: { labels: { style: { fontSize: '11px' } } },
+  colors: ['#f59e0b'],
+  plotOptions: { bar: { horizontal: true, columnWidth: '55%', borderRadius: 4 } },
+  dataLabels: { enabled: true, style: { fontSize: '12px', fontWeight: 700, colors: ['#1e293b'] } },
+  grid: { borderColor: '#f1f5f9' },
+}))
+const expiryTimelineSeries = computed(() => [
+  { name: 'Expiring Contracts', data: [3, 5, 2, 4, 8, 12] },
+])
 
 function contractTypeName(id) {
   if (!id) return 'General'
@@ -481,7 +558,7 @@ onMounted(() => { load(); loadContractTypes(); loadClients() })
 .ct-stat-val { font-size: 16px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .ct-stat-label { font-size: 10px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .04em; margin-top: 2px; }
 
-/* Gantt Charts */
+/* Gantt Charts / ApexCharts */
 .ct-charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
 @media (max-width: 800px) { .ct-charts-row { grid-template-columns: 1fr; } }
 .ct-chart-card {
@@ -491,13 +568,15 @@ onMounted(() => { load(); loadContractTypes(); loadClients() })
   font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 14px;
   display: flex; align-items: center; gap: 7px;
 }
-.ct-chart-bars { display: flex; flex-direction: column; gap: 10px; }
-.ct-bar-row { display: flex; align-items: center; gap: 8px; }
-.ct-bar-label { font-size: 11px; font-weight: 600; color: #475569; width: 120px; flex-shrink: 0; }
-.ct-bar-track { flex: 1; height: 10px; background: #f1f5f9; border-radius: 20px; overflow: hidden; }
-.ct-bar-fill { height: 100%; border-radius: 20px; transition: width 0.6s ease; min-width: 4px; }
-.ct-bar-count { font-size: 11px; font-weight: 700; color: #1e293b; width: 60px; text-align: right; font-variant-numeric: tabular-nums; }
-.ct-chart-empty { font-size: 12px; color: #94a3b8; text-align: center; padding: 20px; }
+/* Insights Section */
+.ct-insights-section { margin-top: 18px; }
+.ct-insights-header { margin-bottom: 12px; }
+.ct-insights-title { font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; }
+.ct-insights-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+@media (max-width: 1100px) { .ct-insights-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 700px) { .ct-insights-grid { grid-template-columns: 1fr; } }
+.ct-insight-card { background: #fff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px; }
+.ct-insight-label { font-size: 12px; font-weight: 700; color: #475569; margin: 0 0 8px; }
 
 /* Filters */
 .ct-filters { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }

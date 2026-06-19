@@ -241,7 +241,7 @@
             <div class="bars">
               <div v-for="row in srCharts" :key="row.month" class="bar-wrap">
                 <div class="bar-label-top">${{ fm(row.invoice_total) }}</div>
-                <div class="bar-col"><div class="bar" :style="{ height: srChartMax ? Math.round((row.invoice_total / srChartMax) * 160) + 'px' : '4px' }"></div></div>
+                <div class="bar-col"><div class="bar" :style="{ height: srChartMax ? Math.round((row.invoice_total / srChartMax) * 300) + 'px' : '4px' }"></div></div>
                 <div class="bar-label">{{ monthName(row.month) }}</div>
               </div>
             </div>
@@ -313,47 +313,23 @@
       </div>
       <div v-if="expLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
       <div v-else class="expenses-detailed">
-        <!-- Chart area -->
+        <!-- Chart area (ApexCharts) -->
         <div class="exp-charts-row">
           <div class="exp-chart-box">
             <div class="chart-title">Monthly Expenses — Not Billable ($)</div>
-            <div class="bars" style="height:160px">
-              <div v-for="(v, i) in expNotBillableTotal" :key="i" class="bar-wrap">
-                <div class="bar-label-top">${{ fm(v) }}</div>
-                <div class="bar-col"><div class="bar exp-bar" :style="{ height: expBarHeight(v, expMaxNotBillable) + 'px' }"></div></div>
-                <div class="bar-label">{{ shortMonth(i) }}</div>
-              </div>
-            </div>
+            <VueApexCharts type="bar" height="320" :options="expNotBillableBarOptions" :series="expNotBillableBarSeries"></VueApexCharts>
           </div>
           <div v-if="!excludeBillable" class="exp-chart-box">
             <div class="chart-title">Monthly Expenses — Billable ($)</div>
-            <div class="bars" style="height:160px">
-              <div v-for="(v, i) in expBillableTotal" :key="i" class="bar-wrap">
-                <div class="bar-label-top">${{ fm(v) }}</div>
-                <div class="bar-col"><div class="bar" :style="{ height: expBarHeight(v, expMaxBillable) + 'px' }"></div></div>
-                <div class="bar-label">{{ shortMonth(i) }}</div>
-              </div>
-            </div>
+            <VueApexCharts type="bar" height="320" :options="expBillableBarOptions" :series="expBillableBarSeries"></VueApexCharts>
           </div>
           <div class="exp-chart-box">
             <div class="chart-title">Category Breakdown — Not Billable</div>
-            <div class="pie-legend">
-              <div v-for="r in expChartCategories(expNotBillable)" :key="r.label" class="legend-item">
-                <span class="legend-dot" :style="{ background: r.color }"></span>
-                <span class="legend-label">{{ r.label }}</span>
-                <span class="legend-val">${{ fm(r.value) }}</span>
-              </div>
-            </div>
+            <VueApexCharts type="donut" height="320" :options="expNotBillableDonutOptions" :series="expNotBillableDonutSeries"></VueApexCharts>
           </div>
           <div v-if="!excludeBillable" class="exp-chart-box">
             <div class="chart-title">Category Breakdown — Billable</div>
-            <div class="pie-legend">
-              <div v-for="r in expChartCategories(expBillable)" :key="r.label" class="legend-item">
-                <span class="legend-dot" :style="{ background: r.color }"></span>
-                <span class="legend-label">{{ r.label }}</span>
-                <span class="legend-val">${{ fm(r.value) }}</span>
-              </div>
-            </div>
+            <VueApexCharts type="donut" height="320" :options="expBillableDonutOptions" :series="expBillableDonutSeries"></VueApexCharts>
           </div>
         </div>
         <!-- Not billable expenses -->
@@ -412,35 +388,8 @@
       </div>
       <div v-if="!finance" class="loading-wrap"><div class="loader"></div> Loading...</div>
       <div v-else class="finance-detail">
-        <div class="finance-comparison">
-          <div class="comparison-row">
-            <span class="comp-label">Total Income</span>
-            <div class="comp-bar-wrap">
-              <div class="comp-bar income-bar" :style="{ width: compPct(finance.income, finance.income + finance.expenses) + '%' }"></div>
-            </div>
-            <span class="comp-value income-val">${{ formatMoney(finance.income) }}</span>
-          </div>
-          <div class="comparison-row">
-            <span class="comp-label">Total Expenses</span>
-            <div class="comp-bar-wrap">
-              <div class="comp-bar expense-bar" :style="{ width: compPct(finance.expenses, finance.income + finance.expenses) + '%' }"></div>
-            </div>
-            <span class="comp-value expense-val">${{ formatMoney(finance.expenses) }}</span>
-          </div>
-          <div class="comparison-row">
-            <span class="comp-label">Payments Received</span>
-            <div class="comp-bar-wrap">
-              <div class="comp-bar payment-bar" :style="{ width: compPct(finance.payments, finance.income + finance.expenses) + '%' }"></div>
-            </div>
-            <span class="comp-value payment-val">${{ formatMoney(finance.payments) }}</span>
-          </div>
-          <div class="comparison-row">
-            <span class="comp-label">Net Profit</span>
-            <div class="comp-bar-wrap">
-              <div class="comp-bar profit-bar" :class="finance.profit >= 0 ? 'pos' : 'neg'" :style="{ width: compPct(Math.abs(finance.profit), finance.income + finance.expenses) + '%' }"></div>
-            </div>
-            <span class="comp-value" :class="finance.profit >= 0 ? 'income-val' : 'expense-val'">${{ formatMoney(finance.profit) }}</span>
-          </div>
+        <div class="finance-chart-wrap">
+          <VueApexCharts type="bar" height="280" :options="financeChartOptions" :series="financeChartSeries"></VueApexCharts>
         </div>
         <div class="profit-summary" :class="finance.profit >= 0 ? 'profitable' : 'unprofitable'">
           <span class="profit-icon">{{ finance.profit >= 0 ? '📈' : '📉' }}</span>
@@ -457,18 +406,10 @@
       <div class="section-header">
         <h2>Leads Report — {{ selectedYear }}</h2>
       </div>
-      <div class="chart-and-table">
-        <div class="bar-chart">
-          <div class="chart-title">Monthly Leads Created</div>
-          <div class="bars">
-            <div v-for="row in leadsData" :key="row.month" class="bar-wrap">
-              <div class="bar-label-top">{{ row.count }}</div>
-              <div class="bar-col">
-                <div class="bar" :style="{ height: barHeight(row.count, maxLeads) + 'px' }"></div>
-              </div>
-              <div class="bar-label">{{ monthName(row.month) }}</div>
-            </div>
-          </div>
+      <div class="leads-chart-area">
+        <div class="leads-chart-box">
+          <div class="chart-title">Monthly Leads Created vs Converted</div>
+          <VueApexCharts type="bar" height="300" :options="leadsChartOptions" :series="leadsChartSeries"></VueApexCharts>
         </div>
         <div class="summary-table">
           <table class="data-table">
@@ -495,18 +436,10 @@
       <div class="section-header">
         <h2>Timesheets Overview — {{ selectedYear }}</h2>
       </div>
-      <div class="chart-and-table">
-        <div class="bar-chart">
+      <div class="timesheets-chart-area">
+        <div class="timesheets-chart-box">
           <div class="chart-title">Monthly Hours Logged</div>
-          <div class="bars">
-            <div v-for="row in timesheetsData" :key="row.month" class="bar-wrap">
-              <div class="bar-label-top">{{ row.hours }}h</div>
-              <div class="bar-col">
-                <div class="bar" :style="{ height: barHeight(row.hours, maxTimesheets) + 'px' }"></div>
-              </div>
-              <div class="bar-label">{{ monthName(row.month) }}</div>
-            </div>
-          </div>
+          <VueApexCharts type="bar" height="300" :options="timesheetsChartOptions" :series="timesheetsChartSeries"></VueApexCharts>
         </div>
         <div class="summary-table">
           <table class="data-table">
@@ -538,24 +471,13 @@
         </select>
       </div>
       <div v-if="kbLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
-      <div v-else class="kb-vote-list">
+      <div v-else class="kb-chart-area">
         <div class="kb-group-label" v-if="selectedKbGroup">Group: {{ selectedKbGroup }}</div>
         <div v-for="a in kbArticles" :key="a.id" class="kb-vote-card">
           <div class="kb-vote-title">{{ a.title }} <span class="kb-total">(Total: {{ a.total }})</span></div>
           <div v-if="a.total === 0" class="kb-no-votes">No votes yet</div>
-          <div v-else class="kb-vote-bars">
-            <div class="kb-vote-row">
-              <span class="kb-vote-label">Yes:</span>
-              <span class="kb-vote-count">{{ a.yes }}</span>
-              <div class="kb-bar-wrap"><div class="kb-bar yes-bar" :style="{ width: a.yes_pct + '%' }"></div></div>
-              <span class="kb-vote-pct">{{ a.yes_pct }}%</span>
-            </div>
-            <div class="kb-vote-row">
-              <span class="kb-vote-label">No:</span>
-              <span class="kb-vote-count">{{ a.no }}</span>
-              <div class="kb-bar-wrap"><div class="kb-bar no-bar" :style="{ width: a.no_pct + '%' }"></div></div>
-              <span class="kb-vote-pct">{{ a.no_pct }}%</span>
-            </div>
+          <div v-else>
+            <VueApexCharts type="donut" height="200" :options="kbDonutOptions(a)" :series="kbDonutSeries(a)"></VueApexCharts>
           </div>
         </div>
         <div v-if="!kbArticles.length" class="empty-state">
@@ -570,18 +492,9 @@
         <h2>Team Performance</h2>
       </div>
       <div v-if="loadingTeam" class="loading-wrap"><div class="loader"></div> Loading...</div>
-      <div v-else class="team-list">
-        <div v-for="(member, idx) in teamData" :key="member.id" class="team-row">
-          <div class="team-rank">{{ idx + 1 }}</div>
-          <div class="team-avatar">{{ member.name?.charAt(0)?.toUpperCase() }}</div>
-          <div class="team-info">
-            <div class="team-name">{{ member.name }}</div>
-            <div class="team-tasks">{{ member.task_count }} tasks assigned</div>
-          </div>
-          <div class="team-bar-wrap">
-            <div class="team-bar" :style="{ width: teamBarPct(member.task_count) + '%' }"></div>
-          </div>
-          <div class="team-count">{{ member.task_count }}</div>
+      <div v-else class="team-chart-area">
+        <div class="team-chart-box">
+          <VueApexCharts type="bar" height="300" :options="teamChartOptions" :series="teamChartSeries"></VueApexCharts>
         </div>
         <div v-if="!teamData.length" class="empty-state">
           <span class="empty-icon">👥</span>
@@ -596,6 +509,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { useRoute } from 'vue-router'
+import VueApexCharts from 'vue3-apexcharts'
 
 const BASE = '/api'
 const route = useRoute()
@@ -652,12 +566,198 @@ const expBillableTotal = computed(() => {
   return totalRow?.monthly ?? Array(12).fill(0)
 })
 
-const expMaxNotBillable = computed(() => Math.max(...expNotBillableTotal.value, 1))
-const expMaxBillable = computed(() => Math.max(...expBillableTotal.value, 1))
+const expNotBillableBarOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
+  xaxis: { categories: SHORT_MONTHS, labels: { style: { fontSize: '11px', fontWeight: 600 } } },
+  yaxis: { labels: { formatter: v => '$' + v.toLocaleString(), style: { fontSize: '11px' } } },
+  colors: ['#ef4444'],
+  plotOptions: { bar: { columnWidth: '55%', borderRadius: 3, dataLabels: { position: 'top' } } },
+  dataLabels: { enabled: true, formatter: v => '$' + (v / 1000).toFixed(1) + 'k', style: { fontSize: '9px', fontWeight: 700, colors: ['#1e293b'] }, offsetY: -14 },
+  grid: { borderColor: '#f1f5f9' },
+  tooltip: { y: { formatter: v => '$' + v.toLocaleString() } },
+}))
+const expNotBillableBarSeries = computed(() => [{ name: 'Not Billable', data: expNotBillableTotal.value }])
 
-function expBarHeight(v, max) {
-  return Math.max(4, Math.round((v / max) * 130))
+const expBillableBarOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
+  xaxis: { categories: SHORT_MONTHS, labels: { style: { fontSize: '11px', fontWeight: 600 } } },
+  yaxis: { labels: { formatter: v => '$' + v.toLocaleString(), style: { fontSize: '11px' } } },
+  colors: ['#3b82f6'],
+  plotOptions: { bar: { columnWidth: '55%', borderRadius: 3, dataLabels: { position: 'top' } } },
+  dataLabels: { enabled: true, formatter: v => '$' + v.toLocaleString(), style: { fontSize: '9px', fontWeight: 700, colors: ['#1e293b'] }, offsetY: -14 },
+  grid: { borderColor: '#f1f5f9' },
+  tooltip: { y: { formatter: v => '$' + v.toLocaleString() } },
+}))
+const expBillableBarSeries = computed(() => [{ name: 'Billable', data: expBillableTotal.value }])
+
+const expNotBillableDonutOptions = computed(() => ({
+  chart: { type: 'donut', toolbar: { show: false } },
+  labels: expChartCategories(expNotBillable.value).map(r => r.label),
+  colors: expChartCategories(expNotBillable.value).map(r => r.color),
+  plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', fontSize: '13px', fontWeight: 700, color: '#1e293b', formatter: () => '$' + expChartCategories(expNotBillable.value).reduce((a, r) => a + r.value, 0).toLocaleString() } } } } },
+  dataLabels: { enabled: false },
+  legend: { position: 'bottom', fontSize: '11px', fontWeight: 600, labels: { colors: '#475569' }, itemMargin: { horizontal: 8 } },
+}))
+const expNotBillableDonutSeries = computed(() => expChartCategories(expNotBillable.value).map(r => r.value))
+
+const expBillableDonutOptions = computed(() => ({
+  chart: { type: 'donut', toolbar: { show: false } },
+  labels: expChartCategories(expBillable.value).map(r => r.label),
+  colors: expChartCategories(expBillable.value).map(r => r.color),
+  plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', fontSize: '13px', fontWeight: 700, color: '#1e293b', formatter: () => '$' + expChartCategories(expBillable.value).reduce((a, r) => a + r.value, 0).toLocaleString() } } } } },
+  dataLabels: { enabled: false },
+  legend: { position: 'bottom', fontSize: '11px', fontWeight: 600, labels: { colors: '#475569' }, itemMargin: { horizontal: 8 } },
+}))
+const expBillableDonutSeries = computed(() => expChartCategories(expBillable.value).map(r => r.value))
+
+const financeChartOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
+  xaxis: {
+    categories: ['Total Income', 'Total Expenses', 'Payments Received', 'Net Profit'],
+    labels: { style: { fontSize: '12px', fontWeight: 600 } },
+  },
+  yaxis: {
+    labels: { formatter: v => '$' + v.toLocaleString(), style: { fontSize: '11px' } },
+  },
+  colors: ['#10b981', '#ef4444', '#3b82f6', '#8b5cf6'],
+  plotOptions: {
+    bar: { columnWidth: '50%', borderRadius: 4, dataLabels: { position: 'top' } },
+  },
+  dataLabels: {
+    enabled: true,
+    formatter: v => '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toLocaleString()),
+    style: { fontSize: '10px', fontWeight: 700, colors: ['#1e293b'] },
+    offsetY: -14,
+  },
+  grid: { borderColor: '#f1f5f9' },
+  tooltip: { y: { formatter: v => '$' + v.toLocaleString() } },
+}))
+const financeChartSeries = computed(() => {
+  if (!finance.value) return []
+  return [{
+    name: 'Amount',
+    data: [
+      finance.value.income || 0,
+      finance.value.expenses || 0,
+      finance.value.payments || 0,
+      finance.value.profit || 0,
+    ],
+  }]
+})
+
+const leadsChartOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true }, stacked: false },
+  xaxis: {
+    categories: leadsData.value.map(r => monthName(r.month)),
+    labels: { style: { fontSize: '11px', fontWeight: 600 } },
+  },
+  yaxis: {
+    labels: { style: { fontSize: '11px' } },
+  },
+  colors: ['#1e9aff', '#10b981'],
+  plotOptions: {
+    bar: { columnWidth: '55%', borderRadius: 3, dataLabels: { position: 'top' } },
+  },
+  dataLabels: {
+    enabled: true,
+    style: { fontSize: '9px', fontWeight: 700, colors: ['#1e293b'] },
+    offsetY: -14,
+  },
+  grid: { borderColor: '#f1f5f9' },
+  tooltip: { y: { formatter: v => v + ' leads' } },
+  legend: { position: 'top', fontSize: '12px', fontWeight: 600, labels: { colors: '#475569' }, itemMargin: { horizontal: 8 } },
+}))
+const leadsChartSeries = computed(() => [{
+  name: 'Created',
+  data: leadsData.value.map(r => r.count),
+}, {
+  name: 'Converted',
+  data: leadsData.value.map(r => r.converted),
+}])
+
+const timesheetsChartOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
+  xaxis: {
+    categories: timesheetsData.value.map(r => monthName(r.month)),
+    labels: { style: { fontSize: '11px', fontWeight: 600 } },
+  },
+  yaxis: {
+    labels: { formatter: v => v + 'h', style: { fontSize: '11px' } },
+  },
+  colors: ['#f59e0b'],
+  plotOptions: {
+    bar: { columnWidth: '55%', borderRadius: 3, dataLabels: { position: 'top' } },
+  },
+  dataLabels: {
+    enabled: true,
+    formatter: v => v + 'h',
+    style: { fontSize: '9px', fontWeight: 700, colors: ['#1e293b'] },
+    offsetY: -14,
+  },
+  grid: { borderColor: '#f1f5f9' },
+  tooltip: { y: { formatter: v => v + ' hours' } },
+}))
+const timesheetsChartSeries = computed(() => [{
+  name: 'Hours',
+  data: timesheetsData.value.map(r => r.hours),
+}])
+
+function kbDonutOptions(article) {
+  return {
+    chart: { type: 'donut', toolbar: { show: false } },
+    labels: ['Yes', 'No'],
+    colors: ['#10b981', '#ef4444'],
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '65%',
+          labels: {
+            show: true,
+            total: { show: true, label: 'Total', fontSize: '13px', fontWeight: 700, color: '#1e293b', formatter: () => article.total },
+          },
+        },
+      },
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: (v, { seriesIndex }) => {
+        const vals = [article.yes, article.no]
+        return vals[seriesIndex] + ' (' + v.toFixed(1) + '%)'
+      },
+      style: { fontSize: '10px', fontWeight: 600, colors: ['#fff'] },
+    },
+    legend: { position: 'bottom', fontSize: '11px', fontWeight: 600, labels: { colors: '#475569' }, itemMargin: { horizontal: 8 } },
+  }
 }
+function kbDonutSeries(article) {
+  return [article.yes, article.no]
+}
+
+const teamChartOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
+  xaxis: {
+    categories: teamData.value.map(m => m.name),
+    labels: { style: { fontSize: '11px', fontWeight: 600 } },
+  },
+  yaxis: {
+    labels: { style: { fontSize: '11px' } },
+  },
+  colors: ['#6366f1'],
+  plotOptions: {
+    bar: { columnWidth: '55%', borderRadius: 3, horizontal: true, dataLabels: { position: 'top' } },
+  },
+  dataLabels: {
+    enabled: true,
+    formatter: v => v + ' tasks',
+    style: { fontSize: '10px', fontWeight: 700, colors: ['#1e293b'] },
+  },
+  grid: { borderColor: '#f1f5f9' },
+  tooltip: { y: { formatter: v => v + ' tasks' } },
+}))
+const teamChartSeries = computed(() => [{
+  name: 'Tasks',
+  data: teamData.value.map(m => m.task_count),
+}])
 
 const salesSubTab   = ref('invoices')
 const srLoading     = ref(false)
@@ -712,7 +812,7 @@ const maxTimesheets  = computed(() => Math.max(...timesheetsData.value.map(r => 
 const maxTeam        = computed(() => Math.max(...teamData.value.map(m => m.task_count), 1))
 
 function barHeight(val, max) {
-  return Math.max(4, Math.round((val / max) * 160))
+  return Math.max(4, Math.round((val / max) * 300))
 }
 
 function compPct(val, total) {
@@ -1005,19 +1105,13 @@ onMounted(loadAll)
 .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #475569; cursor: pointer; }
 .checkbox-label input { width: 16px; height: 16px; cursor: pointer; }
 .expenses-detailed { display: flex; flex-direction: column; gap: 28px; }
-.exp-charts-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.exp-charts-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+@media (max-width: 768px) {
+  .exp-charts-row { grid-template-columns: 1fr; }
+}
 .exp-chart-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
-.exp-chart-box .chart-title { font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 10px; }
-.exp-chart-box .bars { display: flex; align-items: flex-end; gap: 3px; padding-bottom: 18px; border-bottom: 1px solid #e2e8f0; }
-.exp-chart-box .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; position: relative; }
-.exp-chart-box .bar-label-top { font-size: 7px; color: #94a3b8; position: absolute; top: -4px; white-space: nowrap; }
-.exp-chart-box .bar-col { display: flex; align-items: flex-end; flex: 1; width: 100%; padding-top: 12px; }
-.exp-chart-box .bar { width: 100%; min-height: 4px; background: linear-gradient(180deg, #ef4444, #dc2626); border-radius: 3px 3px 0 0; }
-.pie-legend { display: flex; flex-direction: column; gap: 5px; max-height: 180px; overflow-y: auto; }
-.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; }
-.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.legend-label { color: #475569; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.legend-val { color: #1e293b; font-weight: 700; white-space: nowrap; }
+.exp-chart-box .chart-title { font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 10px; }
+.exp-chart-box :deep(.apexcharts-canvas) { margin: 0 auto; }
 .exp-section-group h3 { font-size: 14px; font-weight: 700; color: #1e293b; margin: 0 0 12px; }
 .exp-cat-table th, .exp-cat-table td { white-space: nowrap; font-size: 11px; padding: 6px 8px; }
 .exp-cat-table th:first-child, .exp-cat-table td:first-child { position: sticky; left: 0; background: #fff; z-index: 1; min-width: 140px; }
@@ -1032,7 +1126,7 @@ onMounted(loadAll)
 /* Bar Chart */
 .bar-chart { padding: 0; }
 .chart-title { font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 12px; }
-.bars { display: flex; align-items: flex-end; gap: 6px; height: 200px; padding-bottom: 24px; border-bottom: 2px solid #f1f5f9; }
+.bars { display: flex; align-items: flex-end; gap: 8px; height: 350px; padding-bottom: 24px; border-bottom: 2px solid #f1f5f9; }
 .bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 4px; height: 100%; justify-content: flex-end; position: relative; }
 .bar-label-top { font-size: 8px; color: #94a3b8; text-align: center; position: absolute; top: -4px; white-space: nowrap; }
 .bar-col { display: flex; align-items: flex-end; flex: 1; width: 100%; padding-top: 16px; }
@@ -1049,22 +1143,15 @@ onMounted(loadAll)
 .highlight-row td { background: #eff6ff; }
 .total-row td { background: #f8fafc; border-top: 1.5px solid #e2e8f0; }
 
-/* Finance comparison */
+/* Finance chart */
 .finance-detail { display: flex; flex-direction: column; gap: 24px; }
-.finance-comparison { display: flex; flex-direction: column; gap: 16px; }
-.comparison-row { display: flex; align-items: center; gap: 12px; }
-.comp-label { font-size: 12px; font-weight: 600; color: #475569; min-width: 140px; }
-.comp-bar-wrap { flex: 1; height: 12px; background: #f1f5f9; border-radius: 6px; overflow: hidden; }
-.comp-bar { height: 100%; border-radius: 6px; transition: width 0.8s ease; }
-.income-bar  { background: linear-gradient(90deg, #10b981, #059669); }
-.expense-bar { background: linear-gradient(90deg, #ef4444, #dc2626); }
-.payment-bar { background: linear-gradient(90deg, #3b82f6, #2563eb); }
-.profit-bar.pos { background: linear-gradient(90deg, #10b981, #059669); }
-.profit-bar.neg { background: linear-gradient(90deg, #ef4444, #dc2626); }
-.comp-value { font-size: 12px; font-weight: 700; min-width: 80px; text-align: right; }
-.income-val  { color: #10b981; }
-.expense-val { color: #ef4444; }
-.payment-val { color: #3b82f6; }
+.finance-chart-wrap { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
+
+/* Leads chart */
+.leads-chart-area { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+.leads-chart-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
+.leads-chart-box .chart-title { font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 10px; }
+.leads-chart-box :deep(.apexcharts-canvas) { margin: 0 auto; }
 
 .profit-summary { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-radius: 10px; }
 .profit-summary.profitable   { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1.5px solid #bbf7d0; }
@@ -1073,37 +1160,25 @@ onMounted(loadAll)
 .profit-headline { font-weight: 700; font-size: 15px; color: #1e293b; }
 .profit-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
 
-/* Team */
-.team-list { display: flex; flex-direction: column; gap: 12px; }
-.team-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #f8fafc; border-radius: 10px; transition: background 0.15s; }
-.team-row:hover { background: #f1f5f9; }
-.team-rank { width: 24px; height: 24px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #475569; flex-shrink: 0; }
-.team-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #1e9aff, #6366f1); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; }
-.team-info { min-width: 120px; }
-.team-name { font-size: 13px; font-weight: 700; color: #1e293b; }
-.team-tasks { font-size: 11px; color: #94a3b8; }
-.team-bar-wrap { flex: 1; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
-.team-bar { height: 100%; background: linear-gradient(90deg, #1e9aff, #6366f1); border-radius: 4px; transition: width 0.6s ease; }
-.team-count { font-size: 14px; font-weight: 800; color: #1e293b; min-width: 28px; text-align: right; }
+/* Timesheets chart */
+.timesheets-chart-area { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+.timesheets-chart-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
+.timesheets-chart-box .chart-title { font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 10px; }
+
+/* KB chart */
+.kb-chart-area { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.kb-group-label { font-size: 14px; font-weight: 700; color: #1e293b; grid-column: 1 / -1; padding-bottom: 4px; border-bottom: 2px solid #e2e8f0; margin-bottom: 4px; }
+.kb-vote-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; }
+.kb-vote-title { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 4px; }
+.kb-total { font-weight: 400; color: #94a3b8; font-size: 12px; }
+.kb-no-votes { font-size: 12px; color: #94a3b8; font-style: italic; padding: 24px; text-align: center; }
+
+/* Team chart */
+.team-chart-area { }
+.team-chart-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
 
 .empty-state { text-align: center; padding: 40px; color: #94a3b8; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .empty-icon { font-size: 36px; }
-
-.kb-vote-list { display: flex; flex-direction: column; gap: 16px; }
-.kb-group-label { font-size: 14px; font-weight: 700; color: #1e293b; padding-bottom: 4px; border-bottom: 2px solid #e2e8f0; margin-bottom: 4px; }
-.kb-vote-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; }
-.kb-vote-title { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 8px; }
-.kb-total { font-weight: 400; color: #94a3b8; font-size: 12px; }
-.kb-no-votes { font-size: 12px; color: #94a3b8; font-style: italic; }
-.kb-vote-bars { display: flex; flex-direction: column; gap: 6px; }
-.kb-vote-row { display: flex; align-items: center; gap: 6px; font-size: 12px; }
-.kb-vote-label { min-width: 30px; color: #64748b; font-weight: 600; }
-.kb-vote-count { min-width: 24px; font-weight: 700; color: #1e293b; text-align: right; }
-.kb-bar-wrap { flex: 1; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
-.kb-bar { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
-.yes-bar { background: linear-gradient(90deg, #10b981, #059669); }
-.no-bar { background: linear-gradient(90deg, #ef4444, #dc2626); }
-.kb-vote-pct { min-width: 48px; text-align: right; color: #64748b; font-weight: 600; }
 
 @media (max-width: 1024px) {
   .finance-cards { grid-template-columns: repeat(2, 1fr); }

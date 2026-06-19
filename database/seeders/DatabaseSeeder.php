@@ -118,5 +118,7 @@ class DatabaseSeeder extends Seeder
             'source_id' => $website->id,
             'assigned_id' => $user->id,
         ]);
+
+        $this->call(DemoDataSeeder::class);
     }
 }

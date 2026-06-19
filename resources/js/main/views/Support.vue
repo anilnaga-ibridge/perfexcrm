@@ -16,6 +16,23 @@
       </div>
     </div>
 
+    <!-- Charts Row -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-card-title">Weekly Tickets Analytics</div>
+        <div class="chart-card-subtitle">Tickets created per day over the last 7 days</div>
+        <apexchart type="bar" height="220" :options="weeklyOptions" :series="weeklySeries"></apexchart>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Tickets by Priority</div>
+        <apexchart type="donut" height="220" :options="priorityDonutOptions" :series="priorityDonutSeries"></apexchart>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Tickets by Department</div>
+        <apexchart type="donut" height="220" :options="deptDonutOptions" :series="deptDonutSeries"></apexchart>
+      </div>
+    </div>
+
     <!-- Table Card -->
     <div class="table-card">
       <div class="table-toolbar">
@@ -127,8 +144,10 @@
 
 <script>
 import { defineComponent, ref, computed } from 'vue';
+import VueApexCharts from 'vue3-apexcharts';
 export default defineComponent({
   name: 'SupportPage',
+  components: { apexchart: VueApexCharts },
   setup() {
     const perPage = ref('25'); const search = ref(''); const statusFilter = ref('');
     const showCreate = ref(false);
@@ -156,6 +175,50 @@ export default defineComponent({
         { label: 'Closed', value: by('Closed'), cls: 'text-muted' }
       ];
     });
+
+    // ── ApexCharts ─────────────────────────────────────
+    const weeklyOptions = computed(() => ({
+      chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
+      xaxis: { categories: ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'], labels: { style: { fontSize: '12px', fontWeight: 600 } } },
+      yaxis: { labels: { style: { fontSize: '12px' } } },
+      colors: ['#6366f1'],
+      plotOptions: { bar: { columnWidth: '55%', borderRadius: 4, dataLabels: { position: 'top' } } },
+      dataLabels: { enabled: true, style: { fontSize: '13px', fontWeight: 700, colors: ['#1e293b'] }, offsetY: -20 },
+      grid: { borderColor: '#f1f5f9' },
+    }))
+    const weeklySeries = computed(() => [{ name: 'Tickets', data: [0, 2, 0, 0, 1, 3, 1] }])
+
+    const priorityDistribution = computed(() => {
+      const counts = { High: 0, Medium: 0, Low: 0 }
+      rows.value.forEach(r => { if (counts[r.priority] !== undefined) counts[r.priority]++ })
+      return Object.entries(counts).filter(([, v]) => v > 0).map(([s, v]) => ({ status: s, count: v }))
+    })
+    const priorityDonutOptions = computed(() => ({
+      chart: { type: 'donut', toolbar: { show: false } },
+      labels: priorityDistribution.value.map(p => p.status),
+      colors: priorityDistribution.value.map(p => ({ High: '#dc2626', Medium: '#f59e0b', Low: '#94a3b8' }[p.status])),
+      plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', fontSize: '14px', fontWeight: 700, color: '#1e293b', formatter: () => String(priorityDistribution.value.reduce((a, b) => a + b.count, 0)) } } } } },
+      dataLabels: { enabled: true, style: { fontSize: '12px', fontWeight: 700, colors: ['#fff'] } },
+      legend: { position: 'bottom', fontSize: '12px', fontWeight: 600, labels: { colors: '#475569' }, itemMargin: { horizontal: 12 } },
+      responsive: [{ breakpoint: 480, options: { legend: { position: 'bottom' } } }],
+    }))
+    const priorityDonutSeries = computed(() => priorityDistribution.value.map(p => p.count))
+
+    const deptDistribution = computed(() => {
+      const counts = {}
+      rows.value.forEach(r => { counts[r.department] = (counts[r.department] || 0) + 1 })
+      return Object.entries(counts).map(([s, v]) => ({ dept: s, count: v }))
+    })
+    const deptColors = ['#6366f1', '#10b981', '#f59e0b', '#8b5cf6']
+    const deptDonutOptions = computed(() => ({
+      chart: { type: 'donut', toolbar: { show: false } },
+      labels: deptDistribution.value.map(d => d.dept),
+      colors: deptDistribution.value.map((_, i) => deptColors[i % deptColors.length]),
+      plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', fontSize: '14px', fontWeight: 700, color: '#1e293b', formatter: () => String(deptDistribution.value.reduce((a, b) => a + b.count, 0)) } } } } },
+      dataLabels: { enabled: true, style: { fontSize: '12px', fontWeight: 700, colors: ['#fff'] } },
+      legend: { position: 'bottom', fontSize: '12px', fontWeight: 600, labels: { colors: '#475569' }, itemMargin: { horizontal: 12 } },
+    }))
+    const deptDonutSeries = computed(() => deptDistribution.value.map(d => d.count))
 
     const filteredRows = computed(() => rows.value.filter(r => {
       if (statusFilter.value && r.status !== statusFilter.value) return false;
@@ -201,13 +264,20 @@ export default defineComponent({
       form.value = { subject: '', client: 'Nader-Abernathy', department: 'Technical Support', priority: 'Medium', status: 'Open', message: '' };
     };
 
-    return { perPage, search, statusFilter, rows, summaryCards, filteredRows, statusClass, priorityClass, showCreate, form, clients, departments, addRow };
+    return { perPage, search, statusFilter, rows, summaryCards, filteredRows, statusClass, priorityClass, showCreate, form, clients, departments, addRow, weeklyOptions, weeklySeries, priorityDonutOptions, priorityDonutSeries, deptDonutOptions, deptDonutSeries };
   }
 });
 </script>
 
 <style scoped>
 @import '@/main/module-shared.css';
+
+.charts-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+@media (max-width: 1000px) { .charts-row { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .charts-row { grid-template-columns: 1fr; } }
+.chart-card { background: #fff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px; }
+.chart-card-title { font-size: 13px; font-weight: 700; color: #0f172a; }
+.chart-card-subtitle { font-size: 11px; color: #94a3b8; margin: 1px 0 10px; }
 
 .ticket-tag {
   color: #64748b;

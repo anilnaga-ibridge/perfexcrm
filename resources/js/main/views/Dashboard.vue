@@ -33,7 +33,7 @@
             <!-- Invoice Overview -->
             <div class="overview-col">
               <h3 class="overview-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" width="15" height="15"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" width="17" height="17"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 Invoice overview
               </h3>
               <div class="overview-rows">
@@ -66,7 +66,7 @@
             <!-- Estimate Overview -->
             <div class="overview-col">
               <h3 class="overview-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" width="15" height="15"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" width="17" height="17"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 Estimate overview
               </h3>
               <div class="overview-rows">
@@ -85,7 +85,7 @@
             <!-- Proposal Overview -->
             <div class="overview-col">
               <h3 class="overview-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" width="15" height="15"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" width="17" height="17"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                 Proposal overview
               </h3>
               <div class="overview-rows">
@@ -107,12 +107,12 @@
         <div class="card tabs-panel">
           <div class="tabs-header">
             <button 
-              v-for="t in ['Tasks', 'Projects', 'Reminders', 'Tickets', 'Announcements']" 
+              v-for="t in ['Tasks', 'Projects', 'Reminders', 'Tickets', 'Announcements', 'Latest Activity']" 
               :key="t" 
               :class="['tab-btn', { 'tab-btn--active': activeTab === t }]"
               @click="activeTab = t"
             >
-              My {{ t }}
+              {{ t === 'Latest Activity' ? 'Latest Activity' : 'My ' + t }}
             </button>
           </div>
           
@@ -177,6 +177,19 @@
             <div v-if="activeTab === 'Announcements'" class="empty-cell">
               No recent announcements
             </div>
+
+            <div v-if="activeTab === 'Latest Activity'" class="activity-feed">
+              <div v-for="act in latestActivity" :key="act.time" class="activity-item">
+                <span class="activity-dot" :class="act.colorClass"></span>
+                <div class="activity-content">
+                  <div class="activity-text">
+                    <strong>{{ act.user }}</strong> - {{ act.action }}
+                    <span v-if="act.project" class="activity-project"> — {{ act.project }}</span>
+                  </div>
+                  <div class="activity-time">{{ act.time }}</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -217,43 +230,80 @@
           </div>
         </div>
 
+        <!-- This Week Events -->
+        <div class="card events-panel">
+          <div class="panel-header">
+            <h3 class="panel-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" width="17" height="17" style="vertical-align:middle;margin-right:4px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              This Week events
+            </h3>
+            <span style="font-size:12px;color:#94a3b8">Upcoming events Next Week: {{ nextWeekEvents }}</span>
+          </div>
+          <div class="events-list">
+            <div v-for="ev in thisWeekEvents" :key="ev.title" class="event-item">
+              <div class="event-date-badge">
+                <span class="event-date-day">{{ ev.day }}</span>
+                <span class="event-date-month">{{ ev.month }}</span>
+              </div>
+              <div class="event-info">
+                <div class="event-title">{{ ev.title }}</div>
+                <div class="event-meta">{{ ev.date }} — {{ ev.type }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Payment Records Chart -->
         <div class="card payment-records-panel">
           <div class="panel-header">
             <h3 class="panel-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" width="16" height="16" style="vertical-align: middle; margin-right: 4px;"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" width="18" height="18" style="vertical-align: middle; margin-right: 4px;"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
               Payment Records
             </h3>
-            <span style="font-size:11px;color:#94a3b8">Billed vs Received</span>
+            <span style="font-size:12.5px;color:#94a3b8">Billed vs Received</span>
           </div>
-          <div class="bar-chart-container">
-            <div class="chart-y-axis">
-              <span>$150k</span>
-              <span>$100k</span>
-              <span>$50k</span>
-              <span>$0</span>
+          <apexchart type="bar" height="260" :options="paymentChartOptions" :series="paymentChartSeries"></apexchart>
+        </div>
+
+        <!-- Contracts Expiring Soon -->
+        <div class="card contracts-panel">
+          <div class="panel-header">
+            <h3 class="panel-title">Contracts Expiring Soon</h3>
+            <router-link to="/admin/contracts" class="link-blue" style="font-size:13px">View All</router-link>
+          </div>
+          <div class="table-toolbar">
+            <div class="toolbar-left">
+              <select class="select-sm"><option>10</option><option>25</option></select>
             </div>
-            <div class="chart-bars-wrap">
-              <div class="chart-column" v-for="c in paymentColumns" :key="c.month">
-                <div class="column-bars">
-                  <div class="col-bar col-bar--billed" :style="{ height: c.billedPct + '%' }" :title="`Billed: ${formatCurrency(c.billed)}`"></div>
-                  <div class="col-bar col-bar--received" :style="{ height: c.receivedPct + '%' }" :title="`Received: ${formatCurrency(c.received)}`"></div>
-                </div>
-                <div class="column-label">{{ c.month }}</div>
-              </div>
+            <div class="toolbar-right">
+              <input class="input-sm" v-model="contractSearch" placeholder="Search..." />
             </div>
           </div>
-          <div class="chart-legend">
-            <div class="legend-item"><span class="legend-dot bg-billed"></span> Billed</div>
-            <div class="legend-item"><span class="legend-dot bg-received"></span> Received</div>
-          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Subject #</th>
+                <th>Customer</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="c in filteredContracts" :key="c.subject">
+                <td><a class="link-blue font-semibold">{{ c.subject }}</a></td>
+                <td>{{ c.customer }}</td>
+                <td>{{ c.start }}</td>
+                <td><span class="text-danger font-semibold">{{ c.end }}</span></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <!-- Recent Support Tickets Table -->
         <div class="card tickets-panel">
           <div class="panel-header">
             <h3 class="panel-title">Support Tickets activity</h3>
-            <router-link to="/admin/support" class="link-blue" style="font-size:11.5px">View All</router-link>
+            <router-link to="/admin/support" class="link-blue" style="font-size:13px">View All</router-link>
           </div>
           <table class="data-table">
             <thead>
@@ -268,7 +318,7 @@
               <tr v-for="t in ticketsMock" :key="t.id">
                 <td>
                   <a class="link-blue font-semibold">#{{ t.number }} - {{ t.subject }}</a>
-                  <div style="font-size:11px;color:#64748b;margin-top:2px">{{ t.excerpt }}</div>
+                  <div style="font-size:12px;color:#64748b;margin-top:3px">{{ t.excerpt }}</div>
                 </td>
                 <td>{{ t.client }}</td>
                 <td>{{ t.last_reply }}</td>
@@ -280,7 +330,18 @@
 
         <!-- Staff Tickets Report Table -->
         <div class="card staff-report-panel">
-          <h3 class="panel-title">Staff ticket performance report</h3>
+          <div class="panel-header">
+            <h3 class="panel-title">Staff Tickets Report</h3>
+            <span style="font-size:12px;color:#94a3b8">This Month</span>
+          </div>
+          <div class="table-toolbar">
+            <div class="toolbar-left">
+              <select class="select-sm"><option>10</option><option>25</option></select>
+            </div>
+            <div class="toolbar-right">
+              <input class="input-sm" v-model="staffSearch" placeholder="Search..." />
+            </div>
+          </div>
           <table class="data-table">
             <thead>
               <tr>
@@ -288,16 +349,18 @@
                 <th>Total Assigned</th>
                 <th>Open Tickets</th>
                 <th>Closed Tickets</th>
-                <th class="text-right">Resolve Rate</th>
+                <th>Replies To Tickets</th>
+                <th class="text-right">Avg Reply Time</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="s in staffPerformance" :key="s.name">
+              <tr v-for="s in filteredStaff" :key="s.name">
                 <td><strong>{{ s.name }}</strong></td>
                 <td>{{ s.assigned }}</td>
                 <td><span class="text-danger font-semibold">{{ s.open }}</span></td>
                 <td><span class="text-success font-semibold">{{ s.closed }}</span></td>
-                <td class="text-right font-semibold text-success">{{ s.rate }}%</td>
+                <td>{{ s.replies }}</td>
+                <td class="text-right font-semibold" :class="s.replyTime === '-' ? 'text-muted' : 'text-success'">{{ s.replyTime }}</td>
               </tr>
             </tbody>
           </table>
@@ -358,160 +421,106 @@
           </div>
         </div>
 
-        <!-- Leads Overview (Donut Chart) -->
+        <!-- Leads Overview (Apex Donut) -->
         <div class="card donut-card">
           <h3 class="panel-title">Leads Overview</h3>
-          <div class="donut-chart-wrap">
-            <div class="donut-svg-container">
-              <svg width="120" height="120" viewBox="0 0 36 36" class="donut-svg">
-                <circle cx="18" cy="18" r="15.915" fill="none" stroke="#f1f5f9" stroke-width="4.5"></circle>
-                <circle
-                  v-for="(slice, idx) in leadDonutSlices"
-                  :key="idx"
-                  cx="18"
-                  cy="18"
-                  r="15.915"
-                  fill="none"
-                  :stroke="slice.color"
-                  stroke-width="4.5"
-                  :stroke-dasharray="`${slice.percentage} ${100 - slice.percentage}`"
-                  :stroke-dashoffset="slice.offset"
-                ></circle>
-              </svg>
-              <div class="donut-center">
-                <div class="donut-center-val">{{ metrics.total_leads || 53 }}</div>
-                <div class="donut-center-lbl">Leads</div>
-              </div>
-            </div>
-            <div class="donut-legend">
-              <div v-for="item in leadDonutSlices" :key="item.name" class="legend-item">
-                <span class="legend-dot" :style="{ background: item.color }"></span>
-                <span class="legend-label">{{ item.name }}: <strong>{{ item.count }}</strong></span>
-              </div>
-            </div>
-          </div>
+          <apexchart type="donut" height="260" :options="leadsChartOptions" :series="leadsChartSeries"></apexchart>
         </div>
 
-        <!-- Project Status Chart (Donut Chart) -->
+        <!-- Project Status Chart (Apex Donut) -->
         <div class="card donut-card">
           <h3 class="panel-title">Projects Status Chart</h3>
-          <div class="donut-chart-wrap">
-            <div class="donut-svg-container">
-              <svg width="120" height="120" viewBox="0 0 36 36" class="donut-svg">
-                <circle cx="18" cy="18" r="15.915" fill="none" stroke="#f1f5f9" stroke-width="4.5"></circle>
-                <circle
-                  v-for="(slice, idx) in projectDonutSlices"
-                  :key="idx"
-                  cx="18"
-                  cy="18"
-                  r="15.915"
-                  fill="none"
-                  :stroke="slice.color"
-                  stroke-width="4.5"
-                  :stroke-dasharray="`${slice.percentage} ${100 - slice.percentage}`"
-                  :stroke-dashoffset="slice.offset"
-                ></circle>
-              </svg>
-              <div class="donut-center">
-                <div class="donut-center-val">5</div>
-                <div class="donut-center-lbl">Projects</div>
-              </div>
-            </div>
-            <div class="donut-legend">
-              <div v-for="item in projectDonutSlices" :key="item.name" class="legend-item">
-                <span class="legend-dot" :style="{ background: item.color }"></span>
-                <span class="legend-label">{{ item.name }}: <strong>{{ item.count }}</strong></span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tickets by Status Chart (Donut Chart) -->
-        <div class="card donut-card">
-          <h3 class="panel-title">Tickets Status Chart</h3>
-          <div class="donut-chart-wrap">
-            <div class="donut-svg-container">
-              <svg width="120" height="120" viewBox="0 0 36 36" class="donut-svg">
-                <circle cx="18" cy="18" r="15.915" fill="none" stroke="#f1f5f9" stroke-width="4.5"></circle>
-                <circle
-                  v-for="(slice, idx) in ticketDonutSlices"
-                  :key="idx"
-                  cx="18"
-                  cy="18"
-                  r="15.915"
-                  fill="none"
-                  :stroke="slice.color"
-                  stroke-width="4.5"
-                  :stroke-dasharray="`${slice.percentage} ${100 - slice.percentage}`"
-                  :stroke-dashoffset="slice.offset"
-                ></circle>
-              </svg>
-              <div class="donut-center">
-                <div class="donut-center-val">5</div>
-                <div class="donut-center-lbl">Tickets</div>
-              </div>
-            </div>
-            <div class="donut-legend">
-              <div v-for="item in ticketDonutSlices" :key="item.name" class="legend-item">
-                <span class="legend-dot" :style="{ background: item.color }"></span>
-                <span class="legend-label">{{ item.name }}: <strong>{{ item.count }}</strong></span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Contracts Expiring Soon Chart (Donut Chart) -->
-        <div class="card donut-card">
-          <h3 class="panel-title">Contracts Status Chart</h3>
-          <div class="donut-chart-wrap">
-            <div class="donut-svg-container">
-              <svg width="120" height="120" viewBox="0 0 36 36" class="donut-svg">
-                <circle cx="18" cy="18" r="15.915" fill="none" stroke="#f1f5f9" stroke-width="4.5"></circle>
-                <circle
-                  v-for="(slice, idx) in contractDonutSlices"
-                  :key="idx"
-                  cx="18"
-                  cy="18"
-                  r="15.915"
-                  fill="none"
-                  :stroke="slice.color"
-                  stroke-width="4.5"
-                  :stroke-dasharray="`${slice.percentage} ${100 - slice.percentage}`"
-                  :stroke-dashoffset="slice.offset"
-                ></circle>
-              </svg>
-              <div class="donut-center">
-                <div class="donut-center-val">5</div>
-                <div class="donut-center-lbl">Contracts</div>
-              </div>
-            </div>
-            <div class="donut-legend">
-              <div v-for="item in contractDonutSlices" :key="item.name" class="legend-item">
-                <span class="legend-dot" :style="{ background: item.color }"></span>
-                <span class="legend-label">{{ item.name }}: <strong>{{ item.count }}</strong></span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Project Performance Metrics -->
-        <div class="card progress-card">
-          <h3 class="panel-title">Project Progress Tracker</h3>
-          <div class="progress-bars-list">
-            <div v-for="p in projectProgressList" :key="p.name" class="progress-bar-row">
-              <div class="progress-bar-info">
-                <span class="progress-name">{{ p.name }}</span>
-                <span class="progress-val">{{ p.percentage }}%</span>
-              </div>
-              <div class="progress-track">
-                <div class="progress-fill" :class="p.colorClass" :style="{ width: p.percentage + '%' }"></div>
-              </div>
-            </div>
-          </div>
+          <apexchart type="donut" height="260" :options="projectsChartOptions" :series="projectsChartSeries"></apexchart>
         </div>
 
       </div>
 
+    </div>
+
+    <!-- ── Charts Section (full width below grid) ──────────── -->
+    <div class="charts-section">
+      <div class="charts-grid">
+
+        <!-- Tickets by Status Chart (Apex Donut) -->
+        <div class="card donut-card">
+          <h3 class="panel-title">Tickets Status Chart</h3>
+          <apexchart type="donut" height="260" :options="ticketsChartOptions" :series="ticketsChartSeries"></apexchart>
+        </div>
+
+        <!-- Tickets Awaiting Reply by Department (Apex Donut) -->
+        <div class="card donut-card">
+          <h3 class="panel-title">Tickets Awaiting Reply by Department</h3>
+          <apexchart type="donut" height="260" :options="departmentChartOptions" :series="departmentChartSeries"></apexchart>
+        </div>
+
+        <!-- Project Progress Tracker (Apex Bar) -->
+        <div class="card progress-card">
+          <h3 class="panel-title">Project Progress Tracker</h3>
+          <apexchart type="bar" height="280" :options="progressChartOptions" :series="progressChartSeries"></apexchart>
+        </div>
+
+        <!-- Contracts by Type (Apex Bar) -->
+        <div class="card chart-card">
+          <h3 class="panel-title">Contracts by Type</h3>
+          <apexchart type="bar" height="240" :options="contractsTypeChartOptions" :series="contractsTypeChartSeries"></apexchart>
+        </div>
+
+        <!-- Contracts Value by Type (Apex Area) -->
+        <div class="card chart-card">
+          <h3 class="panel-title">Contracts Value by Type (USD)</h3>
+          <apexchart type="area" height="240" :options="contractsValueChartOptions" :series="contractsValueChartSeries"></apexchart>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Bottom Sections (Latest Activity + Goals) ──────────── -->
+    <div class="bottom-grid">
+      <!-- Latest Project Activity -->
+      <div class="card activity-panel">
+        <div class="panel-header">
+          <h3 class="panel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" width="17" height="17" style="vertical-align:middle;margin-right:4px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Latest Project Activity
+          </h3>
+        </div>
+        <div class="activity-feed-list">
+          <div v-for="(act, i) in projectActivity" :key="i" class="feed-item">
+            <div class="feed-dot" :class="act.dotClass"></div>
+            <div class="feed-content">
+              <div class="feed-time">{{ act.time }}</div>
+              <div class="feed-text">
+                <strong>{{ act.user }}</strong> - {{ act.action }}
+              </div>
+              <div v-if="act.detail" class="feed-detail">{{ act.detail }}</div>
+              <div class="feed-project">{{ act.project }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Goals / Achievements -->
+      <div class="card goals-panel">
+        <div class="panel-header">
+          <h3 class="panel-title">Goals</h3>
+        </div>
+        <div class="goals-list">
+          <div v-for="g in goalList" :key="g.title" class="goal-item">
+            <div class="goal-info">
+              <div class="goal-title">{{ g.title }}</div>
+              <div class="goal-subtitle">{{ g.subtitle }}</div>
+            </div>
+            <div class="goal-metrics">
+              <div class="goal-achieved">{{ g.achieved }}</div>
+              <div class="goal-progress-wrap">
+                <div class="goal-progress-track">
+                  <div class="goal-progress-fill" :style="{ width: g.progressPct + '%', background: g.progressColor }"></div>
+                </div>
+                <div class="goal-progress-label">{{ g.progressPct }}%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
   </template>
@@ -521,9 +530,11 @@
 <script>
 import { defineComponent, ref, computed, onMounted } from 'vue';
 import axios from 'axios';
+import VueApexCharts from 'vue3-apexcharts';
 
 export default defineComponent({
   name: 'Dashboard',
+  components: { apexchart: VueApexCharts },
   setup() {
     const metrics   = ref({});
     const loading   = ref(true);
@@ -674,12 +685,12 @@ export default defineComponent({
       });
     });
 
-    const contractDonutSlices = computed(() => {
+    const departmentDonutSlices = computed(() => {
       const list = [
-        { name: 'Signed',  count: 2, color: '#22c55e', percentage: 40 },
-        { name: 'Sent',    count: 1, color: '#f59e0b', percentage: 20 },
-        { name: 'Draft',   count: 1, color: '#94a3b8', percentage: 20 },
-        { name: 'Expired', count: 1, color: '#ef4444', percentage: 20 },
+        { name: 'Support',        count: 4, color: '#3b82f6', percentage: 40 },
+        { name: 'Sales',          count: 2, color: '#22c55e', percentage: 20 },
+        { name: 'Development',    count: 2, color: '#f59e0b', percentage: 20 },
+        { name: 'Billing',        count: 2, color: '#8b5cf6', percentage: 20 },
       ];
       let accum = 0;
       return list.map(item => {
@@ -688,6 +699,9 @@ export default defineComponent({
         return { ...item, offset: offset % 100 };
       });
     });
+    const totalDepartmentTickets = computed(() =>
+      departmentDonutSlices.value.reduce((s, i) => s + i.count, 0)
+    );
 
     // ── Payment Records Columns ──────────────────────────────
     const paymentColumns = [
@@ -698,6 +712,122 @@ export default defineComponent({
       { month: 'May', billed: 95000, billedPct: 63,  received: 80000, receivedPct: 53 },
       { month: 'Jun', billed: 145000,billedPct: 96,  received: 120000,receivedPct: 80 },
     ];
+
+    // ── ApexCharts Options ───────────────────────────────────
+    const chartColors = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#f97316', '#06b6d4', '#94a3b8'];
+
+    const leadsChartOptions = computed(() => ({
+      chart: { type: 'donut', animations: { enabled: true } },
+      labels: leadDonutSlices.value.map(s => s.name),
+      colors: leadDonutSlices.value.map(s => s.color),
+      legend: { show: true, position: 'bottom', fontSize: '13px', offsetY: 0 },
+      dataLabels: { enabled: true, style: { fontSize: '13px', fontWeight: 600 }, dropShadow: { enabled: false } },
+      plotOptions: { pie: { donut: { size: '70%', labels: { show: true, total: { show: true, label: 'Leads', fontSize: '16px', fontWeight: 700, color: '#1e293b' } } } } },
+      stroke: { show: false },
+      responsive: [{ breakpoint: 480, options: { chart: { width: 220 } } }],
+    }));
+    const leadsChartSeries = computed(() => leadDonutSlices.value.map(s => s.count));
+
+    const projectsChartOptions = computed(() => ({
+      chart: { type: 'donut', animations: { enabled: true } },
+      labels: projectDonutSlices.value.map(s => s.name),
+      colors: projectDonutSlices.value.map(s => s.color),
+      legend: { show: true, position: 'bottom', fontSize: '13px' },
+      dataLabels: { enabled: true, style: { fontSize: '13px', fontWeight: 600 }, dropShadow: { enabled: false } },
+      plotOptions: { pie: { donut: { size: '70%', labels: { show: true, total: { show: true, label: 'Projects', fontSize: '16px', fontWeight: 700, color: '#1e293b' } } } } },
+      stroke: { show: false },
+      responsive: [{ breakpoint: 480, options: { chart: { width: 220 } } }],
+    }));
+    const projectsChartSeries = computed(() => projectDonutSlices.value.map(s => s.count));
+
+    const ticketsChartOptions = computed(() => ({
+      chart: { type: 'donut', animations: { enabled: true } },
+      labels: ticketDonutSlices.value.map(s => s.name),
+      colors: ticketDonutSlices.value.map(s => s.color),
+      legend: { show: true, position: 'bottom', fontSize: '13px' },
+      dataLabels: { enabled: true, style: { fontSize: '13px', fontWeight: 600 }, dropShadow: { enabled: false } },
+      plotOptions: { pie: { donut: { size: '70%', labels: { show: true, total: { show: true, label: 'Tickets', fontSize: '16px', fontWeight: 700, color: '#1e293b' } } } } },
+      stroke: { show: false },
+      responsive: [{ breakpoint: 480, options: { chart: { width: 220 } } }],
+    }));
+    const ticketsChartSeries = computed(() => ticketDonutSlices.value.map(s => s.count));
+
+    const departmentChartOptions = computed(() => ({
+      chart: { type: 'donut', animations: { enabled: true } },
+      labels: departmentDonutSlices.value.map(s => s.name),
+      colors: departmentDonutSlices.value.map(s => s.color),
+      legend: { show: true, position: 'bottom', fontSize: '13px' },
+      dataLabels: { enabled: true, style: { fontSize: '13px', fontWeight: 600 }, dropShadow: { enabled: false } },
+      plotOptions: { pie: { donut: { size: '70%', labels: { show: true, total: { show: true, label: 'Tickets', fontSize: '16px', fontWeight: 700, color: '#1e293b' } } } } },
+      stroke: { show: false },
+      responsive: [{ breakpoint: 480, options: { chart: { width: 220 } } }],
+    }));
+    const departmentChartSeries = computed(() => departmentDonutSlices.value.map(s => s.count));
+
+    const paymentChartOptions = computed(() => ({
+      chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
+      xaxis: { categories: paymentColumns.map(c => c.month), labels: { style: { fontSize: '12px' } } },
+      yaxis: { labels: { formatter: v => '$' + (v / 1000).toFixed(0) + 'k', style: { fontSize: '12px' } } },
+      colors: ['#86efac', '#fbcfe8'],
+      legend: { show: true, position: 'bottom', fontSize: '13px' },
+      dataLabels: { enabled: false },
+      plotOptions: { bar: { horizontal: false, columnWidth: '60%', borderRadius: 4 } },
+      grid: { borderColor: '#f1f5f9' },
+    }));
+    const paymentChartSeries = computed(() => [
+      { name: 'Billed', data: paymentColumns.map(c => c.billed) },
+      { name: 'Received', data: paymentColumns.map(c => c.received) },
+    ]);
+
+    const progressChartOptions = computed(() => ({
+      chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
+      xaxis: { categories: projectProgressList.map(p => p.name), labels: { style: { fontSize: '13px', fontWeight: 600 } } },
+      yaxis: { max: 100, labels: { formatter: v => v + '%', style: { fontSize: '12px' } } },
+      colors: ['#3b82f6'],
+      plotOptions: { bar: { horizontal: false, columnWidth: '50%', borderRadius: 4, dataLabels: { position: 'top' } } },
+      dataLabels: { enabled: true, formatter: v => v + '%', style: { fontSize: '13px', fontWeight: 700, colors: ['#1e293b'] }, offsetY: -20 },
+      grid: { borderColor: '#f1f5f9' },
+      tooltip: { y: { formatter: v => v + '%' } },
+    }));
+    const progressChartSeries = computed(() => [
+      { name: 'Progress', data: projectProgressList.map(p => p.percentage) },
+    ]);
+
+    // ── Contracts Charts ──────────────────────────────────────
+    const contractsByType = [
+      { name: 'General', count: 1, value: 1500 },
+      { name: 'Software License Agreement', count: 1, value: 0 },
+      { name: 'Service Level Agreement (SLA)', count: 2, value: 17000 },
+    ];
+
+    const contractsTypeChartOptions = computed(() => ({
+      chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
+      xaxis: { categories: contractsByType.map(c => c.name), labels: { style: { fontSize: '12px', fontWeight: 600 } } },
+      yaxis: { labels: { style: { fontSize: '12px' } } },
+      colors: ['#3b82f6'],
+      plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4, dataLabels: { position: 'top' } } },
+      dataLabels: { enabled: true, style: { fontSize: '13px', fontWeight: 700, colors: ['#1e293b'] }, offsetY: -20 },
+      grid: { borderColor: '#f1f5f9' },
+    }));
+    const contractsTypeChartSeries = computed(() => [
+      { name: 'Contracts', data: contractsByType.map(c => c.count) },
+    ]);
+
+    const contractsValueChartOptions = computed(() => ({
+      chart: { type: 'area', toolbar: { show: false }, animations: { enabled: true } },
+      xaxis: { categories: contractsByType.map(c => c.name), labels: { style: { fontSize: '12px', fontWeight: 600 } } },
+      yaxis: { labels: { formatter: v => '$' + v.toLocaleString(), style: { fontSize: '12px' } } },
+      colors: ['#8b5cf6'],
+      dataLabels: { enabled: true, formatter: v => '$' + v.toLocaleString(), style: { fontSize: '12px', fontWeight: 700, colors: ['#8b5cf6'] } },
+      fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.2 } },
+      stroke: { curve: 'smooth', width: 2 },
+      markers: { size: 4, colors: ['#fff'], strokeColors: '#8b5cf6', strokeWidth: 2 },
+      grid: { borderColor: '#f1f5f9' },
+      tooltip: { y: { formatter: v => '$' + v.toLocaleString() } },
+    }));
+    const contractsValueChartSeries = computed(() => [
+      { name: 'Value (USD)', data: contractsByType.map(c => c.value) },
+    ]);
 
     // ── Mocks for Tables ─────────────────────────────────────
     const tasksMock = [
@@ -718,20 +848,85 @@ export default defineComponent({
       { id: 3, number: 1020, subject: 'Surveys feedback result exports failing', excerpt: 'Getting 500 error when clicking CSV exports for goals v2.3...', client: 'Halvorson LLC', last_reply: 'Jun 13, 2026 10:15', status: 'Open', statusClass: 'badge-red' }
     ];
 
-    const staffPerformance = [
-      { name: 'Armando Turcotte', assigned: 15, open: 2, closed: 13, rate: 86 },
-      { name: 'Elias Konopelski', assigned: 10, open: 1, closed: 9, rate: 90 },
-      { name: 'Tamara Howell', assigned: 12, open: 0, closed: 12, rate: 100 },
-      { name: 'Marcus Lesch', assigned: 8, open: 3, closed: 5, rate: 62 },
-      { name: 'Rosie Trantow', assigned: 6, open: 1, closed: 5, rate: 83 }
-    ];
-
     const projectProgressList = [
       { name: 'E-commerce API Integration', percentage: 84, colorClass: 'bg-info' },
       { name: 'Brand Strategy Redesign', percentage: 100, colorClass: 'bg-success' },
       { name: 'Legacy App Migration', percentage: 50, colorClass: 'bg-warning' },
       { name: 'SEO Auditing & Content writing', percentage: 100, colorClass: 'bg-success' },
       { name: 'DevOps CI/CD Automation', percentage: 0, colorClass: 'bg-default' }
+    ];
+
+    // ── Latest Activity Tab ──────────────────────────────────
+    const latestActivity = [
+      { user: 'Lance Little', action: 'Added new task assignee', project: 'Brochure Design', time: '56 minutes ago', colorClass: 'dot-blue' },
+      { user: 'Lance Little', action: 'Added new task assignee', project: 'Brochure Design', time: '56 minutes ago', colorClass: 'dot-blue' },
+      { user: 'Lance Little', action: 'Created discussion', project: 'Website Redesign', time: '12 hrs ago', colorClass: 'dot-green' },
+      { user: 'Lance Little', action: 'Created new milestone', project: 'Website Redesign', time: '12 hrs ago', colorClass: 'dot-green' },
+      { user: 'Lance Little', action: 'Created the project', project: 'Website Redesign', time: '12 hrs ago', colorClass: 'dot-purple' },
+    ];
+
+    // ── This Week Events ─────────────────────────────────────
+    const thisWeekEvents = [
+      { title: 'King said, with a sigh: \'he taught Laughing and Grief, they.', date: '2026-06-20 00:00:30', day: '20', month: 'Jun', type: 'Public event' },
+      { title: 'Then followed the Knave was standing before...', date: '2026-06-20 00:00:00', day: '20', month: 'Jun', type: 'Public event' },
+      { title: 'I haven\'t been invited yet.', date: '2026-06-21 00:00:00', day: '21', month: 'Jun', type: 'Event' },
+    ];
+    const nextWeekEvents = 2;
+
+    // ── Contracts Expiring Soon ──────────────────────────────
+    const contractSearch = ref('');
+    const contractsMock = [
+      { subject: 'Rabbit\'s voice; and Alice was not a regular rule: you.', customer: 'Stamm, Jast and Collins', start: '2026-06-19', end: '2026-06-26' },
+      { subject: 'March Hare. The Hatter was the first sentence in her head.', customer: 'Brakus-Funk', start: '2026-06-19', end: '2026-06-25' },
+      { subject: 'I shan\'t grow any more--As it is, I can\'t quite follow it.', customer: 'Strosin-Mueller', start: '2026-06-19', end: '2026-06-24' },
+      { subject: 'CHAPTER V. Advice from a Caterpillar The Caterpillar was.', customer: 'Mitchell-Abshire', start: '2026-06-19', end: '2026-06-23' },
+      { subject: 'YOU, and no one listening, this time, and was going to.', customer: 'Kassulke Group', start: '2026-06-19', end: '2026-06-22' },
+      { subject: 'I haven\'t been invited yet.', customer: 'Brakus-Funk', start: '2026-06-19', end: '2026-06-21' },
+    ];
+    const filteredContracts = computed(() => {
+      if (!contractSearch.value) return contractsMock;
+      const q = contractSearch.value.toLowerCase();
+      return contractsMock.filter(c => c.subject.toLowerCase().includes(q) || c.customer.toLowerCase().includes(q));
+    });
+
+    // ── Staff Search ─────────────────────────────────────────
+    const staffSearch = ref('');
+    const staffPerformance = [
+      { name: 'Armando Turcotte', assigned: 15, open: 2, closed: 13, replies: 0, replyTime: '-' },
+      { name: 'Elias Konopelski', assigned: 10, open: 1, closed: 9, replies: 0, replyTime: '-' },
+      { name: 'Tamara Howell', assigned: 12, open: 0, closed: 12, replies: 0, replyTime: '-' },
+      { name: 'Marcus Lesch', assigned: 8, open: 3, closed: 5, replies: 0, replyTime: '-' },
+      { name: 'Rosie Trantow', assigned: 6, open: 1, closed: 5, replies: 0, replyTime: '-' },
+    ];
+    const filteredStaff = computed(() => {
+      if (!staffSearch.value) return staffPerformance;
+      const q = staffSearch.value.toLowerCase();
+      return staffPerformance.filter(s => s.name.toLowerCase().includes(q));
+    });
+
+    // ── Project Activity Feed ────────────────────────────────
+    const projectActivity = [
+      { user: 'Lance Little', action: 'Added new task assignee', project: 'Brochure Design', detail: 'test - Lance Little', time: '56 minutes ago', dotClass: 'feed-dot--blue' },
+      { user: 'Lance Little', action: 'Added new task assignee', project: 'Brochure Design', detail: 'test - Walton Bahringer', time: '56 minutes ago', dotClass: 'feed-dot--blue' },
+      { user: 'Lance Little', action: 'Created discussion', project: 'Website Redesign', detail: 'Should we add blue color?', time: '12 hrs ago', dotClass: 'feed-dot--green' },
+      { user: 'Lance Little', action: 'Created discussion', project: 'Website Redesign', detail: 'Feedback for the mockup', time: '12 hrs ago', dotClass: 'feed-dot--green' },
+      { user: 'Lance Little', action: 'Created new milestone', project: 'Website Redesign', detail: 'Planning', time: '12 hrs ago', dotClass: 'feed-dot--purple' },
+      { user: 'Lance Little', action: 'Created new milestone', project: 'Website Redesign', detail: 'Design', time: '12 hrs ago', dotClass: 'feed-dot--purple' },
+      { user: 'Lance Little', action: 'Created new milestone', project: 'Website Redesign', detail: 'Development', time: '12 hrs ago', dotClass: 'feed-dot--purple' },
+      { user: 'Lance Little', action: 'Created new milestone', project: 'Website Redesign', detail: 'Integration Test', time: '12 hrs ago', dotClass: 'feed-dot--purple' },
+      { user: 'Lance Little', action: 'Created the project', project: 'Website Redesign', time: '12 hrs ago', dotClass: 'feed-dot--orange' },
+    ];
+
+    // ── Goals / Achievements ─────────────────────────────────
+    const goalList = [
+      { title: 'Achieve Total Income', subtitle: 'While the Owl had the best thing to.', achieved: '4170', progressPct: 100, progressColor: '#22c55e' },
+      { title: 'Convert X Leads', subtitle: 'He trusts to you never to.', achieved: '0', progressPct: 0, progressColor: '#94a3b8' },
+      { title: 'Increase Customer Number', subtitle: 'LITTLE larger, sir, if you wouldn\'t have come.', achieved: '10', progressPct: 34.48, progressColor: '#f59e0b' },
+      { title: 'Invoiced Amount', subtitle: 'She soon got it out to sea.', achieved: '29491', progressPct: 100, progressColor: '#22c55e' },
+      { title: 'X Estimates Conversion', subtitle: 'And the moral of that is.', achieved: '0', progressPct: 0, progressColor: '#94a3b8' },
+      { title: 'Increase Customer Number', subtitle: 'Alice, and, after folding.', achieved: '10', progressPct: 62.50, progressColor: '#3b82f6' },
+      { title: 'Make Contracts By Type', subtitle: 'Pigeon in a very.', achieved: '2', progressPct: 33.33, progressColor: '#f59e0b' },
+      { title: 'Make Contracts By Type', subtitle: 'Mock Turtle repeated thoughtfully.', achieved: '2', progressPct: 13.33, progressColor: '#ef4444' },
     ];
 
     const filteredTasks = computed(() => {
@@ -760,8 +955,22 @@ export default defineComponent({
       invoiceOverview, estimateOverview, proposalOverview,
       pendingTodos, doneTodos, formatCurrency,
       activeTab, tabSearch, filteredTasks,
-      leadDonutSlices, projectDonutSlices, ticketDonutSlices, contractDonutSlices,
-      paymentColumns, tasksMock, projectsMock, ticketsMock, staffPerformance, projectProgressList
+      leadDonutSlices, projectDonutSlices, ticketDonutSlices,
+      departmentDonutSlices, totalDepartmentTickets,
+      leadsChartOptions, leadsChartSeries,
+      projectsChartOptions, projectsChartSeries,
+      ticketsChartOptions, ticketsChartSeries,
+      departmentChartOptions, departmentChartSeries,
+      paymentChartOptions, paymentChartSeries,
+      progressChartOptions, progressChartSeries,
+      contractsTypeChartOptions, contractsTypeChartSeries,
+      contractsValueChartOptions, contractsValueChartSeries,
+      tasksMock, projectsMock, ticketsMock,
+      staffPerformance, filteredStaff, staffSearch,
+      projectProgressList, latestActivity,
+      thisWeekEvents, nextWeekEvents,
+      contractsMock, contractSearch, filteredContracts,
+      projectActivity, goalList,
     };
   }
 });
@@ -770,19 +979,19 @@ export default defineComponent({
 <style scoped>
 .dashboard {
   font-family: 'Inter', -apple-system, sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   color: #334155;
 }
-.loading-wrap { text-align: center; padding: 80px 40px; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; }
-.loader { width: 20px; height: 20px; border: 2.5px solid #e2e8f0; border-top-color: #1e9aff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+.loading-wrap { text-align: center; padding: 80px 40px; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 15px; }
+.loader { width: 24px; height: 24px; border: 3px solid #e2e8f0; border-top-color: #1e9aff; border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── Top Stats ──────────────────────────────────────────── */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 @media (max-width: 900px) { .stats-row { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 560px) { .stats-row { grid-template-columns: 1fr; } }
@@ -790,9 +999,9 @@ export default defineComponent({
 .stat-card {
   background: #fff;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
 }
 .stat-card-inner {
   padding: 14px 16px 10px;
@@ -806,23 +1015,24 @@ export default defineComponent({
   display: flex;
   align-items: center;
 }
+.stat-icon-wrap :deep(svg) { width: 22px; height: 22px; }
 .stat-label {
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 600;
   color: #64748b;
   flex: 1;
   min-width: 100px;
 }
 .stat-value {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 800;
   color: #1e293b;
   white-space: nowrap;
 }
 .stat-bar-wrap {
-  height: 5px;
+  height: 6px;
   background: #f1f5f9;
-  border-radius: 0 0 8px 8px;
+  border-radius: 0 0 14px 14px;
 }
 .stat-bar {
   height: 100%;
@@ -837,8 +1047,8 @@ export default defineComponent({
 /* ── Dashboard Two-Column Grid ────────────────────────── */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 16px;
+  grid-template-columns: 1fr 380px;
+  gap: 12px;
   align-items: start;
 }
 @media (max-width: 1000px) { .dashboard-grid { grid-template-columns: 1fr; } }
@@ -847,21 +1057,21 @@ export default defineComponent({
 .card {
   background: #fff;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   box-shadow: 0 1px 3px rgba(0,0,0,.04);
 }
 .panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   border-bottom: 1px solid #f1f5f9;
   padding-bottom: 8px;
 }
 .panel-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: #1e293b;
   margin: 0;
@@ -871,7 +1081,7 @@ export default defineComponent({
 
 /* Overviews Panel */
 .overviews-panel {
-  padding: 16px;
+  padding: 14px;
 }
 .overview-grid {
   display: grid;
@@ -881,34 +1091,34 @@ export default defineComponent({
 @media (max-width: 768px) { .overview-grid { grid-template-columns: 1fr; gap: 16px; } }
 
 .overview-col {
-  padding: 0 16px;
+  padding: 0 12px;
   border-right: 1px solid #f1f5f9;
 }
 .overview-col:first-child { padding-left: 0; }
 .overview-col:last-child  { padding-right: 0; border-right: none; }
 
 .overview-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: #475569;
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   display: flex;
   align-items: center;
   gap: 6px;
   padding-bottom: 8px;
   border-bottom: 1px solid #f1f5f9;
 }
-.overview-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.overview-rows { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
 .overview-row-label {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 }
-.ov-count      { font-size: 11px; font-weight: 600; color: #334155; }
-.ov-pct        { font-size: 11px; color: #94a3b8; }
-.ov-bar-track  { height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
-.ov-bar        { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+.ov-count      { font-size: 12.5px; font-weight: 600; color: #334155; }
+.ov-pct        { font-size: 12px; color: #94a3b8; }
+.ov-bar-track  { height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+.ov-bar        { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
 .ov-bar-red    { background: #ef4444; }
 .ov-bar-green  { background: #22c55e; }
 .ov-bar-blue   { background: #3b82f6; }
@@ -924,18 +1134,18 @@ export default defineComponent({
 .overview-footer {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 6px;
   border-top: 1px solid #f1f5f9;
-  padding-top: 12px;
+  padding-top: 10px;
 }
 .ov-foot-label {
-  font-size: 10px;
+  font-size: 11px;
   color: #94a3b8;
   font-weight: 500;
   margin-bottom: 2px;
 }
 .ov-foot-value {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: #1e293b;
 }
@@ -951,8 +1161,8 @@ export default defineComponent({
   background: none;
   border: none;
   border-right: 1px solid #e2e8f0;
-  padding: 12px 18px;
-  font-size: 12.5px;
+  padding: 14px 22px;
+  font-size: 13.5px;
   font-weight: 600;
   color: #475569;
   cursor: pointer;
@@ -966,25 +1176,25 @@ export default defineComponent({
   color: #0d6efd;
   border-bottom: 2px solid #0d6efd;
 }
-.tabs-content { padding: 16px; }
+.tabs-content { padding: 12px; }
 
 /* Table styling */
 .table-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
-.toolbar-left, .toolbar-right { display: flex; gap: 8px; }
-.select-sm { border:1px solid #e2e8f0; border-radius:5px; padding:4px 8px; font-size:12px; outline:none; background:#fff; }
-.input-sm  { border:1px solid #e2e8f0; border-radius:5px; padding:4px 8px; font-size:12px; outline:none; width:180px; }
-.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.data-table th { background: #f8fafc; padding: 8px 12px; text-align: left; font-weight: 700; color: #475569; border-bottom: 2px solid #e2e8f0; }
-.data-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; }
+.toolbar-left, .toolbar-right { display: flex; gap: 10px; }
+.select-sm { border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px; font-size:13px; outline:none; background:#fff; }
+.input-sm  { border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px; font-size:13px; outline:none; width:200px; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.data-table th { background: #f8fafc; padding: 8px 10px; text-align: left; font-weight: 700; color: #475569; border-bottom: 2px solid #e2e8f0; }
+.data-table td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; }
 .data-table tbody tr:hover { background: #f8fafc; }
 .link-blue { color: #0d6efd; text-decoration: none; font-weight: 600; cursor: pointer; }
 .link-blue:hover { text-decoration: underline; }
-.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10.5px; font-weight: 600; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 14px; font-size: 11.5px; font-weight: 600; }
 .badge-blue { background: #dbeafe; color: #1d4ed8; }
 .badge-green { background: #dcfce7; color: #15803d; }
 .badge-red { background: #fee2e2; color: #b91c1c; }
@@ -993,19 +1203,18 @@ export default defineComponent({
 .empty-cell { text-align: center; color: #94a3b8; padding: 30px 10px; }
 
 /* Calendar Widget */
-.calendar-panel {}
 .calendar-header {
   display: flex;
   align-items: center;
-  margin-bottom: 14px;
-  gap: 12px;
+  margin-bottom: 10px;
+  gap: 10px;
 }
 .cal-nav-btn {
   background: none;
   border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  width: 28px;
-  height: 28px;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1013,14 +1222,14 @@ export default defineComponent({
   color: #475569;
 }
 .cal-nav-btn:hover { background: #f1f5f9; }
-.calendar-title { font-size: 15px; font-weight: 700; color: #1e293b; margin: 0; }
-.cal-view-modes { margin-left: auto; display: flex; gap: 4px; }
+.calendar-title { font-size: 17px; font-weight: 700; color: #1e293b; margin: 0; }
+.cal-view-modes { margin-left: auto; display: flex; gap: 6px; }
 .btn-outline {
   border: 1px solid #e2e8f0;
   background: #fff;
-  border-radius: 4px;
-  padding: 4px 10px;
-  font-size: 12px;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 13px;
   color: #475569;
   cursor: pointer;
 }
@@ -1032,7 +1241,7 @@ export default defineComponent({
   text-align: center;
   font-weight: 600;
   color: #64748b;
-  font-size: 11px;
+  font-size: 12px;
   margin-bottom: 6px;
   border-bottom: 1px solid #f1f5f9;
   padding-bottom: 6px;
@@ -1046,19 +1255,19 @@ export default defineComponent({
 }
 .calendar-day {
   background: #fff;
-  min-height: 80px;
-  padding: 4px;
+  min-height: 90px;
+  padding: 6px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 .calendar-day--other { background: #f8fafc; color: #94a3b8; }
-.day-num { font-size: 11px; font-weight: 600; color: #64748b; }
-.day-events { display: flex; flex-direction: column; gap: 2px; }
+.day-num { font-size: 12.5px; font-weight: 600; color: #64748b; }
+.day-events { display: flex; flex-direction: column; gap: 3px; }
 .cal-event {
-  font-size: 10px;
-  padding: 2px 4px;
-  border-radius: 3px;
+  font-size: 11px;
+  padding: 3px 5px;
+  border-radius: 4px;
   color: #fff;
   font-weight: 500;
   white-space: nowrap;
@@ -1072,63 +1281,7 @@ export default defineComponent({
 .cal-event--orange { background: #f97316; }
 
 /* Payment Records Chart */
-.payment-records-panel {}
-.bar-chart-container {
-  display: flex;
-  gap: 12px;
-  height: 200px;
-  margin: 16px 0;
-}
-.chart-y-axis {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  font-size: 11px;
-  color: #94a3b8;
-  text-align: right;
-  width: 35px;
-  padding-bottom: 18px;
-}
-.chart-bars-wrap {
-  flex: 1;
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 4px;
-}
-.chart-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-  max-width: 60px;
-}
-.column-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  height: 100%;
-  width: 100%;
-}
-.col-bar {
-  flex: 1;
-  border-radius: 3px 3px 0 0;
-  transition: height 0.5s ease;
-  min-height: 2px;
-}
-.col-bar--billed   { background: #86efac; } /* light green */
-.col-bar--received { background: #fbcfe8; } /* light pink */
-.column-label { font-size: 11px; color: #64748b; font-weight: 500; }
-.chart-legend {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  font-size: 11px;
-}
-.bg-billed { background: #86efac; }
-.bg-received { background: #fbcfe8; }
+.payment-records-panel :deep(.apexcharts-legend-text) { font-size: 13px !important; }
 
 /* Staff Ticket Report */
 .staff-report-panel {}
@@ -1136,84 +1289,141 @@ export default defineComponent({
 /* ── Right Column Sidebar Elements ────────────────────────── */
 
 /* To Do List */
-.todo-panel {}
 .todo-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.todo-title { font-size: 12px; font-weight: 700; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 5px; }
+.todo-title { font-size: 14px; font-weight: 700; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 6px; }
+.todo-title :deep(svg) { width: 18px; height: 18px; }
 .todo-header-actions { display: flex; align-items: center; gap: 10px; }
-.todo-link { font-size: 11.5px; color: #0d6efd; cursor: pointer; text-decoration: none; }
-.todo-btn { font-size: 11px; font-weight: 600; color: #0d6efd; cursor: pointer; }
-.todo-section-label { font-size: 11px; font-weight: 700; margin: 8px 0 6px; padding: 3px 0; }
+.todo-link { font-size: 12.5px; color: #0d6efd; cursor: pointer; text-decoration: none; }
+.todo-btn { font-size: 12px; font-weight: 600; color: #0d6efd; cursor: pointer; }
+.todo-section-label { font-size: 12px; font-weight: 700; margin: 8px 0 6px; padding: 3px 0; }
 .todo-section-label--pending { color: #f59e0b; }
 .todo-section-label--done    { color: #22c55e; }
-.todo-list { display: flex; flex-direction: column; gap: 4px; }
-.todo-item { display: flex; align-items: flex-start; gap: 6px; padding: 6px 4px; border-radius: 4px; }
+.todo-list { display: flex; flex-direction: column; gap: 6px; }
+.todo-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px 6px; border-radius: 6px; }
 .todo-item:hover { background: #f8fafc; }
 .todo-item--done { opacity: 0.7; }
-.todo-drag { color: #cbd5e1; font-size: 14px; cursor: grab; line-height: 1.4; }
-.todo-check-wrap { padding-top: 1px; }
-.todo-checkbox { width: 13px; height: 13px; cursor: pointer; accent-color: #0d6efd; }
+.todo-drag { color: #cbd5e1; font-size: 16px; cursor: grab; line-height: 1.4; }
+.todo-check-wrap { padding-top: 2px; }
+.todo-checkbox { width: 15px; height: 15px; cursor: pointer; accent-color: #0d6efd; }
 .todo-text-wrap { flex: 1; min-width: 0; }
-.todo-text { font-size: 12px; color: #334155; line-height: 1.4; }
+.todo-text { font-size: 13.5px; color: #334155; line-height: 1.4; }
 .todo-text--done { text-decoration: line-through; color: #94a3b8; }
-.todo-date { font-size: 10.5px; color: #94a3b8; margin-top: 2px; }
-.todo-actions { display: flex; gap: 2px; opacity: 0; transition: opacity 0.12s; }
+.todo-date { font-size: 11.5px; color: #94a3b8; margin-top: 3px; }
+.todo-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.12s; }
 .todo-item:hover .todo-actions { opacity: 1; }
-.todo-action-btn { background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 13px; padding: 2px 4px; border-radius: 3px; line-height: 1; }
+.todo-action-btn { background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 15px; padding: 3px 5px; border-radius: 4px; line-height: 1; }
 .todo-action-btn:hover { background: #f1f5f9; color: #475569; }
 .todo-action-btn--del:hover { color: #ef4444; }
 
 /* Donut Charts */
-.donut-card { padding: 14px 16px; }
-.donut-chart-wrap {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 10px;
-}
-.donut-svg-container {
-  position: relative;
-  width: 90px;
-  height: 90px;
-  flex-shrink: 0;
-}
-.donut-svg {
-  transform: rotate(-90deg);
-  width: 100%;
-  height: 100%;
-}
-.donut-center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.donut-center-val { font-size: 15px; font-weight: 800; color: #1e293b; line-height: 1.1; }
-.donut-center-lbl { font-size: 9.5px; color: #64748b; text-transform: uppercase; font-weight: 500; }
-
-.donut-legend {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; }
-.legend-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-.legend-label { color: #475569; }
+.donut-card { padding: 10px 12px; }
+.donut-card :deep(.apexcharts-legend) { gap: 6px; }
+.donut-card :deep(.apexcharts-legend-text) { font-size: 13px !important; }
+.donut-card :deep(.apexcharts-datalabel) { font-size: 13px; font-weight: 600; }
 
 /* Project Progress Card */
-.progress-card { padding: 14px 16px; }
-.progress-bars-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-.progress-bar-row {}
-.progress-bar-info { display: flex; justify-content: space-between; font-size: 11px; font-weight: 500; margin-bottom: 3px; }
-.progress-name { color: #475569; }
-.progress-val { color: #1e293b; font-weight: 700; }
-.progress-track { height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
-.progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.progress-card { padding: 10px 12px; }
+.progress-card :deep(.apexcharts-legend-text) { font-size: 13px !important; }
 
-.bg-info    { background: #3b82f6; }
-.bg-success { background: #22c55e; }
-.bg-warning { background: #f59e0b; }
-.bg-default { background: #cbd5e1; }
+/* Generic Chart Card */
+.chart-card { padding: 10px 12px; }
+
+/* ── Charts Section (full-width below grid) ──────────── */
+.charts-section {
+  margin-top: 10px;
+}
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 10px;
+}
+@media (min-width: 1200px) {
+  .charts-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .progress-card {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 1400px) {
+  .charts-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ── This Week Events ──────────────────────────────── */
+.events-list { display: flex; flex-direction: column; gap: 12px; }
+.event-item { display: flex; gap: 14px; align-items: flex-start; }
+.event-date-badge {
+  display: flex; flex-direction: column; align-items: center;
+  background: #f1f5f9; border-radius: 8px; padding: 6px 10px;
+  min-width: 44px; flex-shrink: 0;
+}
+.event-date-day { font-size: 16px; font-weight: 800; color: #1e293b; line-height: 1.1; }
+.event-date-month { font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase; }
+.event-info { flex: 1; min-width: 0; }
+.event-title { font-size: 13px; font-weight: 600; color: #1e293b; line-height: 1.3; }
+.event-meta { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+
+/* ── Contracts Panel ───────────────────────────────── */
+.contracts-panel {}
+
+/* ── Activity Feed (Latest Activity tab) ───────────── */
+.activity-feed { display: flex; flex-direction: column; gap: 12px; }
+.activity-item { display: flex; gap: 10px; align-items: flex-start; }
+.activity-dot {
+  width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0;
+}
+.dot-blue { background: #3b82f6; }
+.dot-green { background: #22c55e; }
+.dot-purple { background: #8b5cf6; }
+.dot-orange { background: #f97316; }
+.activity-content { flex: 1; min-width: 0; }
+.activity-text { font-size: 13px; color: #334155; line-height: 1.4; }
+.activity-project { font-size: 12px; color: #64748b; }
+.activity-time { font-size: 11.5px; color: #94a3b8; margin-top: 2px; }
+
+/* ── Bottom grid (Project Activity + Goals) ────────── */
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+@media (max-width: 900px) { .bottom-grid { grid-template-columns: 1fr; } }
+
+/* Latest Project Activity */
+.activity-panel {}
+.activity-feed-list { display: flex; flex-direction: column; gap: 14px; max-height: 500px; overflow-y: auto; }
+.feed-item { display: flex; gap: 12px; align-items: flex-start; }
+.feed-dot {
+  width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; flex-shrink: 0;
+}
+.feed-dot--blue { background: #3b82f6; }
+.feed-dot--green { background: #22c55e; }
+.feed-dot--purple { background: #8b5cf6; }
+.feed-dot--orange { background: #f97316; }
+.feed-content { flex: 1; min-width: 0; }
+.feed-time { font-size: 11px; color: #94a3b8; font-weight: 500; }
+.feed-text { font-size: 13px; color: #334155; line-height: 1.4; margin-top: 2px; }
+.feed-detail { font-size: 12px; color: #64748b; margin-top: 1px; padding-left: 0; }
+.feed-project { font-size: 11.5px; color: #3b82f6; font-weight: 500; margin-top: 2px; }
+
+/* Goals */
+.goals-panel { max-height: 540px; overflow-y: auto; }
+.goals-list { display: flex; flex-direction: column; gap: 14px; }
+.goal-item {
+  padding: 12px 14px; border: 1px solid #f1f5f9; border-radius: 10px;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+}
+.goal-item:hover { border-color: #e2e8f0; background: #fafbfc; }
+.goal-info { flex: 1; min-width: 0; }
+.goal-title { font-size: 13.5px; font-weight: 600; color: #1e293b; }
+.goal-subtitle { font-size: 11.5px; color: #94a3b8; margin-top: 2px; }
+.goal-metrics { text-align: right; flex-shrink: 0; }
+.goal-achieved { font-size: 16px; font-weight: 800; color: #1e293b; }
+.goal-progress-wrap { display: flex; align-items: center; gap: 6px; margin-top: 4px; justify-content: flex-end; }
+.goal-progress-track { width: 60px; height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+.goal-progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.goal-progress-label { font-size: 11px; font-weight: 700; color: #64748b; }
 </style>
