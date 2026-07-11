@@ -27,24 +27,26 @@
       <!-- Left Column (Wider Content) -->
       <div class="grid-left">
         
-        <!-- Overviews Panel -->
-        <div class="card overviews-panel">
-          <div class="overview-grid">
+        <!-- Overviews Panel — Liquid Glass -->
+        <div class="overviews-wrapper">
+          <div class="overviews-panel">
+            <div class="overview-grid">
             <!-- Invoice Overview -->
             <div class="overview-col">
               <h3 class="overview-title">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" width="17" height="17"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 Invoice overview
               </h3>
-              <div class="overview-rows">
-                <div v-for="row in invoiceOverview" :key="row.status" class="overview-row">
-                  <div class="overview-row-label">
-                    <span :class="['ov-count', row.colorClass]">{{ row.count }} {{ row.label }}</span>
-                    <span class="ov-pct">{{ row.percentage.toFixed(2) }}%</span>
-                  </div>
-                  <div class="ov-bar-track">
-                    <div class="ov-bar" :class="row.barClass" :style="{ width: Math.min(row.percentage, 100) + '%' }"></div>
-                  </div>
+              <apexchart type="donut" height="220" :options="invoiceDonutOptions" :series="invoiceDonutSeries"></apexchart>
+              <div class="overview-legend">
+                <div 
+                  v-for="row in invoiceOverview" 
+                  :key="row.status" 
+                  :class="['overview-legend-item', { 'ov-btn-red': row.status === 'unpaid', 'ov-btn-green': row.status === 'paid', 'ov-btn-orange': row.status === 'overdue' || row.status === 'partially_paid', 'ov-btn-grey': row.status === 'draft' || row.status === 'cancelled' }]"
+                >
+                  <span class="overview-legend-dot" :style="{ background: invoiceDonutColors[row.status] || '#94a3b8' }"></span>
+                  <span class="overview-legend-label">{{ row.count }} {{ row.label }}</span>
+                  <span class="overview-legend-pct">{{ row.percentage.toFixed(1) }}%</span>
                 </div>
               </div>
               <div class="overview-footer">
@@ -69,15 +71,16 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" width="17" height="17"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 Estimate overview
               </h3>
-              <div class="overview-rows">
-                <div v-for="row in estimateOverview" :key="row.label" class="overview-row">
-                  <div class="overview-row-label">
-                    <span :class="['ov-count', row.colorClass]">{{ row.count }} {{ row.label }}</span>
-                    <span class="ov-pct">{{ row.percentage.toFixed(2) }}%</span>
-                  </div>
-                  <div class="ov-bar-track">
-                    <div class="ov-bar" :class="row.barClass" :style="{ width: row.percentage + '%' }"></div>
-                  </div>
+              <apexchart type="donut" height="220" :options="estimateDonutOptions" :series="estimateDonutSeries"></apexchart>
+              <div class="overview-legend">
+                <div 
+                  v-for="row in estimateOverview" 
+                  :key="row.label" 
+                  :class="['overview-legend-item', { 'ov-btn-grey': row.label === 'Draft' || row.label === 'Not Sent', 'ov-btn-blue': row.label === 'Sent', 'ov-btn-orange': row.label === 'Expired', 'ov-btn-red': row.label === 'Declined', 'ov-btn-green': row.label === 'Accepted' }]"
+                >
+                  <span class="overview-legend-dot" :style="{ background: estimateDonutColors[row.label] || '#94a3b8' }"></span>
+                  <span class="overview-legend-label">{{ row.count }} {{ row.label }}</span>
+                  <span class="overview-legend-pct">{{ row.percentage.toFixed(1) }}%</span>
                 </div>
               </div>
             </div>
@@ -88,19 +91,21 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" width="17" height="17"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                 Proposal overview
               </h3>
-              <div class="overview-rows">
-                <div v-for="row in proposalOverview" :key="row.label" class="overview-row">
-                  <div class="overview-row-label">
-                    <span :class="['ov-count', row.colorClass]">{{ row.count }} {{ row.label }}</span>
-                    <span class="ov-pct">{{ row.percentage.toFixed(2) }}%</span>
-                  </div>
-                  <div class="ov-bar-track">
-                    <div class="ov-bar" :class="row.barClass" :style="{ width: row.percentage + '%' }"></div>
-                  </div>
+              <apexchart type="donut" height="220" :options="proposalDonutOptions" :series="proposalDonutSeries"></apexchart>
+              <div class="overview-legend">
+                <div 
+                  v-for="row in proposalOverview" 
+                  :key="row.label" 
+                  :class="['overview-legend-item', { 'ov-btn-grey': row.label === 'Draft', 'ov-btn-blue': row.label === 'Sent' || row.label === 'Open', 'ov-btn-orange': row.label === 'Revised', 'ov-btn-red': row.label === 'Declined', 'ov-btn-green': row.label === 'Accepted' }]"
+                >
+                  <span class="overview-legend-dot" :style="{ background: proposalDonutColors[row.label] || '#94a3b8' }"></span>
+                  <span class="overview-legend-label">{{ row.count }} {{ row.label }}</span>
+                  <span class="overview-legend-pct">{{ row.percentage.toFixed(1) }}%</span>
                 </div>
               </div>
             </div>
           </div>
+        </div>
         </div>
 
         <!-- Tabs Widget: My Tasks | My Projects | My Reminders | Tickets | Announcements -->
@@ -328,44 +333,6 @@
           </table>
         </div>
 
-        <!-- Staff Tickets Report Table -->
-        <div class="card staff-report-panel">
-          <div class="panel-header">
-            <h3 class="panel-title">Staff Tickets Report</h3>
-            <span style="font-size:12px;color:#94a3b8">This Month</span>
-          </div>
-          <div class="table-toolbar">
-            <div class="toolbar-left">
-              <select class="select-sm"><option>10</option><option>25</option></select>
-            </div>
-            <div class="toolbar-right">
-              <input class="input-sm" v-model="staffSearch" placeholder="Search..." />
-            </div>
-          </div>
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Staff Member</th>
-                <th>Total Assigned</th>
-                <th>Open Tickets</th>
-                <th>Closed Tickets</th>
-                <th>Replies To Tickets</th>
-                <th class="text-right">Avg Reply Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="s in filteredStaff" :key="s.name">
-                <td><strong>{{ s.name }}</strong></td>
-                <td>{{ s.assigned }}</td>
-                <td><span class="text-danger font-semibold">{{ s.open }}</span></td>
-                <td><span class="text-success font-semibold">{{ s.closed }}</span></td>
-                <td>{{ s.replies }}</td>
-                <td class="text-right font-semibold" :class="s.replyTime === '-' ? 'text-muted' : 'text-success'">{{ s.replyTime }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
       </div>
       
       <!-- Right Column (Sidebar Content) -->
@@ -379,8 +346,8 @@
               My To Do Items
             </h3>
             <div class="todo-header-actions">
-              <a class="todo-link">View All</a>
-              <a class="todo-btn">New To Do</a>
+              <router-link to="/admin/my-todos" class="todo-link">View All</router-link>
+              <router-link to="/admin/my-todos?new=true" class="todo-btn">New To Do</router-link>
             </div>
           </div>
 
@@ -425,38 +392,48 @@
         <div class="card donut-card">
           <h3 class="panel-title">Leads Overview</h3>
           <apexchart type="donut" height="260" :options="leadsChartOptions" :series="leadsChartSeries"></apexchart>
+          <div class="overview-action-btn-wrap">
+            <router-link to="/admin/leads" class="btn-liquid-glass">
+              <span class="shimmer-glare"></span>
+              View Leads Overview
+            </router-link>
+          </div>
         </div>
 
         <!-- Project Status Chart (Apex Donut) -->
         <div class="card donut-card">
           <h3 class="panel-title">Projects Status Chart</h3>
           <apexchart type="donut" height="260" :options="projectsChartOptions" :series="projectsChartSeries"></apexchart>
+          <div class="overview-action-btn-wrap">
+            <router-link to="/admin/projects" class="btn-liquid-glass">
+              <span class="shimmer-glare"></span>
+              View Projects Status
+            </router-link>
+          </div>
         </div>
 
-      </div>
-
-    </div>
-
-    <!-- ── Charts Section (full width below grid) ──────────── -->
-    <div class="charts-section">
-      <div class="charts-grid">
-
-        <!-- Tickets by Status Chart (Apex Donut) -->
+        <!-- Tickets Status Chart (Apex Donut) -->
         <div class="card donut-card">
           <h3 class="panel-title">Tickets Status Chart</h3>
           <apexchart type="donut" height="260" :options="ticketsChartOptions" :series="ticketsChartSeries"></apexchart>
+          <div class="overview-action-btn-wrap">
+            <router-link to="/admin/support" class="btn-liquid-glass">
+              <span class="shimmer-glare"></span>
+              View Tickets Status
+            </router-link>
+          </div>
         </div>
 
         <!-- Tickets Awaiting Reply by Department (Apex Donut) -->
         <div class="card donut-card">
           <h3 class="panel-title">Tickets Awaiting Reply by Department</h3>
           <apexchart type="donut" height="260" :options="departmentChartOptions" :series="departmentChartSeries"></apexchart>
-        </div>
-
-        <!-- Project Progress Tracker (Apex Bar) -->
-        <div class="card progress-card">
-          <h3 class="panel-title">Project Progress Tracker</h3>
-          <apexchart type="bar" height="280" :options="progressChartOptions" :series="progressChartSeries"></apexchart>
+          <div class="overview-action-btn-wrap">
+            <router-link to="/admin/support" class="btn-liquid-glass">
+              <span class="shimmer-glare"></span>
+              View Department Tickets
+            </router-link>
+          </div>
         </div>
 
         <!-- Contracts by Type (Apex Bar) -->
@@ -470,6 +447,59 @@
           <h3 class="panel-title">Contracts Value by Type (USD)</h3>
           <apexchart type="area" height="240" :options="contractsValueChartOptions" :series="contractsValueChartSeries"></apexchart>
         </div>
+
+      </div>
+
+    </div>
+
+    <!-- ── Staff Tickets Report (full width) ──────────────── -->
+    <div class="card staff-report-panel" style="margin-top: 12px;">
+      <div class="panel-header">
+        <h3 class="panel-title">Staff Tickets Report</h3>
+        <span style="font-size:12px;color:#94a3b8">This Month</span>
+      </div>
+      <div class="table-toolbar">
+        <div class="toolbar-left">
+          <select class="select-sm"><option>10</option><option>25</option></select>
+        </div>
+        <div class="toolbar-right">
+          <input class="input-sm" v-model="staffSearch" placeholder="Search..." />
+        </div>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Staff Member</th>
+            <th>Total Assigned</th>
+            <th>Open Tickets</th>
+            <th>Closed Tickets</th>
+            <th>Replies To Tickets</th>
+            <th class="text-right">Avg Reply Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="s in filteredStaff" :key="s.name">
+            <td><strong>{{ s.name }}</strong></td>
+            <td>{{ s.assigned }}</td>
+            <td><span class="text-danger font-semibold">{{ s.open }}</span></td>
+            <td><span class="text-success font-semibold">{{ s.closed }}</span></td>
+            <td>{{ s.replies }}</td>
+            <td class="text-right font-semibold" :class="s.replyTime === '-' ? 'text-muted' : 'text-success'">{{ s.replyTime }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Charts Section (full width below grid) ──────────── -->
+    <div class="charts-section">
+      <div class="charts-grid">
+
+        <!-- Project Progress Tracker (Apex Bar) -->
+        <div class="card progress-card">
+          <h3 class="panel-title">Project Progress Tracker</h3>
+          <apexchart type="bar" height="280" :options="progressChartOptions" :series="progressChartSeries"></apexchart>
+        </div>
+
       </div>
     </div>
 
@@ -764,6 +794,55 @@ export default defineComponent({
     }));
     const departmentChartSeries = computed(() => departmentDonutSlices.value.map(s => s.count));
 
+    // ── Overview Donut Charts (Invoice / Estimate / Proposal) ────
+    const invoiceDonutColors = {
+      draft: '#94a3b8', unpaid: '#ef4444', paid: '#22c55e',
+      overdue: '#f59e0b', partially_paid: '#f97316', cancelled: '#cbd5e1',
+    };
+    const invoiceDonutOptions = computed(() => ({
+      chart: { type: 'donut', animations: { enabled: true } },
+      labels: invoiceOverview.value.map(r => r.label),
+      colors: invoiceOverview.value.map(r => invoiceDonutColors[r.status] || '#94a3b8'),
+      legend: { show: false },
+      dataLabels: { enabled: false },
+      plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Invoices', fontSize: '14px', fontWeight: 700, color: '#1e293b' } } } } },
+      stroke: { show: false },
+      responsive: [{ breakpoint: 480, options: { chart: { width: 180 } } }],
+    }));
+    const invoiceDonutSeries = computed(() => invoiceOverview.value.map(r => r.count));
+
+    const estimateDonutColors = {
+      Draft: '#94a3b8', 'Not Sent': '#cbd5e1', Sent: '#3b82f6',
+      Expired: '#f59e0b', Declined: '#ef4444', Accepted: '#22c55e',
+    };
+    const estimateDonutOptions = computed(() => ({
+      chart: { type: 'donut', animations: { enabled: true } },
+      labels: estimateOverview.map(r => r.label),
+      colors: estimateOverview.map(r => estimateDonutColors[r.label] || '#94a3b8'),
+      legend: { show: false },
+      dataLabels: { enabled: false },
+      plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Estimates', fontSize: '14px', fontWeight: 700, color: '#1e293b' } } } } },
+      stroke: { show: false },
+      responsive: [{ breakpoint: 480, options: { chart: { width: 180 } } }],
+    }));
+    const estimateDonutSeries = computed(() => estimateOverview.map(r => r.count));
+
+    const proposalDonutColors = {
+      Draft: '#94a3b8', Sent: '#3b82f6', Open: '#06b6d4',
+      Revised: '#f59e0b', Declined: '#ef4444', Accepted: '#22c55e',
+    };
+    const proposalDonutOptions = computed(() => ({
+      chart: { type: 'donut', animations: { enabled: true } },
+      labels: proposalOverview.map(r => r.label),
+      colors: proposalOverview.map(r => proposalDonutColors[r.label] || '#94a3b8'),
+      legend: { show: false },
+      dataLabels: { enabled: false },
+      plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Proposals', fontSize: '14px', fontWeight: 700, color: '#1e293b' } } } } },
+      stroke: { show: false },
+      responsive: [{ breakpoint: 480, options: { chart: { width: 180 } } }],
+    }));
+    const proposalDonutSeries = computed(() => proposalOverview.map(r => r.count));
+
     const paymentChartOptions = computed(() => ({
       chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
       xaxis: { categories: paymentColumns.map(c => c.month), labels: { style: { fontSize: '12px' } } },
@@ -953,6 +1032,10 @@ export default defineComponent({
     return {
       metrics, loading, topStats,
       invoiceOverview, estimateOverview, proposalOverview,
+      invoiceDonutColors, estimateDonutColors, proposalDonutColors,
+      invoiceDonutOptions, invoiceDonutSeries,
+      estimateDonutOptions, estimateDonutSeries,
+      proposalDonutOptions, proposalDonutSeries,
       pendingTodos, doneTodos, formatCurrency,
       activeTab, tabSearch, filteredTasks,
       leadDonutSlices, projectDonutSlices, ticketDonutSlices,
@@ -1004,11 +1087,11 @@ export default defineComponent({
   box-shadow: 0 2px 8px rgba(0,0,0,.04);
 }
 .stat-card-inner {
-  padding: 14px 16px 10px;
+  padding: 24px 20px 18px;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 10px;
 }
 .stat-icon-wrap {
   color: #94a3b8;
@@ -1051,17 +1134,10 @@ export default defineComponent({
   gap: 12px;
   align-items: start;
 }
+.grid-right > .card:last-child { margin-bottom: 0; }
 @media (max-width: 1000px) { .dashboard-grid { grid-template-columns: 1fr; } }
 
-/* Shared Card Layout */
-.card {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.04);
-}
+
 .panel-header {
   display: flex;
   justify-content: space-between;
@@ -1079,35 +1155,165 @@ export default defineComponent({
 
 /* ── Left Column Elements ────────────────────────────── */
 
-/* Overviews Panel */
-.overviews-panel {
-  padding: 14px;
+/* ── Liquid Glass UI Kit — Overview Cards ──────────────────────── */
+
+/* Wrapper — holds orbs + glass panel */
+.overviews-wrapper {
+  position: relative;
+  border-radius: 28px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  background:
+    radial-gradient(ellipse at 15% 25%, rgba(99,102,241,0.22) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 60%, rgba(168,85,247,0.18) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 30%, rgba(6,182,212,0.16) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 85%, rgba(236,72,153,0.14) 0%, transparent 50%),
+    linear-gradient(160deg, rgba(255,255,255,0.20), rgba(255,255,255,0.08));
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  box-shadow:
+    0 30px 80px rgba(0,0,0,0.08),
+    0 8px 24px rgba(0,0,0,0.04);
 }
+
+/* Volumetric refractive edge */
+.overviews-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 28px;
+  padding: 1.5px;
+  background: linear-gradient(
+    160deg,
+    rgba(255,255,255,0.80) 0%,
+    rgba(139,92,246,0.35) 20%,
+    rgba(59,130,246,0.25) 40%,
+    rgba(255,255,255,0.10) 60%,
+    rgba(236,72,153,0.20) 80%,
+    rgba(255,255,255,0.65) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Top specular highlight */
+.overviews-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 100%);
+  border-radius: 28px 28px 0 0;
+  pointer-events: none;
+}
+
+.overviews-panel {
+  padding: 0;
+  background: transparent;
+  border: none;
+  position: relative;
+  z-index: 1;
+}
+
 .overview-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
 }
-@media (max-width: 768px) { .overview-grid { grid-template-columns: 1fr; gap: 16px; } }
+@media (max-width: 768px) { .overview-grid { grid-template-columns: 1fr; } }
 
+/* ── Individual Liquid Glass Card ─────────────────────────────────────── */
 .overview-col {
-  padding: 0 12px;
-  border-right: 1px solid #f1f5f9;
+  padding: 26px 22px;
+  border-radius: 28px;
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.55);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(.16,1,.3,1);
+  backdrop-filter: blur(35px);
+  -webkit-backdrop-filter: blur(35px);
+  box-shadow: 
+    0 12px 36px rgba(0, 0, 0, 0.04), 
+    inset 0 3px 6px rgba(255, 255, 255, 0.9),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.02),
+    inset 0 12px 24px rgba(255, 255, 255, 0.2);
 }
-.overview-col:first-child { padding-left: 0; }
-.overview-col:last-child  { padding-right: 0; border-right: none; }
+.overview-col > * { position: relative; z-index: 3; }
 
+/* Convex top reflection (liquid gloss overlay) */
+.overview-col::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.06) 80%, transparent 100%);
+  border-radius: 28px 28px 50% 50% / 28px 28px 18% 18%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Background glowing refraction disc */
+.overview-col::before {
+  content: '';
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  filter: blur(50px);
+  background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.1) 100%);
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 0;
+  transition: all 0.5s cubic-bezier(.16,1,.3,1);
+  top: -40px; left: -40px;
+}
+
+/* Hover - 3D dynamic scaling and reflection shift */
+.overview-col:hover {
+  transform: translateY(-8px) scale(1.02);
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 
+    0 20px 48px rgba(0, 0, 0, 0.07), 
+    inset 0 4px 8px rgba(255, 255, 255, 0.95),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.03),
+    inset 0 15px 30px rgba(255, 255, 255, 0.25);
+}
+.overview-col:hover::before {
+  transform: scale(1.2);
+}
+
+/* ── Title inside glass ──────────────────────────────────────── */
 .overview-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 99px;
   font-size: 13px;
   font-weight: 700;
-  color: #475569;
-  margin: 0 0 10px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+  margin: 0 0 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: all 0.25s ease;
 }
+.overview-title:hover {
+  background: #18181b;
+  color: #ffffff;
+  border-color: #18181b;
+  box-shadow: 0 4px 14px rgba(24, 24, 27, 0.25);
+}
+.overview-title svg { opacity: 0.7; }
+.overview-title:hover svg { opacity: 1; color: #ffffff; }
+
 .overview-rows { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
 .overview-row-label {
   display: flex;
@@ -1117,13 +1323,99 @@ export default defineComponent({
 }
 .ov-count      { font-size: 12.5px; font-weight: 600; color: #334155; }
 .ov-pct        { font-size: 12px; color: #94a3b8; }
-.ov-bar-track  { height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+.ov-bar-track  { height: 8px; background: rgba(99,102,241,0.08); border-radius: 4px; overflow: hidden; }
 .ov-bar        { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
-.ov-bar-red    { background: #ef4444; }
-.ov-bar-green  { background: #22c55e; }
-.ov-bar-blue   { background: #3b82f6; }
-.ov-bar-orange { background: #f97316; }
-.ov-bar-slate  { background: #334155; }
+.ov-bar-red    { background: linear-gradient(90deg, #ef4444, #f87171); }
+.ov-bar-green  { background: linear-gradient(90deg, #22c55e, #4ade80); }
+.ov-bar-blue   { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.ov-bar-orange { background: linear-gradient(90deg, #f97316, #fb923c); }
+.ov-bar-slate  { background: linear-gradient(90deg, #94a3b8, #cbd5e1); }
+
+.overview-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.overview-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #1e293b;
+  position: relative;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 
+    inset 0 2px 3px rgba(255, 255, 255, 0.8),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(.22,1,.36,1);
+  cursor: pointer;
+}
+
+/* Convex specular highlight overlay for each button */
+.overview-legend-item::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.05) 90%, transparent 100%);
+  border-radius: 99px 99px 50% 50% / 99px 99px 15% 15%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Hover - 3D Lift */
+.overview-legend-item:hover {
+  transform: translateY(-2px) scale(1.03);
+}
+
+/* Color Modifier Classes */
+.ov-btn-grey {
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.35) 0%, rgba(148, 163, 184, 0.15) 100%);
+  box-shadow: 0 4px 12px rgba(148, 163, 184, 0.15), inset 0 2px 3px rgba(255, 255, 255, 0.8), inset 0 -2px 3px rgba(0, 0, 0, 0.05);
+}
+.ov-btn-grey:hover {
+  box-shadow: 0 6px 18px rgba(148, 163, 184, 0.25), inset 0 3px 4px rgba(255, 255, 255, 0.95), inset 0 -3px 4px rgba(0, 0, 0, 0.08);
+}
+
+.ov-btn-red {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.35) 0%, rgba(239, 68, 68, 0.15) 100%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15), inset 0 2px 3px rgba(255, 255, 255, 0.8), inset 0 -2px 3px rgba(0, 0, 0, 0.05);
+}
+.ov-btn-red:hover {
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.25), inset 0 3px 4px rgba(255, 255, 255, 0.95), inset 0 -3px 4px rgba(0, 0, 0, 0.08);
+}
+
+.ov-btn-green {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.35) 0%, rgba(34, 197, 94, 0.15) 100%);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15), inset 0 2px 3px rgba(255, 255, 255, 0.8), inset 0 -2px 3px rgba(0, 0, 0, 0.05);
+}
+.ov-btn-green:hover {
+  box-shadow: 0 6px 18px rgba(34, 197, 94, 0.25), inset 0 3px 4px rgba(255, 255, 255, 0.95), inset 0 -3px 4px rgba(0, 0, 0, 0.08);
+}
+
+.ov-btn-orange {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.35) 0%, rgba(249, 115, 22, 0.15) 100%);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15), inset 0 2px 3px rgba(255, 255, 255, 0.8), inset 0 -2px 3px rgba(0, 0, 0, 0.05);
+}
+.ov-btn-orange:hover {
+  box-shadow: 0 6px 18px rgba(249, 115, 22, 0.25), inset 0 3px 4px rgba(255, 255, 255, 0.95), inset 0 -3px 4px rgba(0, 0, 0, 0.08);
+}
+
+.ov-btn-blue {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.35) 0%, rgba(59, 130, 246, 0.15) 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15), inset 0 2px 3px rgba(255, 255, 255, 0.8), inset 0 -2px 3px rgba(0, 0, 0, 0.05);
+}
+.ov-btn-blue:hover {
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.25), inset 0 3px 4px rgba(255, 255, 255, 0.95), inset 0 -3px 4px rgba(0, 0, 0, 0.08);
+}
+.overview-legend-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(0,0,0,0.15), inset 0 -1px 2px rgba(0,0,0,0.15);
+}
+.overview-legend-label { font-weight: 600; }
+.overview-legend-pct { color: rgba(100,116,139,0.8); font-size: 11px; font-weight: 500; }
 
 .text-danger  { color: #ef4444 !important; }
 .text-success { color: #22c55e !important; }
@@ -1134,20 +1426,43 @@ export default defineComponent({
 .overview-footer {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  border-top: 1px solid #f1f5f9;
-  padding-top: 10px;
+  gap: 8px;
+  border-top: 1px solid rgba(255,255,255,0.35);
+  padding-top: 16px;
+  margin-top: 16px;
+}
+.overview-footer > div {
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 16px;
+  padding: 8px 10px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+  transition: all 0.3s cubic-bezier(.22,1,.36,1);
+}
+.overview-footer > div:hover {
+  background: #18181b;
+  border-color: #18181b;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(24, 24, 27, 0.15);
+}
+.overview-footer > div:hover .ov-foot-label {
+  color: rgba(255, 255, 255, 0.6);
+}
+.overview-footer > div:hover .ov-foot-value {
+  color: #ffffff;
 }
 .ov-foot-label {
   font-size: 11px;
-  color: #94a3b8;
+  color: rgba(71, 85, 105, 0.85);
   font-weight: 500;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 .ov-foot-value {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
-  color: #1e293b;
+  color: #0f172a;
+  transition: color 0.3s ease;
 }
 
 /* Tabs Panel */
@@ -1315,11 +1630,194 @@ export default defineComponent({
 .todo-action-btn:hover { background: #f1f5f9; color: #475569; }
 .todo-action-btn--del:hover { color: #ef4444; }
 
-/* Donut Charts */
-.donut-card { padding: 10px 12px; }
+/* Donut Charts - Apple-Inspired Liquid Glass Cards */
+.donut-card {
+  padding: 24px 20px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.15) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  border-top: 2px solid rgba(255, 255, 255, 0.95); /* Refractive bevel highlight */
+  border-radius: 24px;
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.04), 
+    0 4px 12px rgba(99, 102, 241, 0.04),
+    inset 0 3px 6px rgba(255, 255, 255, 0.9),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.02),
+    inset 0 12px 24px rgba(255, 255, 255, 0.2);
+}
+
+.donut-card > * {
+  position: relative;
+  z-index: 3;
+}
+
+/* Glossy top curvature glare */
+.donut-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 48%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.08) 85%, transparent 100%);
+  border-radius: 24px 24px 50% 50% / 24px 24px 15% 15%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Ambient dynamic soft backlight orb */
+.donut-card::before {
+  content: '';
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  filter: blur(40px);
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, rgba(99, 102, 241, 0) 70%);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 0;
+  top: -40px; left: -40px;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Color thematic indicators */
+.donut-card:nth-of-type(1)::before {
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.45) 0%, rgba(56, 189, 248, 0) 70%); /* Cyan leads */
+}
+.donut-card:nth-of-type(2)::before {
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.42) 0%, rgba(168, 85, 247, 0) 70%); /* Purple projects */
+}
+.donut-card:nth-of-type(3)::before {
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.42) 0%, rgba(236, 72, 153, 0) 70%); /* Rose tickets */
+}
+.donut-card:nth-of-type(4)::before {
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.45) 0%, rgba(45, 212, 191, 0) 70%); /* Teal departments */
+}
+
+/* Hover scales card and expands underglow */
+.donut-card:hover {
+  transform: translateY(-6px) scale(1.015);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.25) 100%);
+  box-shadow: 
+    0 25px 55px rgba(0, 0, 0, 0.08), 
+    0 12px 30px rgba(99, 102, 241, 0.06),
+    inset 0 4px 8px rgba(255, 255, 255, 0.95),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.03);
+}
+.donut-card:hover::before {
+  transform: scale(1.25) translate(10px, 10px);
+}
+
 .donut-card :deep(.apexcharts-legend) { gap: 6px; }
 .donut-card :deep(.apexcharts-legend-text) { font-size: 13px !important; }
 .donut-card :deep(.apexcharts-datalabel) { font-size: 13px; font-weight: 600; }
+
+.donut-card :deep(.vue-apexcharts),
+.chart-card :deep(.vue-apexcharts),
+.progress-card :deep(.vue-apexcharts),
+.overview-col :deep(.vue-apexcharts) {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+.donut-card :deep(.apexcharts-canvas),
+.chart-card :deep(.apexcharts-canvas),
+.progress-card :deep(.apexcharts-canvas),
+.overview-col :deep(.apexcharts-canvas) {
+  margin: 0 auto !important;
+  display: block !important;
+}
+
+/* ── Apple-Inspired Liquid Glass Action Buttons ── */
+.overview-action-btn-wrap {
+  margin-top: 14px;
+  position: relative;
+  border-radius: 12px;
+  padding: 1px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(0, 0, 0, 0.2) 100%);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.05),
+    0 2px 4px rgba(0, 0, 0, 0.03);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: block;
+}
+
+.overview-action-btn-wrap:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(0, 0, 0, 0.12) 100%);
+  box-shadow: 
+    0 8px 20px rgba(0, 0, 0, 0.1),
+    0 0 14px rgba(56, 189, 248, 0.2);
+}
+
+.overview-action-btn-wrap:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-liquid-glass {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 9px 16px;
+  border-radius: 11px;
+  font-family: var(--font-primary);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: center;
+  color: #1e293b;
+  cursor: pointer;
+  outline: none;
+  border: none;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  box-shadow: 
+    /* Multi-layered light pools and refraction edge */
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 6px 8px -3px rgba(255, 255, 255, 0.35),
+    inset 0 -6px 8px -3px rgba(0, 0, 0, 0.05);
+}
+
+.btn-liquid-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 11px;
+  z-index: -1;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.22) 0%, rgba(56, 189, 248, 0.06) 100%);
+  transition: all 0.4s ease;
+}
+
+.overview-action-btn-wrap:hover .btn-liquid-glass::before {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.35) 0%, rgba(56, 189, 248, 0.15) 100%);
+}
+
+.shimmer-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: 11px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.shimmer-glare::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.05) 85%, transparent 100%);
+  border-radius: 11px 11px 50% 50% / 11px 11px 15% 15%;
+}
 
 /* Project Progress Card */
 .progress-card { padding: 10px 12px; }

@@ -1,0 +1,4 @@
+<?php
+
+$lang['{{ permissionPrefix }}_title'] = '{{ moduleName }}';
+$lang['{{ permissionPrefix }}_dashboard'] = '{{ moduleName }} Dashboard';

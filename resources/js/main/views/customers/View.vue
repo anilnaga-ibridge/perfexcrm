@@ -5917,9 +5917,7 @@ export default defineComponent({
       formData.append('visible_to_customer', false);
 
       try {
-        await axios.post(`/clients/${customer.value.id}/files`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        await axios.post(`/clients/${customer.value.id}/files`, formData);
         message.success('File uploaded successfully.');
         loadClientFiles();
       } catch (err) {
@@ -6710,13 +6708,7 @@ export default defineComponent({
   color: #2563eb;
 }
 
-.card {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 20px 24px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.02);
-}
+
 
 /* Statement Card - slightly more top padding to match demo */
 .statement-card {

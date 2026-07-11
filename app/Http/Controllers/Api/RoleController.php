@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Role;
+use App\Models\Permission;
 use Illuminate\Http\Request;
 
 class RoleController extends Controller
 {
     public function index()
     {
-        return response()->json(Role::orderBy('name')->get());
+        return response()->json(Role::with('permissions')->orderBy('name')->get());
     }
 
     public function store(Request $request)
@@ -22,13 +23,23 @@ class RoleController extends Controller
             'permissions' => 'nullable|array',
         ]);
 
-        $role = Role::create($validated);
-        return response()->json($role, 201);
+        $role = Role::create([
+            'name'        => $validated['name'],
+            'slug'        => $validated['slug'],
+            'description' => $validated['description'] ?? null,
+        ]);
+
+        if (!empty($validated['permissions'])) {
+            $permissionIds = Permission::whereIn('name', $validated['permissions'])->pluck('id');
+            $role->permissions()->sync($permissionIds);
+        }
+
+        return response()->json($role->load('permissions'), 201);
     }
 
     public function show($id)
     {
-        $role = Role::findOrFail($id);
+        $role = Role::with('permissions')->findOrFail($id);
         return response()->json($role);
     }
 
@@ -42,13 +53,28 @@ class RoleController extends Controller
             'permissions' => 'nullable|array',
         ]);
 
-        $role->update($validated);
-        return response()->json($role);
+        $role->update([
+            'name'        => $validated['name'],
+            'slug'        => $validated['slug'],
+            'description' => $validated['description'] ?? null,
+        ]);
+
+        if (array_key_exists('permissions', $validated)) {
+            if (!empty($validated['permissions'])) {
+                $permissionIds = Permission::whereIn('name', $validated['permissions'])->pluck('id');
+                $role->permissions()->sync($permissionIds);
+            } else {
+                $role->permissions()->detach();
+            }
+        }
+
+        return response()->json($role->load('permissions'));
     }
 
     public function destroy($id)
     {
         $role = Role::findOrFail($id);
+        $role->permissions()->detach();
         $role->delete();
         return response()->json(['message' => 'Role deleted']);
     }

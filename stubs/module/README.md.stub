@@ -1,0 +1,14 @@
+# {{ moduleName }} Plugin
+
+Auto-generated extensible plugin for iBridge.
+
+## Features
+* Evolved Service Provider architecture.
+* Automatically registers with search, widgets, and console scheduler.
+* Direct integration via WordPress-style Hook engine.
+
+## Installation
+Run:
+```bash
+php artisan migrate
+```

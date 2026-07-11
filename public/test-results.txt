@@ -1,0 +1,115 @@
+PHPUnit 12.5.29 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.3.30
+Configuration: /Applications/MAMP/htdocs/perfexcrm/phpunit.xml
+
+.[31;1mE[0m..[41;37mF[0m...[36;1mS[0m[31;1mE[0m[31;1mE[.....[31;1mE[0m.........................[31;1mE[0m..................[41;37mF[0m[41;37mF[0m[41;37mF[0m[41;37mF[0m[41;37mF[0m. 65 / 69 ( 94%)
+....                                                              69 / 69 (100%)
+
+Time: 00:35.186, Memory: 26.00 MB
+
+There were 5 errors:
+
+1) Tests\Feature\ModuleEndToEndTest::test_scenario_2_dependency_tree
+Exception: Invalid module manifest: 'module.json' could not be decoded.
+
+/Applications/MAMP/htdocs/perfexcrm/app/Services/ModuleManager.php:67
+/Applications/MAMP/htdocs/perfexcrm/tests/Feature/ModuleEndToEndTest.php:198
+
+2) Tests\Feature\ModuleManagementTest::test_upgrade_preserves_single_dependent
+Exception: Integrity check failed: Module folder 'mod-b' does not exist.
+
+/Applications/MAMP/htdocs/perfexcrm/app/Services/ModuleValidator.php:87
+/Applications/MAMP/htdocs/perfexcrm/app/Services/ModuleManager.php:232
+/Applications/MAMP/htdocs/perfexcrm/app/Services/ModuleManager.php:512
+/Applications/MAMP/htdocs/perfexcrm/app/Services/ModuleManager.php:133
+/Applications/MAMP/htdocs/perfexcrm/tests/Feature/ModuleManagementTest.php:111
+/Applications/MAMP/htdocs/perfexcrm/tests/Feature/ModuleManagementTest.php:141
+
+3) Tests\Feature\ModuleManagementTest::test_upgrade_preserves_multi_level_dependents
+Exception: Integrity check failed: Module folder 'mod-d' does not exist.
+
+/Applications/MAMP/htdocs/perfexcrm/app/Services/ModuleValidator.php:87
+/Applications/MAMP/htdocs/perfexcrm/app/Services/ModuleManager.php:232
+/Applications/MAMP/htdocs/perfexcrm/tests/Feature/ModuleManagementTest.php:93
+/Applications/MAMP/htdocs/perfexcrm/tests/Feature/ModuleManagementTest.php:150
+
+4) Tests\Feature\ModuleManagementTest::test_upgrade_preserves_sibling_dependents
+ErrorException: ZipArchive::extractTo(/Applications/MAMP/htdocs/perfexcrm/storage/app/temp_module_extract_1783670129/routes/web.php): Failed to open stream: Invalid argument
+
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php:263
+/Applications/MAMP/htdocs/perfexcrm/app/Services/ModuleManager.php:57
+/Applications/MAMP/htdocs/perfexcrm/tests/Feature/ModuleManagementTest.php:90
+/Applications/MAMP/htdocs/perfexcrm/tests/Feature/ModuleManagementTest.php:171
+
+5) Tests\Feature\ModuleSettingsTest::test_save_updates_existing_keys
+RuntimeException: Module 'test-settings' has no settings schema.
+
+/Applications/MAMP/htdocs/perfexcrm/app/Services/ModuleSettingsService.php:118
+/Applications/MAMP/htdocs/perfexcrm/tests/Feature/ModuleSettingsTest.php:305
+
+--
+
+There were 6 failures:
+
+1) Tests\Feature\ModuleEndToEndTest::test_scenario_5_messy_aliases
+Failed asserting that false is true.
+
+/Applications/MAMP/htdocs/perfexcrm/tests/Feature/ModuleEndToEndTest.php:335
+
+2) Tests\Feature\ModuleSsoTest::test_generate_sso_url
+Invalid JSON was returned from the route.
+
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:1281
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:1039
+/Applications/MAMP/htdocs/perfexcrm/tests/Feature/ModuleSsoTest.php:33
+
+3) Tests\Feature\ModuleSsoTest::test_successful_sso_login
+Invalid JSON was returned from the route.
+
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:1281
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:1296
+/Applications/MAMP/htdocs/perfexcrm/tests/Feature/ModuleSsoTest.php:48
+
+4) Tests\Feature\ModuleSsoTest::test_invalid_sso_token
+Expected response status code [403] but received 200.
+Failed asserting that 200 is identical to 403.
+
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:176
+/Applications/MAMP/htdocs/perfexcrm/tests/Feature/ModuleSsoTest.php:70
+
+5) Tests\Feature\ModuleSsoTest::test_expired_sso_token
+Invalid JSON was returned from the route.
+
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:1281
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:1296
+/Applications/MAMP/htdocs/perfexcrm/tests/Feature/ModuleSsoTest.php:82
+
+6) Tests\Feature\ModuleSsoTest::test_sso_open_redirect_protection
+Invalid JSON was returned from the route.
+
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:1281
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:1296
+/Applications/MAMP/htdocs/perfexcrm/tests/Feature/ModuleSsoTest.php:102
+
+[37;41mERRORS![0m
+[37;41mTests: 69[0m[37;41m, Assertions: 275[0m[37;41m, Errors: 5[0m[37;41m, Failures: 6[0m[37;41m, Skipped: 1[0m[37;41m.[0m
+plications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:1281
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:1296
+/Applications/MAMP/htdocs/perfexcrm/tests/Feature/ModuleSsoTest.php:82
+
+5) Tests\Feature\ModuleSsoTest::test_sso_open_redirect_protection
+Invalid JSON was returned from the route.
+
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:1281
+/Applications/MAMP/htdocs/perfexcrm/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:1296
+/Applications/MAMP/htdocs/perfexcrm/tests/Feature/ModuleSsoTest.php:102
+
+[37;41mERRORS![0m
+[37;41mTests: 69[0m[37;41m, Assertions: 325[0m[37;41m, Errors: 6[0m[37;41m, Failures: 5[0m[37;41m, Skipped: 1[0m[37;41m.[0m

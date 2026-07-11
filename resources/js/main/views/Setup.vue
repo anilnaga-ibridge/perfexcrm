@@ -351,22 +351,23 @@
           </div>
         </div>
 
-        <!-- ── MODULES ── -->
-        <div v-if="activeSection === 'modules'">
-          <h2 class="section-title">Modules</h2>
+        <!-- ── PLUGINS ── -->
+        <div v-if="activeSection === 'plugins'">
+          <h2 class="section-title">Plugins</h2>
 
-          <!-- Upload Module Card -->
+          <!-- Upload Plugin Card -->
           <div class="mod-upload-card">
-            <div class="mod-upload-title">Upload Module</div>
-            <p class="mod-upload-desc">If you have a module in a <code>.zip</code> format, you may install it by uploading it here.</p>
+            <div class="mod-upload-title">Upload Plugin</div>
+            <p class="mod-upload-desc">If you have a plugin in a <code>.zip</code> format, you may install it by uploading it here.</p>
             <div class="mod-upload-row">
               <label class="mod-file-label">
-                <input type="file" accept=".zip" @change="onModuleFileChange" style="display:none" />
+                <input type="file" accept=".zip" ref="moduleFileInput" @change="onModuleFileChange" style="display:none" />
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 {{ moduleFileName || 'No file chosen' }}
               </label>
-              <button class="btn-primary btn-sm" @click="uploadModule" :disabled="!moduleFileName">
-                Upload Module
+              <button class="btn-primary btn-sm" @click="uploadModule" :disabled="!moduleFileName || uploadLoading">
+                <span v-if="uploadLoading" class="mod-action-spinner"></span>
+                {{ uploadLoading ? 'Uploading...' : 'Upload Plugin' }}
               </button>
             </div>
           </div>
@@ -391,23 +392,29 @@
             </div>
           </div>
 
-          <!-- Modules Table -->
+          <!-- Plugins Table -->
           <div class="mod-table-wrap">
+            <a-spin :spinning="modulesLoading" tip="Loading plugins...">
             <table class="mod-table">
               <thead>
                 <tr>
-                  <th>Module</th>
+                  <th>Plugin</th>
                   <th>Description</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="mod in filteredModules" :key="mod.key">
+                <tr v-for="mod in paginatedModules.list" :key="mod.key">
                   <td class="mod-name-cell">
                     <div class="mod-name-link">{{ mod.name }}</div>
                     <div class="mod-actions-row">
                       <template v-for="(action, idx) in mod.actions" :key="idx">
                         <span v-if="idx > 0" class="mod-action-sep">|</span>
                         <a
+                          v-if="modLoading(mod.id)"
+                          class="mod-action-link mod-action-link--loading"
+                        ><span class="mod-action-spinner"></span> Loading...</a>
+                        <a
+                          v-else
                           class="mod-action-link"
                           :class="{ 'mod-action-link--deactivate': action === 'Deactivate', 'mod-action-link--danger': action === 'Activate' }"
                           @click="handleModuleAction(mod, action)"
@@ -420,16 +427,36 @@
                     <div class="mod-version">Version {{ mod.version }}</div>
                   </td>
                 </tr>
-                <tr v-if="filteredModules.length === 0">
-                  <td colspan="2" style="text-align:center;padding:40px;color:#94a3b8">No modules found</td>
+                <tr v-if="!modulesLoading && paginatedModules.total === 0">
+                  <td colspan="2" style="text-align:center;padding:40px;color:#94a3b8">No plugins found</td>
                 </tr>
               </tbody>
             </table>
+            </a-spin>
           </div>
 
           <!-- Table Footer -->
           <div class="mod-table-footer">
-            Showing 1 to {{ filteredModules.length }} of {{ filteredModules.length }} entries
+            <div class="mod-footer-info">
+              Showing {{ paginatedModules.start }} to {{ paginatedModules.end }} of {{ paginatedModules.total }} entries
+            </div>
+            <div class="mod-footer-pages" v-if="paginatedModules.total > modPerPage">
+              <a-button size="small" :disabled="modCurrentPage <= 1" @click="modCurrentPage--">
+                &laquo; Prev
+              </a-button>
+              <template v-for="p in modPageNumbers" :key="p">
+                <a-button
+                  v-if="p !== '...'"
+                  size="small"
+                  :type="p === modCurrentPage ? 'primary' : 'default'"
+                  @click="modCurrentPage = p"
+                >{{ p }}</a-button>
+                <span v-else class="mod-page-ellipsis">...</span>
+              </template>
+              <a-button size="small" :disabled="modCurrentPage >= modPageCount" @click="modCurrentPage++">
+                Next &raquo;
+              </a-button>
+            </div>
           </div>
         </div>
 
@@ -497,6 +524,7 @@ import { defineComponent, ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 import { message } from 'ant-design-vue';
+import { useModuleStore } from '../store/moduleStore';
 
 // Import Modular Setup Views
 import GroupsView from './setup/Groups.vue';
@@ -574,7 +602,8 @@ export default defineComponent({
 
       const mappings = {
         'staff': { activeSection: 'staff', activeSubSection: '' },
-        'modules': { activeSection: 'modules', activeSubSection: '' },
+        'plugins': { activeSection: 'plugins', activeSubSection: '' },
+        'modules': { activeSection: 'plugins', activeSubSection: '' },
         'email-templates': { activeSection: 'email-templates', activeSubSection: '' },
         'custom-fields': { activeSection: 'custom-fields', activeSubSection: '' },
         'gdpr': { activeSection: 'gdpr', activeSubSection: '' },
@@ -611,7 +640,8 @@ export default defineComponent({
     const mapSectionToUrl = (activeSection, activeSubSection) => {
       const reverseMappings = {
         'staff': { section: 'staff' },
-        'modules': { section: 'modules' },
+        'plugins': { section: 'plugins' },
+        'modules': { section: 'plugins' },
         'email-templates': { section: 'email-templates' },
         'custom-fields': { section: 'custom-fields' },
         'gdpr': { section: 'gdpr' },
@@ -704,7 +734,7 @@ export default defineComponent({
           { id: 'estimate-request-statuses', label: 'Statuses' },
         ]
       },
-      { id: 'modules',          label: 'Modules',          icon: iconSvg('modules') },
+      { id: 'plugins',          label: 'Plugins',          icon: iconSvg('modules') },
       { id: 'email-templates',  label: 'Email Templates',  icon: iconSvg('email') },
       { id: 'custom-fields',    label: 'Custom Fields',    icon: iconSvg('fields') },
       { id: 'gdpr',             label: 'GDPR',             icon: iconSvg('shield') },
@@ -1055,62 +1085,86 @@ export default defineComponent({
     // ── Settings data ──────────────────────────────
 
 
-    // ── Modules (exact Perfex CRM demo data) ──
-    const modules = ref([
-      {
-        key: 'database-backup', name: 'Database Backup',
-        description: 'Default module to perform database backup',
-        version: '2.3.0', active: true,
-        actions: ['Deactivate', 'Database Backup'],
-      },
-      {
-        key: 'einvoice', name: 'e-Invoice',
-        description: 'Default module for e-Invoice',
-        version: '1.0.0', active: true,
-        actions: ['Deactivate', 'Settings'],
-      },
-      {
-        key: 'csv-export', name: 'CSV Export Manager',
-        description: 'Default module for Exporting data in CSV',
-        version: '1.0.0', active: true,
-        actions: ['Deactivate'],
-      },
-      {
-        key: 'goals', name: 'Goals',
-        description: 'Default module for defining goals',
-        version: '2.3.0', active: true,
-        actions: ['Deactivate'],
-      },
-      {
-        key: 'menu-setup', name: 'Menu Setup',
-        description: 'Default module to apply changes to the menus',
-        version: '2.3.0', active: true,
-        actions: ['Deactivate', 'Main Menu', 'Setup Menu'],
-      },
-      {
-        key: 'openai', name: 'OpenAi Integration',
-        description: 'Default module for Open AI integration',
-        version: '1.0.0', active: true,
-        actions: ['Deactivate', 'Settings', 'AI Integration'],
-      },
-      {
-        key: 'surveys', name: 'Surveys',
-        description: 'Default module for sending surveys',
-        version: '2.3.0', active: true,
-        actions: ['Deactivate'],
-      },
-      {
-        key: 'theme-style', name: 'Theme Style',
-        description: 'Default module to apply additional CSS styles',
-        version: '2.3.0', active: true,
-        actions: ['Deactivate', 'Settings'],
-      },
-    ]);
+    // ── Modules ──
+    const modules = ref([]);
 
-    // Module upload & search
-    const modSearch    = ref('');
-    const modPerPage   = ref(25);
+    // Module upload, search & pagination
+    const modSearch      = ref('');
+    const modPerPage     = ref(10);
+    const modCurrentPage = ref(1);
     const moduleFileName = ref('');
+    const modulesLoading = ref(false);
+    const uploadLoading = ref(false);
+    const modActionLoading = ref(new Set());
+    const moduleFileInput = ref(null);
+
+    const modLoading = (modId) => modActionLoading.value.has(modId);
+
+    const paginatedModules = computed(() => {
+      const list = filteredModules.value;
+      const total = list.length;
+      const perPage = modPerPage.value;
+      const page = modCurrentPage.value;
+      const start = (page - 1) * perPage;
+      const end = Math.min(start + perPage, total);
+      return { list: list.slice(start, end), total, start: start + 1, end };
+    });
+
+    watch(modSearch, () => { modCurrentPage.value = 1; });
+    watch(modPerPage, () => { modCurrentPage.value = 1; });
+
+    const modPageCount = computed(() => Math.max(1, Math.ceil(paginatedModules.value.total / modPerPage.value)));
+
+    const modPageNumbers = computed(() => {
+      const total = modPageCount.value;
+      const cur = modCurrentPage.value;
+      if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+      const pages = [];
+      if (cur <= 4) {
+        for (let i = 1; i <= Math.min(5, total); i++) pages.push(i);
+        if (total > 5) { pages.push('...'); pages.push(total); }
+      } else if (cur >= total - 3) {
+        pages.push(1); pages.push('...');
+        for (let i = total - 4; i <= total; i++) pages.push(i);
+      } else {
+        pages.push(1); pages.push('...');
+        pages.push(cur - 1); pages.push(cur); pages.push(cur + 1);
+        pages.push('...'); pages.push(total);
+      }
+      return pages;
+    });
+
+    const buildModuleActions = (mod) => {
+      const actions = [];
+      if (mod.is_active) {
+        actions.push('Deactivate');
+      } else {
+        actions.push('Activate');
+      }
+      if (mod.settings_link || mod.has_settings) {
+        actions.push('Settings');
+      }
+      actions.push('Repair');
+      actions.push('Rollback');
+      actions.push('Uninstall');
+      return actions;
+    };
+
+    const fetchModules = async () => {
+      modulesLoading.value = true;
+      try {
+        const res = await axios.get('/plugins');
+        modules.value = (res.data.data || []).map(m => ({
+          ...m,
+          active: m.is_active,
+          actions: buildModuleActions(m),
+        }));
+      } catch (e) {
+        message.error('Failed to load plugins');
+      } finally {
+        modulesLoading.value = false;
+      }
+    };
 
     const filteredModules = computed(() => {
       if (!modSearch.value.trim()) return modules.value;
@@ -1123,19 +1177,103 @@ export default defineComponent({
     const onModuleFileChange = (e) => {
       const file = e.target.files[0];
       moduleFileName.value = file ? file.name : '';
+      moduleFileInput.value = e.target;
     };
 
-    const uploadModule = () => {
-      message.info(`Uploading ${moduleFileName.value}... (demo — no actual upload)`);
+    const uploadModule = async () => {
+      const fileInput = moduleFileInput.value;
+      if (!fileInput || !fileInput.files[0]) return;
+      uploadLoading.value = true;
+      const formData = new FormData();
+      formData.append('module_file', fileInput.files[0]);
+      try {
+        await axios.post('/plugins', formData);
+        message.success('Plugin uploaded and installed successfully.');
+        moduleFileName.value = '';
+        fileInput.value = '';
+        fetchModules();
+        const moduleStore = useModuleStore();
+        await moduleStore.fetchActiveModules(true);
+        await moduleStore.fetchActiveMenus(true);
+      } catch (e) {
+        message.error(e.response?.data?.message || 'Upload failed');
+      } finally {
+        uploadLoading.value = false;
+      }
     };
 
-    const handleModuleAction = (mod, action) => {
+    const withModLoading = async (modId, fn) => {
+      modActionLoading.value = new Set([...modActionLoading.value, modId]);
+      try {
+        await fn();
+      } finally {
+        const next = new Set(modActionLoading.value);
+        next.delete(modId);
+        modActionLoading.value = next;
+      }
+    };
+
+    const handleModuleAction = async (mod, action) => {
+      const moduleStore = useModuleStore();
       if (action === 'Deactivate') {
-        mod.active = false;
-        message.success(`${mod.name} deactivated`);
+        await withModLoading(mod.id, async () => {
+          await axios.patch(`/plugins/${mod.id}/deactivate`);
+          mod.is_active = false;
+          mod.active = false;
+          mod.actions = buildModuleActions(mod);
+          message.success(`${mod.name} deactivated`);
+          await moduleStore.fetchActiveModules(true);
+          await moduleStore.fetchActiveMenus(true);
+        });
       } else if (action === 'Activate') {
-        mod.active = true;
-        message.success(`${mod.name} activated`);
+        await withModLoading(mod.id, async () => {
+          await axios.patch(`/plugins/${mod.id}/activate`);
+          mod.is_active = true;
+          mod.active = true;
+          mod.actions = buildModuleActions(mod);
+          message.success(`${mod.name} activated`);
+          await moduleStore.fetchActiveModules(true);
+          await moduleStore.fetchActiveMenus(true);
+        });
+      } else if (action === 'Uninstall') {
+        const confirmUninstall = window.confirm(`Are you sure you want to uninstall the ${mod.name} plugin? This will remove all files associated with it.`);
+        if (!confirmUninstall) return;
+
+        const deleteData = window.confirm("Do you want to delete the database tables and data for this plugin? (Click OK to delete tables, Cancel to keep database tables intact)");
+
+        await withModLoading(mod.id, async () => {
+          await axios.delete(`/plugins/${mod.id}`, {
+            params: { delete_data: deleteData ? 1 : 0 }
+          });
+          message.success(`${mod.name} uninstalled successfully.`);
+          fetchModules();
+          await moduleStore.fetchActiveModules(true);
+          await moduleStore.fetchActiveMenus(true);
+        });
+      } else if (action === 'Settings') {
+        if (mod.settings_link) {
+          router.push(mod.settings_link);
+        } else if (mod.has_settings) {
+          router.push(`/admin/module/${mod.slug}/settings`);
+        }
+      } else if (action === 'Repair') {
+        await withModLoading(mod.id, async () => {
+          await axios.post(`/plugins/${mod.id}/repair`);
+          message.success(`${mod.name} repaired successfully`);
+          fetchModules();
+          await moduleStore.fetchActiveModules(true);
+          await moduleStore.fetchActiveMenus(true);
+        });
+      } else if (action === 'Rollback') {
+        const confirmRollback = window.confirm(`Are you sure you want to roll back the ${mod.name} plugin? This will roll back database tables and deactivate it.`);
+        if (!confirmRollback) return;
+        await withModLoading(mod.id, async () => {
+          await axios.post(`/plugins/${mod.id}/rollback`);
+          message.success(`${mod.name} rolled back successfully`);
+          fetchModules();
+          await moduleStore.fetchActiveModules(true);
+          await moduleStore.fetchActiveMenus(true);
+        });
       } else {
         message.info(`${action} — ${mod.name}`);
       }
@@ -1160,6 +1298,7 @@ export default defineComponent({
     onMounted(() => {
       loadStaff();
       loadRoles();
+      fetchModules();
     });
 
     return {
@@ -1170,8 +1309,9 @@ export default defineComponent({
       getStaffPerm, setStaffPerm, toggleStaffAdmin, onStaffRoleChange, onStaffFileChange, avatarColor,
       loadStaff, loadRoles, editStaffMember, saveStaff, deleteStaff, resetStaffForm, initials,
       formatLastLogin, viewingStaff, viewStaffModal, viewStaff,
-      modules, filteredModules,
-      modSearch, modPerPage, moduleFileName, onModuleFileChange, uploadModule, handleModuleAction,
+      modules, filteredModules, paginatedModules, modulesLoading,
+      modSearch, modPerPage, modCurrentPage, modPageCount, modPageNumbers,
+      moduleFileName, uploadLoading, modLoading, onModuleFileChange, uploadModule, handleModuleAction,
       helpItems,
       saveSettings, navigateToSection,
     };
@@ -1561,6 +1701,26 @@ function iconSvg(type) {
   font-size: 11px;
   padding: 0 1px;
 }
+.mod-action-link--loading {
+  color: #94a3b8;
+  cursor: default;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.mod-action-spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #cbd5e1;
+  border-top-color: #64748b;
+  border-radius: 50%;
+  animation: mod-spin 0.6s linear infinite;
+}
+@keyframes mod-spin {
+  to { transform: rotate(360deg); }
+}
 .mod-desc-text {
   font-size: 13px;
   color: #475569;
@@ -1577,6 +1737,20 @@ function iconSvg(type) {
   color: #64748b;
   margin-top: 12px;
   padding: 6px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mod-footer-pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.mod-page-ellipsis {
+  padding: 0 4px;
+  color: #94a3b8;
 }
 .view-staff-modal .view-field {
   margin-bottom: 16px;

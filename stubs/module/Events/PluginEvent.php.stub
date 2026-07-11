@@ -1,0 +1,23 @@
+<?php
+
+namespace Modules\{{ namespace }}\Events;
+
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
+
+/**
+ * Class PluginEvent
+ * 
+ * Auto-generated event triggered by {{ moduleName }} plugin.
+ */
+class PluginEvent
+{
+    use Dispatchable, SerializesModels;
+
+    public array $data;
+
+    public function __construct(array $data)
+    {
+        $this->data = $data;
+    }
+}

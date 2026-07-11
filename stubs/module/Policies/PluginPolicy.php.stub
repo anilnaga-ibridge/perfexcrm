@@ -1,0 +1,49 @@
+<?php
+
+namespace Modules\{{ namespace }}\Policies;
+
+use App\Models\User;
+use Modules\{{ namespace }}\Models\{{ model }};
+use Illuminate\Auth\Access\HandlesAuthorization;
+
+/**
+ * Class PluginPolicy
+ * 
+ * Auto-generated access policy for {{ moduleName }} plugin.
+ */
+class PluginPolicy
+{
+    use HandlesAuthorization;
+
+    /**
+     * Determine whether the user can view any models.
+     */
+    public function viewAny(User $user): bool
+    {
+        return true;
+    }
+
+    /**
+     * Determine whether the user can create models.
+     */
+    public function create(User $user): bool
+    {
+        return true;
+    }
+
+    /**
+     * Determine whether the user can update the model.
+     */
+    public function update(User $user, {{ model }} $model): bool
+    {
+        return true;
+    }
+
+    /**
+     * Determine whether the user can delete the model.
+     */
+    public function delete(User $user, {{ model }} $model): bool
+    {
+        return true;
+    }
+}

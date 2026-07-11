@@ -273,9 +273,7 @@ export default defineComponent({
       formData.append('profile_image', file);
 
       try {
-        const response = await axios.post(`/api/staff/${user.value.id}/image`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        const response = await axios.post(`/api/staff/${user.value.id}/image`, formData);
         form.profile_image = response.data.profile_image;
         await authStore.updateUserAction();
         message.success({ content: 'Profile picture updated successfully.', duration: 3 });

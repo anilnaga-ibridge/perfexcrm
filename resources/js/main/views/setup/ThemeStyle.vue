@@ -14,60 +14,83 @@
           <div class="tab-content-wrap">
             <h3 class="tab-title">Admin Area Styling</h3>
             
-            <div class="color-pickers-grid">
-              <div class="color-picker-item">
-                <span class="picker-label">Sidebar Menu/Setup Menu Background Color</span>
-                <div class="picker-controls">
-                  <input type="color" v-model="settings.admin_sidebar_bg" class="color-picker-box" />
-                  <a-input v-model:value="settings.admin_sidebar_bg" size="small" style="width: 110px" />
+            <div class="split-preview-layout">
+              <div class="color-pickers-grid" style="flex: 1;">
+                <div class="color-picker-item">
+                  <span class="picker-label">Sidebar Menu/Setup Menu Background Color</span>
+                  <div class="picker-controls">
+                    <input type="color" :ref="setPickerRef('admin_sidebar_bg')" v-model="settings.admin_sidebar_bg" class="color-picker-box" />
+                    <a-input v-model:value="settings.admin_sidebar_bg" size="small" style="width: 110px" />
+                  </div>
+                </div>
+
+                <div class="color-picker-item">
+                  <span class="picker-label">Sidebar Menu/Setup Menu Links Color</span>
+                  <div class="picker-controls">
+                    <input type="color" :ref="setPickerRef('admin_sidebar_link')" v-model="settings.admin_sidebar_link" class="color-picker-box" />
+                    <a-input v-model:value="settings.admin_sidebar_link" size="small" style="width: 110px" />
+                  </div>
+                </div>
+
+                <div class="color-picker-item">
+                  <span class="picker-label">Sidebar Menu/Setup Active Item Background Color</span>
+                  <div class="picker-controls">
+                    <input type="color" :ref="setPickerRef('admin_sidebar_active_bg')" v-model="settings.admin_sidebar_active_bg" class="color-picker-box" />
+                    <a-input v-model:value="settings.admin_sidebar_active_bg" size="small" style="width: 110px" />
+                  </div>
+                </div>
+
+                <div class="color-picker-item">
+                  <span class="picker-label">Sidebar Menu/Setup Active Item Color</span>
+                  <div class="picker-controls">
+                    <input type="color" :ref="setPickerRef('admin_sidebar_active_link')" v-model="settings.admin_sidebar_active_link" class="color-picker-box" />
+                    <a-input v-model:value="settings.admin_sidebar_active_link" size="small" style="width: 110px" />
+                  </div>
+                </div>
+
+                <div class="color-picker-item">
+                  <span class="picker-label">Top Header Background Color</span>
+                  <div class="picker-controls">
+                    <input type="color" :ref="setPickerRef('admin_header_bg')" v-model="settings.admin_header_bg" class="color-picker-box" />
+                    <a-input v-model:value="settings.admin_header_bg" size="small" style="width: 110px" />
+                  </div>
+                </div>
+
+                <div class="color-picker-item">
+                  <span class="picker-label">Top Header Links Color</span>
+                  <div class="picker-controls">
+                    <input type="color" :ref="setPickerRef('admin_header_link')" v-model="settings.admin_header_link" class="color-picker-box" />
+                    <a-input v-model:value="settings.admin_header_link" size="small" style="width: 110px" />
+                  </div>
+                </div>
+
+                <div class="color-picker-item">
+                  <span class="picker-label">Main Content Background Color</span>
+                  <div class="picker-controls">
+                    <input type="color" :ref="setPickerRef('admin_content_bg')" v-model="settings.admin_content_bg" class="color-picker-box" />
+                    <a-input v-model:value="settings.admin_content_bg" size="small" style="width: 110px" />
+                  </div>
                 </div>
               </div>
 
-              <div class="color-picker-item">
-                <span class="picker-label">Sidebar Menu/Setup Menu Links Color</span>
-                <div class="picker-controls">
-                  <input type="color" v-model="settings.admin_sidebar_link" class="color-picker-box" />
-                  <a-input v-model:value="settings.admin_sidebar_link" size="small" style="width: 110px" />
-                </div>
-              </div>
-
-              <div class="color-picker-item">
-                <span class="picker-label">Sidebar Menu/Setup Active Item Background Color</span>
-                <div class="picker-controls">
-                  <input type="color" v-model="settings.admin_sidebar_active_bg" class="color-picker-box" />
-                  <a-input v-model:value="settings.admin_sidebar_active_bg" size="small" style="width: 110px" />
-                </div>
-              </div>
-
-              <div class="color-picker-item">
-                <span class="picker-label">Sidebar Menu/Setup Active Item Color</span>
-                <div class="picker-controls">
-                  <input type="color" v-model="settings.admin_sidebar_active_link" class="color-picker-box" />
-                  <a-input v-model:value="settings.admin_sidebar_active_link" size="small" style="width: 110px" />
-                </div>
-              </div>
-
-              <div class="color-picker-item">
-                <span class="picker-label">Top Header Background Color</span>
-                <div class="picker-controls">
-                  <input type="color" v-model="settings.admin_header_bg" class="color-picker-box" />
-                  <a-input v-model:value="settings.admin_header_bg" size="small" style="width: 110px" />
-                </div>
-              </div>
-
-              <div class="color-picker-item">
-                <span class="picker-label">Top Header Links Color</span>
-                <div class="picker-controls">
-                  <input type="color" v-model="settings.admin_header_link" class="color-picker-box" />
-                  <a-input v-model:value="settings.admin_header_link" size="small" style="width: 110px" />
-                </div>
-              </div>
-
-              <div class="color-picker-item">
-                <span class="picker-label">Main Content Background Color</span>
-                <div class="picker-controls">
-                  <input type="color" v-model="settings.admin_content_bg" class="color-picker-box" />
-                  <a-input v-model:value="settings.admin_content_bg" size="small" style="width: 110px" />
+              <!-- Sidebar Preview Panel -->
+              <div class="preview-panel" style="flex: 1;">
+                <span class="preview-title">Sidebar Visual Preview (Click to Customize)</span>
+                <div class="sidebar-preview-box" :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.admin_sidebar_bg} 50%, #0b579f 100%)` }" style="cursor: pointer" @click.self="triggerPicker('admin_sidebar_bg')">
+                  <div class="sidebar-preview-logo" style="cursor: pointer" @click="triggerPicker('admin_sidebar_bg')">
+                    <span style="color:#fff;font-weight:700;letter-spacing:0.5px">iBRIDGE CRM</span>
+                  </div>
+                  <div class="sidebar-preview-menu">
+                    <div class="sidebar-preview-item active" :style="{ backgroundColor: settings.admin_sidebar_active_bg, color: settings.admin_sidebar_active_link }" style="cursor: pointer" @click.stop="triggerPicker('admin_sidebar_active_bg')">
+                      <span>Dashboard</span>
+                    </div>
+                    <div class="sidebar-preview-item" :style="{ color: settings.admin_sidebar_link }" style="cursor: pointer" @click.stop="triggerPicker('admin_sidebar_link')">
+                      <span>Customers</span>
+                    </div>
+                    <div class="sidebar-preview-item" :style="{ color: settings.admin_sidebar_link }" style="cursor: pointer" @click.stop="triggerPicker('admin_sidebar_link')">
+                      <span>Invoices</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -79,36 +102,53 @@
           <div class="tab-content-wrap">
             <h3 class="tab-title">Customers Area Styling</h3>
             
-            <div class="color-pickers-grid">
-              <div class="color-picker-item">
-                <span class="picker-label">Navigation Background Color</span>
-                <div class="picker-controls">
-                  <input type="color" v-model="settings.cust_nav_bg" class="color-picker-box" />
-                  <a-input v-model:value="settings.cust_nav_bg" size="small" style="width: 110px" />
+            <div class="split-preview-layout">
+              <div class="color-pickers-grid" style="flex: 1;">
+                <div class="color-picker-item">
+                  <span class="picker-label">Navigation Background Color</span>
+                  <div class="picker-controls">
+                    <input type="color" :ref="setPickerRef('cust_nav_bg')" v-model="settings.cust_nav_bg" class="color-picker-box" />
+                    <a-input v-model:value="settings.cust_nav_bg" size="small" style="width: 110px" />
+                  </div>
+                </div>
+
+                <div class="color-picker-item">
+                  <span class="picker-label">Navigation Links Color</span>
+                  <div class="picker-controls">
+                    <input type="color" :ref="setPickerRef('cust_nav_link')" v-model="settings.cust_nav_link" class="color-picker-box" />
+                    <a-input v-model:value="settings.cust_nav_link" size="small" style="width: 110px" />
+                  </div>
+                </div>
+
+                <div class="color-picker-item">
+                  <span class="picker-label">Footer Background</span>
+                  <div class="picker-controls">
+                    <input type="color" :ref="setPickerRef('cust_footer_bg')" v-model="settings.cust_footer_bg" class="color-picker-box" />
+                    <a-input v-model:value="settings.cust_footer_bg" size="small" style="width: 110px" />
+                  </div>
+                </div>
+
+                <div class="color-picker-item">
+                  <span class="picker-label">Footer Text Color</span>
+                  <div class="picker-controls">
+                    <input type="color" :ref="setPickerRef('cust_footer_text')" v-model="settings.cust_footer_text" class="color-picker-box" />
+                    <a-input v-model:value="settings.cust_footer_text" size="small" style="width: 110px" />
+                  </div>
                 </div>
               </div>
 
-              <div class="color-picker-item">
-                <span class="picker-label">Navigation Links Color</span>
-                <div class="picker-controls">
-                  <input type="color" v-model="settings.cust_nav_link" class="color-picker-box" />
-                  <a-input v-model:value="settings.cust_nav_link" size="small" style="width: 110px" />
+              <!-- Portal Navigation Preview -->
+              <div class="preview-panel" style="flex: 1;">
+                <span class="preview-title">Portal Navigation Preview (Click to Customize)</span>
+                <div class="nav-preview-box" :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.cust_nav_bg} 50%, #0b579f 100%)` }" style="cursor: pointer" @click.self="triggerPicker('cust_nav_bg')">
+                  <span class="nav-preview-brand" style="color: #fff; font-weight: 600; cursor: pointer" @click.stop="triggerPicker('cust_nav_bg')">Customer Portal</span>
+                  <div class="nav-preview-links" :style="{ color: settings.cust_nav_link }">
+                    <span style="border-bottom: 2px solid #fff; padding-bottom: 2px; cursor: pointer" @click.stop="triggerPicker('cust_nav_link')">Invoices</span>
+                    <span style="opacity: 0.8; margin-left: 12px; cursor: pointer" @click.stop="triggerPicker('cust_nav_link')">Estimates</span>
+                  </div>
                 </div>
-              </div>
-
-              <div class="color-picker-item">
-                <span class="picker-label">Footer Background</span>
-                <div class="picker-controls">
-                  <input type="color" v-model="settings.cust_footer_bg" class="color-picker-box" />
-                  <a-input v-model:value="settings.cust_footer_bg" size="small" style="width: 110px" />
-                </div>
-              </div>
-
-              <div class="color-picker-item">
-                <span class="picker-label">Footer Text Color</span>
-                <div class="picker-controls">
-                  <input type="color" v-model="settings.cust_footer_text" class="color-picker-box" />
-                  <a-input v-model:value="settings.cust_footer_text" size="small" style="width: 110px" />
+                <div class="footer-preview-box" :style="{ backgroundColor: settings.cust_footer_bg, color: settings.cust_footer_text }" style="cursor: pointer" @click="triggerPicker('cust_footer_bg')">
+                  <span style="cursor: pointer" @click.stop="triggerPicker('cust_footer_text')">© 2026 iBRIDGE CRM. All rights reserved.</span>
                 </div>
               </div>
             </div>
@@ -120,50 +160,59 @@
           <div class="tab-content-wrap">
             <h3 class="tab-title">Button Styling</h3>
             
-            <div class="color-pickers-grid">
-              <div class="color-picker-item">
-                <span class="picker-label">Button Default</span>
-                <div class="picker-controls">
-                  <input type="color" v-model="settings.btn_default" class="color-picker-box" />
-                  <a-input v-model:value="settings.btn_default" size="small" style="width: 110px" />
+            <div class="split-preview-layout">
+              <div class="color-pickers-grid" style="flex: 1;">
+                <div class="color-picker-item">
+                  <span class="picker-label">Button Default</span>
+                  <div class="picker-controls">
+                    <input type="color" :ref="setPickerRef('btn_default')" v-model="settings.btn_default" class="color-picker-box" />
+                    <a-input v-model:value="settings.btn_default" size="small" style="width: 110px" />
+                  </div>
                 </div>
-                <button class="preview-btn" :style="{ backgroundColor: settings.btn_default, color: '#333', border: '1px solid #ccc' }">Default Button</button>
+
+                <div class="color-picker-item">
+                  <span class="picker-label">Button Primary</span>
+                  <div class="picker-controls">
+                    <input type="color" :ref="setPickerRef('btn_primary')" v-model="settings.btn_primary" class="color-picker-box" />
+                    <a-input v-model:value="settings.btn_primary" size="small" style="width: 110px" />
+                  </div>
+                </div>
+
+                <div class="color-picker-item">
+                  <span class="picker-label">Button Info</span>
+                  <div class="picker-controls">
+                    <input type="color" :ref="setPickerRef('btn_info')" v-model="settings.btn_info" class="color-picker-box" />
+                    <a-input v-model:value="settings.btn_info" size="small" style="width: 110px" />
+                  </div>
+                </div>
+
+                <div class="color-picker-item">
+                  <span class="picker-label">Button Success</span>
+                  <div class="picker-controls">
+                    <input type="color" :ref="setPickerRef('btn_success')" v-model="settings.btn_success" class="color-picker-box" />
+                    <a-input v-model:value="settings.btn_success" size="small" style="width: 110px" />
+                  </div>
+                </div>
+
+                <div class="color-picker-item">
+                  <span class="picker-label">Button Danger</span>
+                  <div class="picker-controls">
+                    <input type="color" :ref="setPickerRef('btn_danger')" v-model="settings.btn_danger" class="color-picker-box" />
+                    <a-input v-model:value="settings.btn_danger" size="small" style="width: 110px" />
+                  </div>
+                </div>
               </div>
 
-              <div class="color-picker-item">
-                <span class="picker-label">Button Primary</span>
-                <div class="picker-controls">
-                  <input type="color" v-model="settings.btn_primary" class="color-picker-box" />
-                  <a-input v-model:value="settings.btn_primary" size="small" style="width: 110px" />
+              <!-- Buttons Preview Panel -->
+              <div class="preview-panel" style="flex: 1;">
+                <span class="preview-title">Buttons Visual Preview (Click to Customize)</span>
+                <div class="buttons-preview-list">
+                  <button type="button" class="preview-btn" :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.btn_default} 50%, #0b579f 100%)`, color: '#fff', border: 'none' }" style="cursor: pointer" @click="triggerPicker('btn_default')">Default Button</button>
+                  <button type="button" class="preview-btn" :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.btn_primary} 50%, #0b579f 100%)`, color: '#fff', border: 'none', boxShadow: `0px 4px 14px 0px rgba(126, 30, 142, 0.2)` }" style="cursor: pointer" @click="triggerPicker('btn_primary')">Primary Button</button>
+                  <button type="button" class="preview-btn" :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.btn_info} 50%, #0b579f 100%)`, color: '#fff', border: 'none' }" style="cursor: pointer" @click="triggerPicker('btn_info')">Info Button</button>
+                  <button type="button" class="preview-btn" :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.btn_success} 50%, #0b579f 100%)`, color: '#fff', border: 'none' }" style="cursor: pointer" @click="triggerPicker('btn_success')">Success Button</button>
+                  <button type="button" class="preview-btn" :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.btn_danger} 50%, #0b579f 100%)`, color: '#fff', border: 'none' }" style="cursor: pointer" @click="triggerPicker('btn_danger')">Danger Button</button>
                 </div>
-                <button class="preview-btn" :style="{ backgroundColor: settings.btn_primary, color: '#fff' }">Primary Button</button>
-              </div>
-
-              <div class="color-picker-item">
-                <span class="picker-label">Button Info</span>
-                <div class="picker-controls">
-                  <input type="color" v-model="settings.btn_info" class="color-picker-box" />
-                  <a-input v-model:value="settings.btn_info" size="small" style="width: 110px" />
-                </div>
-                <button class="preview-btn" :style="{ backgroundColor: settings.btn_info, color: '#fff' }">Info Button</button>
-              </div>
-
-              <div class="color-picker-item">
-                <span class="picker-label">Button Success</span>
-                <div class="picker-controls">
-                  <input type="color" v-model="settings.btn_success" class="color-picker-box" />
-                  <a-input v-model:value="settings.btn_success" size="small" style="width: 110px" />
-                </div>
-                <button class="preview-btn" :style="{ backgroundColor: settings.btn_success, color: '#fff' }">Success Button</button>
-              </div>
-
-              <div class="color-picker-item">
-                <span class="picker-label">Button Danger</span>
-                <div class="picker-controls">
-                  <input type="color" v-model="settings.btn_danger" class="color-picker-box" />
-                  <a-input v-model:value="settings.btn_danger" size="small" style="width: 110px" />
-                </div>
-                <button class="preview-btn" :style="{ backgroundColor: settings.btn_danger, color: '#fff' }">Danger Button</button>
               </div>
             </div>
           </div>
@@ -179,7 +228,7 @@
                 <div class="color-picker-item">
                   <span class="picker-label">Heading Background</span>
                   <div class="picker-controls">
-                    <input type="color" v-model="settings.modal_heading_bg" class="color-picker-box" />
+                    <input type="color" :ref="setPickerRef('modal_heading_bg')" v-model="settings.modal_heading_bg" class="color-picker-box" />
                     <a-input v-model:value="settings.modal_heading_bg" size="small" style="width: 110px" />
                   </div>
                 </div>
@@ -187,7 +236,7 @@
                 <div class="color-picker-item">
                   <span class="picker-label">Heading Color</span>
                   <div class="picker-controls">
-                    <input type="color" v-model="settings.modal_heading_color" class="color-picker-box" />
+                    <input type="color" :ref="setPickerRef('modal_heading_color')" v-model="settings.modal_heading_color" class="color-picker-box" />
                     <a-input v-model:value="settings.modal_heading_color" size="small" style="width: 110px" />
                   </div>
                 </div>
@@ -195,7 +244,7 @@
                 <div class="color-picker-item">
                   <span class="picker-label">Close Button Color</span>
                   <div class="picker-controls">
-                    <input type="color" v-model="settings.modal_close_color" class="color-picker-box" />
+                    <input type="color" :ref="setPickerRef('modal_close_color')" v-model="settings.modal_close_color" class="color-picker-box" />
                     <a-input v-model:value="settings.modal_close_color" size="small" style="width: 110px" />
                   </div>
                 </div>
@@ -203,7 +252,7 @@
                 <div class="color-picker-item">
                   <span class="picker-label">Modal Header Text Color</span>
                   <div class="picker-controls">
-                    <input type="color" v-model="settings.modal_header_text_color" class="color-picker-box" />
+                    <input type="color" :ref="setPickerRef('modal_header_text_color')" v-model="settings.modal_header_text_color" class="color-picker-box" />
                     <a-input v-model:value="settings.modal_header_text_color" size="small" style="width: 110px" />
                   </div>
                 </div>
@@ -211,14 +260,14 @@
 
               <!-- Modal Preview Frame -->
               <div class="preview-panel" style="flex: 1;">
-                <span class="preview-title">Visual Preview</span>
+                <span class="preview-title">Visual Preview (Click to Customize)</span>
                 <div class="modal-preview-box">
-                  <div class="modal-preview-header" :style="{ backgroundColor: settings.modal_heading_bg }">
-                    <span class="modal-preview-heading-text" :style="{ color: settings.modal_header_text_color }">Example Modal Heading</span>
-                    <span class="modal-preview-close" :style="{ color: settings.modal_close_color }">×</span>
+                  <div class="modal-preview-header" :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.modal_heading_bg} 50%, #0b579f 100%)` }" style="cursor: pointer" @click.self="triggerPicker('modal_heading_bg')">
+                    <span class="modal-preview-heading-text" :style="{ color: '#fff' }" style="cursor: pointer" @click.stop="triggerPicker('modal_heading_bg')">Example Modal Heading</span>
+                    <span class="modal-preview-close" :style="{ color: settings.modal_close_color }" style="cursor: pointer" @click.stop="triggerPicker('modal_close_color')">×</span>
                   </div>
                   <div class="modal-preview-body">
-                    <span class="sample-text-header" :style="{ color: settings.modal_heading_color }">Sample Text</span>
+                    <span class="sample-text-header" :style="{ color: settings.modal_heading_color }" style="cursor: pointer" @click="triggerPicker('modal_heading_color')">Sample Text</span>
                     <p class="sample-body-text">Modal Body</p>
                   </div>
                 </div>
@@ -237,7 +286,7 @@
                 <div class="color-picker-item">
                   <span class="picker-label">Table Links Color</span>
                   <div class="picker-controls">
-                    <input type="color" v-model="settings.table_link" class="color-picker-box" />
+                    <input type="color" :ref="setPickerRef('table_link')" v-model="settings.table_link" class="color-picker-box" />
                     <a-input v-model:value="settings.table_link" size="small" style="width: 110px" />
                   </div>
                 </div>
@@ -245,7 +294,7 @@
                 <div class="color-picker-item">
                   <span class="picker-label">Table Links Hover/Focus Color</span>
                   <div class="picker-controls">
-                    <input type="color" v-model="settings.table_link_hover" class="color-picker-box" />
+                    <input type="color" :ref="setPickerRef('table_link_hover')" v-model="settings.table_link_hover" class="color-picker-box" />
                     <a-input v-model:value="settings.table_link_hover" size="small" style="width: 110px" />
                   </div>
                 </div>
@@ -253,7 +302,7 @@
                 <div class="color-picker-item">
                   <span class="picker-label">Table Headings Color</span>
                   <div class="picker-controls">
-                    <input type="color" v-model="settings.table_heading" class="color-picker-box" />
+                    <input type="color" :ref="setPickerRef('table_heading')" v-model="settings.table_heading" class="color-picker-box" />
                     <a-input v-model:value="settings.table_heading" size="small" style="width: 110px" />
                   </div>
                 </div>
@@ -261,7 +310,7 @@
                 <div class="color-picker-item">
                   <span class="picker-label">Items Table Headings Background Color</span>
                   <div class="picker-controls">
-                    <input type="color" v-model="settings.table_items_heading_bg" class="color-picker-box" />
+                    <input type="color" :ref="setPickerRef('table_items_heading_bg')" v-model="settings.table_items_heading_bg" class="color-picker-box" />
                     <a-input v-model:value="settings.table_items_heading_bg" size="small" style="width: 110px" />
                   </div>
                 </div>
@@ -269,7 +318,7 @@
                 <div class="color-picker-item">
                   <span class="picker-label">Items Table Headings Text Color</span>
                   <div class="picker-controls">
-                    <input type="color" v-model="settings.table_items_heading_text" class="color-picker-box" />
+                    <input type="color" :ref="setPickerRef('table_items_heading_text')" v-model="settings.table_items_heading_text" class="color-picker-box" />
                     <a-input v-model:value="settings.table_items_heading_text" size="small" style="width: 110px" />
                   </div>
                 </div>
@@ -277,20 +326,20 @@
 
               <!-- Table Preview Frame -->
               <div class="preview-panel" style="flex: 1;">
-                <span class="preview-title">Visual Preview</span>
+                <span class="preview-title">Visual Preview (Click to Customize)</span>
                 <table class="table-preview-control">
-                  <thead :style="{ backgroundColor: settings.table_items_heading_bg, color: settings.table_items_heading_text }">
+                  <thead :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.table_items_heading_bg} 50%, #0b579f 100%)`, color: settings.table_items_heading_text }" style="cursor: pointer" @click="triggerPicker('table_items_heading_bg')">
                     <tr>
-                      <th>Example Heading 1</th>
-                      <th>Example Heading 2</th>
+                      <th style="color:#fff; cursor: pointer" @click.stop="triggerPicker('table_items_heading_text')">Example Heading 1</th>
+                      <th style="color:#fff; cursor: pointer" @click.stop="triggerPicker('table_items_heading_text')">Example Heading 2</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
                       <td>
-                        <a href="#" :style="{ color: settings.table_link }">Table Link</a>
+                        <a href="#" :style="{ color: settings.table_link }" style="cursor: pointer" @click.stop.prevent="triggerPicker('table_link')">Table Link</a>
                       </td>
-                      <td :style="{ color: settings.table_heading }">Heading Text</td>
+                      <td :style="{ color: settings.table_heading }" style="cursor: pointer" @click.stop="triggerPicker('table_heading')">Heading Text</td>
                     </tr>
                   </tbody>
                 </table>
@@ -458,8 +507,9 @@
 </template>
 
 <script>
-import { defineComponent, ref, reactive } from 'vue';
+import { defineComponent, ref, reactive, watch } from 'vue';
 import { message } from 'ant-design-vue';
+import { applyThemeStyles } from '../../utils.js';
 
 export default defineComponent({
   name: 'ThemeStyleView',
@@ -467,76 +517,118 @@ export default defineComponent({
     const activeTab = ref('admin_area');
     const saving = ref(false);
 
-    const settings = reactive({
-      admin_sidebar_bg: '#1e293b',
-      admin_sidebar_link: '#94a3b8',
-      admin_sidebar_active_bg: '#334155',
+    const defaultSettings = {
+      admin_sidebar_bg: '#7e1e8e',
+      admin_sidebar_link: '#e2e8f0',
+      admin_sidebar_active_bg: '#6366f1',
       admin_sidebar_active_link: '#ffffff',
       admin_header_bg: '#ffffff',
-      admin_header_link: '#475569',
-      admin_content_bg: '#f8fafc',
+      admin_header_link: '#4F4B5E',
+      admin_content_bg: '#F8F7FA',
 
-      cust_nav_bg: '#4f46e5',
+      cust_nav_bg: '#7e1e8e',
       cust_nav_link: '#ffffff',
-      cust_footer_bg: '#1e293b',
-      cust_footer_text: '#94a3b8',
+      cust_footer_bg: '#2F3349',
+      cust_footer_text: '#A5A2AD',
 
-      btn_default: '#f1f5f9',
-      btn_primary: '#4f46e5',
-      btn_info: '#06b6d4',
-      btn_success: '#10b981',
-      btn_danger: '#ef4444',
+      btn_default: '#F1F0F2',
+      btn_primary: '#7e1e8e',
+      btn_info: '#00CFE8',
+      btn_success: '#28C76F',
+      btn_danger: '#EA5455',
 
-      modal_heading_bg: '#f1f5f9',
-      modal_heading_color: '#475569',
-      modal_close_color: '#94a3b8',
-      modal_header_text_color: '#0f172a',
+      modal_heading_bg: '#7e1e8e',
+      modal_heading_color: '#4F4B5E',
+      modal_close_color: '#A5A2AD',
+      modal_header_text_color: '#4F4B5E',
 
-      table_link: '#4f46e5',
-      table_link_hover: '#4338ca',
-      table_heading: '#0f172a',
-      table_items_heading_bg: '#f8fafc',
-      table_items_heading_text: '#475569',
+      table_link: '#7e1e8e',
+      table_link_hover: '#671675',
+      table_heading: '#4F4B5E',
+      table_items_heading_bg: '#7e1e8e',
+      table_items_heading_text: '#ffffff',
 
-      gen_link: '#4f46e5',
-      gen_link_hover: '#4338ca',
-      gen_login_bg: '#f8fafc',
-      gen_text_muted: '#64748b',
-      gen_text_danger: '#ef4444',
-      gen_text_warning: '#f59e0b',
-      gen_text_info: '#0b99ff',
-      gen_text_success: '#10b981',
+      gen_link: '#7e1e8e',
+      gen_link_hover: '#671675',
+      gen_login_bg: '#F8F7FA',
+      gen_text_muted: '#A5A2AD',
+      gen_text_danger: '#EA5455',
+      gen_text_warning: '#FF9F43',
+      gen_text_info: '#00CFE8',
+      gen_text_success: '#28C76F',
 
       custom_css_tab: 'admin',
-      custom_css_admin: '/* Custom Admin CSS Rules */\nbody {\n  letter-spacing: -0.01em;\n}',
-      custom_css_customer: '/* Custom Customers CSS Rules */\n.btn-custom {\n  border-radius: 9999px;\n}'
-    });
+      custom_css_admin: '/* Custom Admin CSS Rules */\nbody {\n  font-family: "Public Sans", sans-serif;\n}',
+      custom_css_customer: '/* Custom Customers CSS Rules */\n.btn-custom {\n  border-radius: 6px;\n}'
+    };
 
-    const tags = ref([
-      { name: 'bug', color: '#ef4444' },
-      { name: 'follow up', color: '#3b82f6' },
-      { name: 'important', color: '#f59e0b' },
-      { name: 'logo', color: '#06b6d4' },
-      { name: 'review', color: '#8b5cf6' },
-      { name: 'todo', color: '#64748b' },
-      { name: 'tomorrow', color: '#10b981' },
-      { name: 'wordpress', color: '#14b8a6' }
-    ]);
+    const savedSettings = localStorage.getItem('crm_theme_style_settings');
+    const settings = reactive(savedSettings ? JSON.parse(savedSettings) : defaultSettings);
+
+    const defaultTags = [
+      { name: 'bug', color: '#EA5455' },
+      { name: 'follow up', color: '#7e1e8e' },
+      { name: 'important', color: '#FF9F43' },
+      { name: 'logo', color: '#00CFE8' },
+      { name: 'review', color: '#8F00FF' },
+      { name: 'todo', color: '#A5A2AD' },
+      { name: 'tomorrow', color: '#28C76F' },
+      { name: 'wordpress', color: '#00CFE8' }
+    ];
+    const savedTags = localStorage.getItem('crm_theme_style_tags');
+    const tags = ref(savedTags ? JSON.parse(savedTags) : defaultTags);
 
     const saveThemeSettings = () => {
       saving.value = true;
       setTimeout(() => {
         saving.value = false;
+        localStorage.setItem('crm_theme_style_settings', JSON.stringify(settings));
+        localStorage.setItem('crm_theme_style_tags', JSON.stringify(tags.value));
+        applyThemeStyles(settings);
         message.success('Theme Style settings saved successfully');
       }, 600);
     };
+
+    const pickerRefs = {};
+    const setPickerRef = (key) => (el) => {
+      if (el) pickerRefs[key] = el;
+    };
+    const triggerPicker = (key) => {
+      const el = pickerRefs[key];
+      if (el) {
+        el.click();
+      }
+    };
+
+    // Watcher to sync all button colors together when any button color is updated
+    watch(
+      () => [settings.btn_primary, settings.btn_default, settings.btn_info, settings.btn_success, settings.btn_danger],
+      (newVals, oldVals) => {
+        let changedVal = null;
+        for (let i = 0; i < newVals.length; i++) {
+          if (newVals[i] !== oldVals[i]) {
+            changedVal = newVals[i];
+            break;
+          }
+        }
+        if (changedVal) {
+          if (settings.btn_primary !== changedVal) settings.btn_primary = changedVal;
+          if (settings.btn_default !== changedVal) settings.btn_default = changedVal;
+          if (settings.btn_info !== changedVal) settings.btn_info = changedVal;
+          if (settings.btn_success !== changedVal) settings.btn_success = changedVal;
+          if (settings.btn_danger !== changedVal) settings.btn_danger = changedVal;
+        }
+      }
+    );
 
     return {
       activeTab,
       saving,
       settings,
       tags,
-      saveThemeSettings
+      saveThemeSettings,
+      setPickerRef,
+      triggerPicker
     };
   }
 });

@@ -1,0 +1,13 @@
+{
+  "title": "{{ moduleName }}",
+  "route": "",
+  "icon": "modules",
+  "permission": "{{ permissionPrefix }}_view",
+  "children": [
+    {
+      "title": "Dashboard",
+      "route": "/dashboard",
+      "permission": "{{ permissionPrefix }}_view"
+    }
+  ]
+}

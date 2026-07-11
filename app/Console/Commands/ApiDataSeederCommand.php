@@ -53,13 +53,13 @@ class ApiDataSeederCommand extends Command
 
         // Seed Lead Statuses
         DB::table('lead_statuses')->insert([
-            ['name' => 'New', 'color' => '#6366f1', 'order_num' => 1, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Contacted', 'color' => '#0ea5e9', 'order_num' => 2, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Working', 'color' => '#f59e0b', 'order_num' => 3, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Qualified', 'color' => '#10b981', 'order_num' => 4, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Proposal Sent', 'color' => '#8b5cf6', 'order_num' => 5, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Customer', 'color' => '#22c55e', 'order_num' => 6, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Lost', 'color' => '#ef4444', 'order_num' => 7, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'New', 'color' => '#7367F0', 'order_num' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Contacted', 'color' => '#00CFE8', 'order_num' => 2, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Working', 'color' => '#FF9F43', 'order_num' => 3, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Qualified', 'color' => '#28C76F', 'order_num' => 4, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Proposal Sent', 'color' => '#8F00FF', 'order_num' => 5, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Customer', 'color' => '#28C76F', 'order_num' => 6, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Lost', 'color' => '#EA5455', 'order_num' => 7, 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         // Seed Lead Sources

@@ -1,0 +1,40 @@
+<?php
+
+namespace Modules\{{ namespace }}\Widgets;
+
+use App\Contracts\Plugins\WidgetInterface;
+
+/**
+ * Class DashboardWidget
+ * 
+ * Auto-generated dashboard widget for {{ moduleName }} plugin.
+ */
+class DashboardWidget implements WidgetInterface
+{
+    public function getId(): string
+    {
+        return '{{ moduleAlias }}_dashboard_widget';
+    }
+
+    public function getTitle(): string
+    {
+        return '{{ moduleName }} Stats';
+    }
+
+    public function getSize(): string
+    {
+        return 'half';
+    }
+
+    public function render(): string
+    {
+        return '{{ moduleAlias }}::widgets.dashboard';
+    }
+
+    public function getData(): array
+    {
+        return [
+            'count' => 10,
+        ];
+    }
+}

@@ -131,7 +131,7 @@ export default defineComponent({
           { key: 'statuses', label: 'Statuses', visible: true }
         ]
       },
-      { key: 'modules', label: 'Modules', visible: true },
+      { key: 'plugins', label: 'Plugins', visible: true },
       { key: 'email_templates', label: 'Email Templates', visible: true },
       { key: 'custom_fields', label: 'Custom Fields', visible: true },
       { key: 'gdpr', label: 'GDPR', visible: true },

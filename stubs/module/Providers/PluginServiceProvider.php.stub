@@ -1,0 +1,44 @@
+<?php
+
+namespace Modules\{{ namespace }}\Providers;
+
+use App\Plugin\Providers\PluginServiceProvider as BaseProvider;
+
+/**
+ * Class PluginServiceProvider
+ * 
+ * Auto-generated Service Provider for {{ moduleName }} plugin.
+ */
+class PluginServiceProvider extends BaseProvider
+{
+    /**
+     * Register any plugin services.
+     */
+    public function register(): void
+    {
+        // Register configuration
+        $this->registerConfig('{{ moduleAlias }}', [
+            'name' => '{{ moduleName }}',
+            'version' => '1.0.0',
+        ]);
+    }
+
+    /**
+     * Bootstrap any plugin services.
+     */
+    public function boot(): void
+    {
+        // Register web and api routes
+        $this->registerRoutes(
+            __DIR__ . '/../routes/web.php',
+            __DIR__ . '/../routes/api.php',
+            "Modules\\{{ namespace }}\\Controllers"
+        );
+
+        // Register Blade views
+        $this->registerViews(__DIR__ . '/../Views', '{{ moduleAlias }}');
+
+        // Register localizations/translations
+        $this->registerTranslations(__DIR__ . '/../language', '{{ moduleAlias }}');
+    }
+}

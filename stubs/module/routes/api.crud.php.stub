@@ -1,0 +1,10 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Modules\{{ namespace }}\Http\Controllers\Api\{{ model }}Controller;
+
+Route::get('{{ moduleAlias }}', [{{ model }}Controller::class, 'index']);
+Route::get('{{ moduleAlias }}/{id}', [{{ model }}Controller::class, 'show']);
+Route::post('{{ moduleAlias }}', [{{ model }}Controller::class, 'store']);
+Route::put('{{ moduleAlias }}/{id}', [{{ model }}Controller::class, 'update']);
+Route::delete('{{ moduleAlias }}/{id}', [{{ model }}Controller::class, 'destroy']);

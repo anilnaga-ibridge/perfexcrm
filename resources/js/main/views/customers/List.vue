@@ -8,11 +8,12 @@
         <p class="text-xs text-slate-500 mt-0.5">Manage your client database and contact profiles</p>
       </div>
       <div class="flex items-center gap-2">
-        <button class="btn-outline" @click="showSummary = !showSummary">
+        <button class="btn-summary-premium" @click="showSummary = !showSummary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           {{ showSummary ? 'Hide Summary' : 'Show Summary' }}
         </button>
-        <router-link to="/admin/customers/all-contacts" class="btn-outline">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" class="mr-1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <router-link to="/admin/customers/all-contacts" class="btn-contacts-premium">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Contacts
         </router-link>
         <button class="btn-primary" @click="goToCreatePage">
@@ -22,7 +23,7 @@
       </div>
     </div>
 
-    <!-- Summary Cards (Matching Perfex) -->
+    <!-- Summary Cards -->
     <div class="summary-cards" v-if="showSummary">
       <div class="summary-card">
         <div class="summary-label">Total Customers</div>
@@ -501,5 +502,71 @@ export default defineComponent({
 
 .customers-list-page {
   font-family: 'Inter', -apple-system, sans-serif;
+}
+
+.btn-summary-premium {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #fff;
+  color: #1e293b;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.2s;
+  line-height: 1.4;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.btn-summary-premium:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+.btn-summary-premium:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.btn-summary-premium svg {
+  flex-shrink: 0;
+}
+
+.btn-contacts-premium {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
+  transition: all 0.2s;
+  line-height: 1.4;
+}
+.btn-contacts-premium:hover {
+  background: linear-gradient(135deg, #0f172a, #000);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+  color: #fff;
+}
+.btn-contacts-premium:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.15);
+}
+.btn-contacts-premium svg {
+  flex-shrink: 0;
 }
 </style>

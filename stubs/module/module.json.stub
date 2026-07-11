@@ -1,0 +1,11 @@
+{
+  "name": "{{ moduleName }}",
+  "alias": "{{ moduleAlias }}",
+  "version": "1.0.0",
+  "minimum_core_version": "3.0.0",
+  "description": "",
+  "author": "",
+  "depends": [],
+  "settings_route": null,
+  "sdk_version": "1.0"
+}

@@ -5,8 +5,12 @@ import { h, defineComponent } from 'vue';
 // Layouts & Views
 import AdminLayout from '../layouts/AdminLayout.vue';
 import Login      from '../views/auth/Login.vue';
+import Register   from '../views/auth/Register.vue';
+import ForgotPassword from '../views/auth/ForgotPassword.vue';
+import ResetPassword from '../views/auth/ResetPassword.vue';
 import Dashboard  from '../views/Dashboard.vue';
 import SetupPage  from '../views/Setup.vue';
+import ModuleView from '../views/ModuleView.vue';
 import InvoicesPage from '../views/Invoices.vue';
 import InvoiceView  from '../views/invoices/InvoiceView.vue';
 import InvoiceForm  from '../views/invoices/InvoiceForm.vue';
@@ -117,6 +121,24 @@ const routes = [
     meta: { requireUnauth: true }
   },
   {
+    path: '/admin/register',
+    name: 'admin.register',
+    component: Register,
+    meta: { requireUnauth: true }
+  },
+  {
+    path: '/admin/forgot-password',
+    name: 'admin.forgot-password',
+    component: ForgotPassword,
+    meta: { requireUnauth: true }
+  },
+  {
+    path: '/admin/reset-password/:token',
+    name: 'admin.reset-password',
+    component: ResetPassword,
+    meta: { requireUnauth: true }
+  },
+  {
     path: '/admin',
     component: AdminLayout,
     meta: { requireAuth: true },
@@ -204,7 +226,8 @@ const routes = [
       { path: 'reports/kb-articles',    name: 'admin.reports.kb-articles', component: ReportsPage },
       { path: 'reports/team',           name: 'admin.reports.team',        component: ReportsPage },
 
-
+      // Dynamic module pages (captures full path for native Vue rendering)
+      { path: 'module/:slug/:pathMatch(.*)*', name: 'admin.module.dynamic', component: ModuleView },
     ]
   },
   // Catch-all

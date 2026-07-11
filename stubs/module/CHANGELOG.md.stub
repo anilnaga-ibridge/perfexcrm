@@ -1,0 +1,6 @@
+# Changelog
+
+All notable changes to the "{{ moduleName }}" plugin will be documented in this file.
+
+## [1.0.0] - 2026-07-11
+- Initial scaffolded release of {{ moduleName }} plugin.

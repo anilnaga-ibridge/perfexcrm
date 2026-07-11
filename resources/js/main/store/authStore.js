@@ -12,6 +12,28 @@ export const useAuthStore = defineStore('auth', {
   },
   
   actions: {
+    async registerAction(data) {
+      try {
+        const response = await axios.post('/auth/register', data);
+        const { token, user } = response.data;
+        
+        this.token = token;
+        this.user = user;
+        
+        localStorage.setItem('auth_token', token);
+        localStorage.setItem('auth_user', JSON.stringify(user));
+        
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        return { success: true };
+      } catch (error) {
+        console.error('Register error:', error);
+        return {
+          success: false,
+          message: error.response?.data?.message || 'Registration failed.'
+        };
+      }
+    },
+
     async loginAction(credentials) {
       try {
         const response = await axios.post('/auth/login', credentials);

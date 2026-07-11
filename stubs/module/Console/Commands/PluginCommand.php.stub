@@ -1,0 +1,32 @@
+<?php
+
+namespace Modules\{{ namespace }}\Console\Commands;
+
+use Illuminate\Console\Command;
+
+/**
+ * Class PluginCommand
+ * 
+ * Auto-generated command for {{ moduleName }} plugin.
+ */
+class PluginCommand extends Command
+{
+    /**
+     * The name and signature of the console command.
+     */
+    protected $signature = '{{ moduleAlias }}:sync';
+
+    /**
+     * The console command description.
+     */
+    protected $description = 'Synchronize data for {{ moduleName }} plugin';
+
+    /**
+     * Execute the console command.
+     */
+    public function handle(): int
+    {
+        $this->info('{{ moduleName }} command executed successfully!');
+        return Command::SUCCESS;
+    }
+}

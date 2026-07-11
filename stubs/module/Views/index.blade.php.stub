@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ moduleName }} - Admin Dashboard</title>
+</head>
+<body>
+    <h1>Welcome to {{ moduleName }} Dashboard!</h1>
+    <p>This is a dynamic blade view registered from the plugin.</p>
+</body>
+</html>

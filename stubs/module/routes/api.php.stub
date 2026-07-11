@@ -1,0 +1,6 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Modules\{{ namespace }}\Http\Controllers\Api\{{ model }}Controller;
+
+Route::get('{{ moduleAlias }}', [{{ model }}Controller::class, 'index']);

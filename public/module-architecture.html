@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Perfex CRM — Complete Frontend & Backend Architecture</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+    :root{--p:#4f46e5;--pl:#ede9fe;--s:#0ea5e9;--ok:#10b981;--w:#f59e0b;--err:#ef4444;--dark:#0f172a;--sl:#1e293b;--mu:#64748b;--bd:#e2e8f0;--bg:#f8fafc;--cb:#0f172a}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--dark);line-height:1.7;font-size:14px}
+    /* COVER */
+    .cover{background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#4f46e5 100%);color:white;padding:70px 60px 50px;min-height:100vh;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;page-break-after:always}
+    .cover::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(99,102,241,.25) 0%,transparent 70%);border-radius:50%}
+    .brow{display:flex;gap:10px;margin-bottom:40px;position:relative;z-index:1}
+    .bge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:5px 14px;border-radius:100px;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase}
+    .bge .dot{width:7px;height:7px;background:#10b981;border-radius:50%}
+    .cover h1{font-size:54px;font-weight:800;line-height:1.08;margin-bottom:14px;background:linear-gradient(135deg,#fff 0%,#c7d2fe 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;position:relative;z-index:1}
+    .csub{font-size:18px;color:rgba(255,255,255,.65);margin-bottom:50px;position:relative;z-index:1}
+    .cgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;position:relative;z-index:1}
+    .ccard{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:16px 18px}
+    .ccard .cl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:5px}
+    .ccard .cv{font-size:14px;font-weight:700;color:white}
+    .cft{border-top:1px solid rgba(255,255,255,.1);margin-top:40px;padding-top:20px;font-size:12px;color:rgba(255,255,255,.35);display:flex;justify-content:space-between;position:relative;z-index:1}
+    /* PAGE */
+    .page{padding:56px 60px;max-width:1040px;margin:0 auto}
+    .ph{display:flex;align-items:center;gap:16px;margin-bottom:28px;padding-bottom:18px;border-bottom:2px solid var(--bd);page-break-after:avoid}
+    .pn{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--p),var(--s));color:white;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex-shrink:0}
+    .pt{font-size:22px;font-weight:800;color:var(--dark)}
+    .ps{font-size:12px;color:var(--mu);margin-top:2px}
+    h3{font-size:15px;font-weight:700;color:var(--dark);margin:24px 0 10px}
+    h4{font-size:13px;font-weight:600;color:var(--sl);margin:16px 0 6px}
+    p{color:#334155;margin-bottom:10px;font-size:13px}
+    /* CODE */
+    pre{background:var(--cb);color:#e2e8f0;border-radius:10px;padding:20px 22px;font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.8;overflow-x:auto;margin:12px 0}
+    .c{color:#475569;font-style:italic}.k{color:#7dd3fc}.v{color:#86efac}.s{color:#fde68a}.pp{color:#f472b6;font-weight:600}.g{color:#4ade80}.bl{color:#60a5fa}.y{color:#fbbf24}.r{color:#fb923c}
+    code{font-family:'JetBrains Mono',monospace;background:#f1f5f9;color:var(--p);padding:1px 6px;border-radius:4px;font-size:11.5px}
+    /* TABLES */
+    .tw{overflow-x:auto;margin:12px 0}
+    table{width:100%;border-collapse:collapse;font-size:12.5px}
+    thead tr{background:var(--dark);color:white}
+    thead th{padding:10px 14px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+    thead th:first-child{border-radius:8px 0 0 0}
+    thead th:last-child{border-radius:0 8px 0 0}
+    tbody tr{border-bottom:1px solid var(--bd)}
+    tbody tr:nth-child(even){background:#f8fafc}
+    td{padding:9px 14px;vertical-align:top}
+    /* CARDS */
+    .g2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:14px 0}
+    .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+    .card{background:white;border:1px solid var(--bd);border-radius:10px;padding:18px}
+    .ci{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:10px}
+    .ct{font-size:13px;font-weight:700;color:var(--dark);margin-bottom:5px}
+    .cd{font-size:11.5px;color:var(--mu);line-height:1.55}
+    /* ALERTS */
+    .al{border-radius:9px;padding:14px 18px;margin:12px 0;border-left:4px solid;display:flex;gap:10px}
+    .al-ic{font-size:17px;flex-shrink:0}
+    .al-inf{background:#eff6ff;border-color:#3b82f6}
+    .al-ok{background:#f0fdf4;border-color:#22c55e}
+    .al-w{background:#fffbeb;border-color:#f59e0b}
+    .al-t{font-weight:700;font-size:12.5px;margin-bottom:3px}
+    .al-d{font-size:12px;color:#334155}
+    /* TAGS */
+    .tg{display:inline-block;padding:1px 8px;border-radius:100px;font-size:10.5px;font-weight:600}
+    .tr{background:#fee2e2;color:#991b1b}.tgn{background:#dcfce7;color:#166534}.tb{background:#dbeafe;color:#1e40af}.tw2{background:#fef3c7;color:#92400e}
+    /* ENDPOINTS */
+    .ep{list-style:none}
+    .epi{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd);font-size:11.5px}
+    .mt{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;width:44px;text-align:center;flex-shrink:0;display:inline-block}
+    .mg{background:#dcfce7;color:#166534}.mp{background:#dbeafe;color:#1e40af}.mpu{background:#fef3c7;color:#92400e}.mpa{background:#ede9fe;color:#5b21b6}.md{background:#fee2e2;color:#991b1b}
+    .eu{font-family:'JetBrains Mono',monospace;color:var(--sl);flex:1}
+    .ed{color:var(--mu);font-size:11px;min-width:200px;text-align:right}
+    .div{border:none;border-top:1px solid var(--bd);margin:44px 0}
+    .hb{background:linear-gradient(135deg,#ede9fe,#dbeafe);border-radius:10px;padding:16px 20px;margin:12px 0;border-left:4px solid var(--p);font-size:12.5px}
+    .hb strong{color:var(--p)}
+    /* FLOW */
+    .fl{margin:12px 0}
+    .fli{display:flex;gap:12px;margin-bottom:10px}
+    .fn{width:26px;height:26px;background:var(--p);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;flex-shrink:0;margin-top:1px}
+    .ft{font-weight:600;font-size:13px;color:var(--dark)}
+    .fd{font-size:11.5px;color:var(--mu);margin-top:2px}
+    /* SIDEBAR */
+    .sb{background:#0f172a;border-radius:10px;padding:16px;color:white;font-size:11.5px;min-width:190px}
+    .sbl{font-weight:700;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:12px;margin-bottom:12px}
+    .sbi{padding:6px 8px;border-radius:5px;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:7px;margin-bottom:1px}
+    .sbi.act{background:rgba(79,70,229,.3);color:white}
+    .sbsb{padding:4px 8px 4px 24px;color:rgba(255,255,255,.4);font-size:10.5px}
+    .sbdv{border-top:1px solid rgba(255,255,255,.1);margin:10px 0;position:relative}
+    .sbdl{position:absolute;top:-7px;left:8px;background:#0f172a;padding:0 5px;font-size:9px;color:rgba(255,255,255,.3);letter-spacing:.1em;text-transform:uppercase}
+    .sbm{background:rgba(79,70,229,.15);border:1px solid rgba(79,70,229,.3);border-radius:5px;padding:5px 8px;margin-bottom:3px;color:#a5b4fc;font-size:10.5px;font-weight:600}
+    .sbms{padding:3px 8px 3px 20px;color:rgba(165,180,252,.55);font-size:10px}
+    .tc{display:grid;grid-template-columns:190px 1fr;gap:20px;align-items:start;margin:14px 0}
+    @media print{body{background:white}.cover{min-height:auto}pre{font-size:10px;page-break-inside:avoid}}
+  </style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div>
+    <div class="brow">
+      <div class="bge"><span class="dot"></span>Complete Architecture</div>
+      <div class="bge">Frontend + Backend</div>
+      <div class="bge">Source Code Verified</div>
+    </div>
+    <h1>Perfex CRM<br/>Architecture</h1>
+    <div class="csub">Complete Frontend &amp; Backend System Analysis<br/>Built from direct reading of every key file in your codebase</div>
+  </div>
+  <div>
+    <div class="cgrid">
+      <div class="ccard"><div class="cl">Frontend</div><div class="cv">Vue 3 SPA</div></div>
+      <div class="ccard"><div class="cl">Backend</div><div class="cv">Laravel 10 API</div></div>
+      <div class="ccard"><div class="cl">Auth</div><div class="cv">Sanctum Tokens</div></div>
+      <div class="ccard"><div class="cl">Modules</div><div class="cv">ZIP Plugins</div></div>
+    </div>
+    <div class="cft"><span>iBRIDGE Solutions · Perfex CRM · Confidential</span><span>July 2026 · Source Code Verified</span></div>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- ═══ PART 1 ═══ -->
+<div class="ph"><div class="pn">1</div><div><div class="pt">Complete System Architecture</div><div class="ps">Every layer and connection — exactly as coded</div></div></div>
+
+<pre><span class="c">// ═══════════════════════════════════════════════════════════════
+// FULL SYSTEM MAP  —  Perfex CRM (verified from source)
+// ═══════════════════════════════════════════════════════════════</span>
+
+<span class="pp">BROWSER</span>
+├── index.html  (Laravel → resources/views/welcome.blade.php)
+│     ├── window.config = { path: url('/') }   <span class="c">← injected by Blade</span>
+│     └── &lt;div id="app"&gt;&lt;/div&gt;                <span class="c">← Vue mounts here</span>
+└── <span class="k">app.js</span>  (Vite entry point)
+      ├── createApp(App.vue)          <span class="c">← root = &lt;router-view /&gt;</span>
+      ├── use(createPinia())
+      ├── use(Antd)                   <span class="c">← Ant Design Vue (a-table, a-form...)</span>
+      ├── use(router)
+      ├── axios.baseURL = window.config.path + '/api'
+      ├── axios: read JWT from localStorage → Authorization: Bearer
+      ├── axios 401 interceptor → clear token → redirect /admin/login
+      └── router.isReady().then(() =&gt; app.mount('#app'))
+
+<span class="pp">VUE ROUTER  (createWebHistory, basePath from window.config.path)</span>
+├── /                          → redirect /admin/dashboard
+├── /admin/login               → Login.vue        (requireUnauth)
+├── /admin/register            → Register.vue     (requireUnauth)
+├── /admin/forgot-password     → ForgotPassword   (requireUnauth)
+├── /admin/reset-password/:t   → ResetPassword    (requireUnauth)
+└── /admin  [AdminLayout.vue]  meta: { requireAuth: true }
+      ├── dashboard, customers/:id, leads
+      ├── invoices, invoices/create, invoices/:id, invoices/:id/edit
+      ├── invoices/recurring
+      ├── proposals, proposals/proposal, proposals/proposal/:id
+      ├── estimates, estimates/estimate, estimates/estimate/:id
+      ├── payments, payments/create, payments/:id, payments/:id/edit
+      ├── credit-notes, credit-notes/create, credit-notes/:id/edit
+      ├── items, subscriptions, expenses, contracts
+      ├── projects, tasks, tasks/overview, support
+      ├── estimate-request, knowledge-base, knowledge-base/groups
+      ├── media, calendar, announcements, goals, activity
+      ├── utilities/(bulk-pdf-export|e-invoice-export|csv-export|surveys|...)
+      ├── reports, reports/(sales|expenses|finance|leads|timesheets|kb-articles|team)
+      ├── staff, profile, profile/edit, timesheets, my-todos, notifications
+      ├── setup/:section?/:subsection?
+      └── <span class="g">module/:slug/:pathMatch(.*)* → ModuleView.vue  ← ALL module pages</span>
+
+<span class="pp">LARAVEL BACKEND</span>
+├── <span class="k">routes/web.php</span>
+│     ├── GET /plugins/sso?token=...      → ModuleController@ssoLogin
+│     ├── GET /modules/sso?token=...      → same (backward-compat)
+│     ├── GET /plugins/{alias}/{page?}    → CI legacy bridge / native Vue redirect
+│     ├── GET /admin/{controller}/{meth}  → CI controller dispatch (scans Modules/)
+│     ├── GET /debug-db                   → dump modules/menus/users (dev)
+│     └── fallback → welcome.blade.php   → Vue SPA renders
+│
+├── <span class="k">routes/api.php</span>  (all auth:sanctum unless noted)
+│     ├── /auth/{register,login,forgot-password,reset-password}  (open)
+│     ├── /auth/{logout,user}                                    (sanctum)
+│     ├── /plugins/* and /modules/* (alias) → ModuleController
+│     └── /clients, /leads, /invoices, /payments, /projects...  (sanctum)
+│
+└── <span class="k">Modules/{alias}/routes/api.php</span>
+      └── Loaded by ModuleServiceProvider at boot (active modules only)</pre>
+
+<hr class="div"/>
+
+<!-- ═══ PART 2 ═══ -->
+<div class="ph"><div class="pn">2</div><div><div class="pt">Frontend Boot Sequence</div><div class="ps">Page load → logged-in dashboard, step by step</div></div></div>
+
+<div class="fl">
+  <div class="fli"><div class="fn">1</div><div><div class="ft">Any /admin/* URL requested</div><div class="fd">Laravel fallback route catches it → returns welcome.blade.php with injected window.config.path</div></div></div>
+  <div class="fli"><div class="fn">2</div><div><div class="ft">Vite bundle loads — app.js runs</div><div class="fd">Creates Vue app. Reads JWT token from localStorage. Sets axios Authorization header. Registers 401 interceptor.</div></div></div>
+  <div class="fli"><div class="fn">3</div><div><div class="ft">Router guard fires (beforeEach)</div><div class="fd">If <code>requireAuth</code> and not logged in → redirect to /admin/login. If <code>requireUnauth</code> and logged in → redirect to dashboard.</div></div></div>
+  <div class="fli"><div class="fn">4</div><div><div class="ft">App.vue mounts</div><div class="fd">Reads theme from localStorage → applies CSS vars via <code>applyThemeStyles()</code>. Falls back to hardcoded default theme (sidebar: #7e1e8e, primary: #7e1e8e).</div></div></div>
+  <div class="fli"><div class="fn">5</div><div><div class="ft">AdminLayout.vue mounts</div><div class="fd">Calls <code>moduleStore.fetchActiveMenus()</code> → GET /api/plugins/menus. Calls <code>moduleStore.fetchActiveModules()</code> → GET /api/plugins/active. Both cached in Pinia (skip if already loaded).</div></div></div>
+  <div class="fli"><div class="fn">6</div><div><div class="ft">Sidebar renders: static + dynamic</div><div class="fd">Static: hardcoded menuItems[] in AdminLayout.vue. Dynamic module items: from moduleStore.menus — appended below a divider line.</div></div></div>
+  <div class="fli"><div class="fn">7</div><div><div class="ft">401 auto-logout protection</div><div class="fd">Any API 401 → removes auth_token + auth_user from localStorage → deletes Authorization header → redirects to /admin/login.</div></div></div>
+</div>
+
+<hr class="div"/>
+
+<!-- ═══ PART 3 ═══ -->
+<div class="ph"><div class="pn">3</div><div><div class="pt">Authentication — Two Systems</div><div class="ps">Sanctum Bearer tokens (API) + Web session (SSO for legacy modules)</div></div></div>
+
+<div class="g2">
+  <div class="card"><div class="ci" style="background:#ede9fe;">🔑</div><div class="ct">API Auth — Sanctum Bearer</div><div class="cd">POST /api/auth/login → { token }. Stored in localStorage as auth_token. Sent as Authorization: Bearer on every Axios request. Logout deletes token from DB and localStorage.</div></div>
+  <div class="card"><div class="ci" style="background:#dcfce7;">🌐</div><div class="ct">Web Session Auth — Module SSO</div><div class="cd">Legacy modules need web session. GET /plugins/sso?token=X → auth('web')->loginUsingId(userId) → session regenerate → redirect to module page. One-time token, valid 1 minute in Cache.</div></div>
+</div>
+
+<h3>Permission Check — User::hasPermission() — 5 levels</h3>
+<pre><span class="pp">1.</span> user.role === <span class="s">'admin'</span>          <span class="c">→ always true (legacy column)</span>
+<span class="pp">2.</span> role relationship.slug === <span class="s">'admin'</span>  <span class="c">→ always true</span>
+<span class="pp">3.</span> role.permissions (JSON array)  <span class="c">→ check key or nested match</span>
+<span class="pp">4.</span> user.roles many-to-many        <span class="c">→ role_permissions → permissions.name</span>
+<span class="pp">5.</span> direct role.permissions()      <span class="c">→ permission name lookup</span></pre>
+
+<hr class="div"/>
+
+<!-- ═══ PART 4 ═══ -->
+<div class="ph"><div class="pn">4</div><div><div class="pt">Sidebar — Exact Architecture</div><div class="ps">3 sections: static core + computed module-gated + dynamic module menus from DB</div></div></div>
+
+<div class="tc">
+  <div class="sb">
+    <div class="sbl">🔷 CRM Admin</div>
+    <div class="sbi act">📊 Dashboard</div>
+    <div class="sbi">👥 Customers</div>
+    <div class="sbi">💰 Sales ›</div>
+    <div class="sbsb">Proposals / Estimates / Invoices</div>
+    <div class="sbsb">Payments / Credit Notes / Items</div>
+    <div class="sbi">📁 Projects</div>
+    <div class="sbi">✅ Tasks</div>
+    <div class="sbi">🎫 Support</div>
+    <div class="sbi">🎯 Leads</div>
+    <div class="sbi">📦 Utilities ›</div>
+    <div class="sbsb">Goals* / Surveys* / CSV*</div>
+    <div class="sbi">📈 Reports</div>
+    <div class="sbi">⚙️ Setup</div>
+    <div class="sbdv"><span class="sbdl">Modules</span></div>
+    <div class="sbm">📦 Uploaded Module</div>
+    <div class="sbms">Dashboard</div>
+    <div class="sbms">Manage Items</div>
+    <div class="sbm">📦 Another Module</div>
+  </div>
+  <div>
+    <h4>Section 1: Static Items (hardcoded menuItems[] in AdminLayout.vue)</h4>
+    <p>Dashboard, Customers, Sales (Proposals/Estimates/Invoices/Payments/Credit Notes/Items), Subscriptions, Expenses, Contracts, Projects, Tasks, Support, Leads, Estimate Request, Knowledge Base, Utilities, Reports, Setup.</p>
+
+    <h4>Section 2: Module-gated items inside Utilities (computed: filteredMenuItems)</h4>
+    <pre style="font-size:10.5px;padding:12px;"><span class="c">// Items with 'module' key are hidden unless that module is active</span>
+{ name: <span class="s">'Goals'</span>,       module: <span class="s">'goals'</span> }
+{ name: <span class="s">'Surveys'</span>,     module: <span class="s">'surveys'</span> }
+{ name: <span class="s">'CSV Export'</span>,   module: <span class="s">'csv-export'</span> }
+{ name: <span class="s">'e-Invoice'</span>,   module: <span class="s">'einvoice'</span> }
+{ name: <span class="s">'DB Backup'</span>,   module: <span class="s">'database-backup'</span> }
+<span class="c">// moduleStore.isActive(alias) → checked from /api/plugins/active</span></pre>
+
+    <h4>Section 3: Dynamic Module Items (from DB via API)</h4>
+    <pre style="font-size:10.5px;padding:12px;"><span class="c">// GET /api/plugins/menus → moduleStore.menus</span>
+<span class="c">// Computed: dynamicModuleItems</span>
+moduleStore.menus.map(menu => ({
+  ...menu, icon: icons[menu.icon] || icons.modules
+}))
+<span class="c">// Rendered below a divider, each as collapsible group or single link</span>
+<span class="c">// Each child path: /admin/module/{alias}/{route}</span></pre>
+  </div>
+</div>
+
+<hr class="div"/>
+
+<!-- ═══ PART 5 ═══ -->
+<div class="ph"><div class="pn">5</div><div><div class="pt">Module Page Rendering — ModuleView.vue</div><div class="ps">3 resolution steps: native Vue → settings UI → SSO iframe</div></div></div>
+
+<pre><span class="c">// Route: admin.module.dynamic</span>
+{ path: <span class="s">'module/:slug/:pathMatch(.*)*'</span>, component: ModuleView }
+
+<span class="c">// ModuleView receives: route.params.slug + route.params.pathMatch (array)</span>
+
+<span class="pp">STEP 1 — Try Native Vue (ModulePageLoader.js)</span>
+  <span class="c">// Vite glob at COMPILE TIME (all module Vue pages bundled)</span>
+  <span class="k">const</span> pageModules = import.meta.glob(
+    <span class="s">'../../../../Modules/*/resources/js/pages/**/*.vue'</span>
+  )
+  <span class="c">// For each key, normalize: strip path prefix, remove .vue, lowercase</span>
+  <span class="c">// Key format: "{alias}/{page}" e.g. "my-module/manage_items"</span>
+  <span class="c">// Match if key === normalizedTarget OR key === normalizedTarget + '/index'</span>
+  <span class="g">Found? → defineAsyncComponent(pageModules[key])  ← lazy loaded</span>
+
+<span class="pp">STEP 2 — Settings Page</span>
+  <span class="k">if</span> (module.settings_route &amp;&amp; path === module.settings_route)
+  <span class="g">→ &lt;GenericModuleSettings :alias="slug" /&gt;</span>
+  <span class="c">// Fetches GET /api/plugins/{alias}/settings → schema + values</span>
+  <span class="c">// Renders 13 field types automatically via FieldRenderer.vue</span>
+
+<span class="pp">STEP 3 — SSO Iframe (legacy modules)</span>
+  GET /api/plugins/sso-url?redirect=<span class="s">/plugins/{alias}/{path}</span>
+  <span class="c">// Backend creates 64-char token, Cache::put('sso_token_'+token, {user_id, redirect}, 1min)</span>
+  <span class="c">// Returns { url: "/plugins/sso?token={token}" }</span>
+  &lt;iframe :src=<span class="s">"ssoUrl"</span>&gt;
+  <span class="c">// GET /plugins/sso?token={token} (web route)</span>
+  <span class="c">// Cache::pull → auth('web')->loginUsingId(userId) → session regenerate</span>
+  <span class="c">// → redirect /plugins/{alias}/{path}</span>
+  <span class="c">// → /plugins/{alias}/{page} web route: check .vue exists → redirect /admin/module/...</span>
+  <span class="c">// → no .vue: run CI compat layer → render CI view inside iframe</span></pre>
+
+<hr class="div"/>
+
+<!-- ═══ PART 6 ═══ -->
+<div class="ph"><div class="pn">6</div><div><div class="pt">Backend Boot — ModuleServiceProvider</div><div class="ps">Runtime dynamic registration of every active module on every Laravel request</div></div></div>
+
+<pre><span class="c">// app/Providers/ModuleServiceProvider.php (157 lines)</span>
+<span class="c">// Called on EVERY request — both register() and boot()</span>
+
+<span class="pp">getActiveModules():</span>
+  <span class="c">// Safe guard: Schema::hasTable('modules') before querying</span>
+  DB::table(<span class="s">'modules'</span>)->where(<span class="s">'status'</span>, <span class="s">'active'</span>)->get([<span class="s">'name'</span>, <span class="s">'alias'</span>])
+
+<span class="pp">register():</span>
+  <span class="c">// Get Composer class loader at runtime</span>
+  $loader = require base_path(<span class="s">'vendor/autoload.php'</span>)
+
+  <span class="c">// For each active module:</span>
+  <span class="c">// Convert alias/name → PascalCase namespace</span>
+  <span class="c">// "my-custom-module" → "MyCustomModule"</span>
+  <span class="c">// "HR Payroll" → "HRPayroll"</span>
+  $nsPrefix = str_replace(<span class="s">' '</span>, <span class="s">''</span>, ucwords(str_replace([<span class="s">'-'</span>,<span class="s">'_'</span>], <span class="s">' '</span>, $alias)))
+  <span class="c">// If alias starts with digit, prefix with "Mod_"</span>
+
+  <span class="c">// Register PSR-4 at runtime — NO composer dump-autoload needed!</span>
+  $loader->addPsr4(<span class="s">"Modules\\{$nsPrefix}\\"</span>, <span class="s">"Modules/{$alias}/"</span>)
+  <span class="c">// Falls back to name-based dir if alias-based doesn't exist (legacy)</span>
+
+<span class="pp">boot():</span>
+  <span class="c">// Web routes (checks both routes/ and Routes/ for case-sensitivity)</span>
+  Route::middleware(<span class="s">'web'</span>)
+    ->namespace(<span class="s">"Modules\\{$nsPrefix}\\Controllers"</span>)
+    ->group(<span class="s">"Modules/{$alias}/routes/web.php"</span>)
+
+  <span class="c">// API routes</span>
+  Route::middleware(<span class="s">'api'</span>)->prefix(<span class="s">'api'</span>)
+    ->namespace(<span class="s">"Modules\\{$nsPrefix}\\Controllers\\Api"</span>)
+    ->group(<span class="s">"Modules/{$alias}/routes/api.php"</span>)
+
+  <span class="c">// Blade views</span>
+  $this->loadViewsFrom(<span class="s">"Modules/{$alias}/Views"</span>, strtolower($alias))
+
+  <span class="c">// Migrations</span>
+  $this->loadMigrationsFrom(<span class="s">"Modules/{$alias}/Database/Migrations"</span>)
+
+<span class="g">KEY: Only ACTIVE modules are registered. Deactivate = routes/autoload removed next request.</span>
+<span class="g">SAFE: Schema::hasTable guard prevents crash during fresh install migrations.</span></pre>
+
+<hr class="div"/>
+
+<!-- ═══ PART 7 ═══ -->
+<div class="ph"><div class="pn">7</div><div><div class="pt">Complete Module Install Flow</div><div class="ps">ModuleController → ModuleManager — every step from ZIP to active module</div></div></div>
+
+<pre><span class="c">// POST /api/plugins → ModuleController@store</span>
+
+<span class="pp">1. VALIDATE:</span>  $request->validate(['module_file' => 'required|file|mimes:zip'])
+<span class="pp">2. STORE:</span>     storage/app/temp_uploads/{filename}.zip
+<span class="pp">3. INSTALL:</span>   ModuleManager::install($fullTempPath)
+
+  <span class="bl">EXTRACT:</span>
+  ZipArchive → storage/app/temp_module_extract_{microtime}_{uniqid}/
+
+  <span class="bl">FIND MANIFEST (4 strategies):</span>
+  a) Find module.json anywhere in extracted tree → json_decode
+  b) Find PHP files with WordPress/Perfex comment headers
+     ("Module Name:", "Version:", "Author:", "Requires at least:")
+  c) Find nested .zip files (CodeCanyon double-zip) → re-extract → try a+b
+  d) None found → Exception "Invalid module ZIP"
+
+  <span class="bl">NORMALIZE alias:</span>
+  strtolower → preg_replace(/[^a-z0-9]+/, '-') → trim hyphens
+
+  <span class="bl">DUPLICATE CHECK:</span>
+  Module::where('alias', $alias)->first()
+  <span class="g">Found?</span>  → ModuleManager::upgrade($existing, $zipPath)  [version must be higher]
+  <span class="g">Not found?</span> → continue install
+
+  <span class="bl">VALIDATE MANIFEST:</span>
+  - name, alias required
+  - version → normalize X.Y.Z (fill missing parts with 0)
+  - minimum_core_version (core assumed = 3.0.0)
+
+  <span class="bl">COPY FILES:</span>
+  File::copyDirectory($moduleDir, base_path("Modules/{$alias}"))
+  File::deleteDirectory($tempDir)
+
+  <span class="bl">AUTO-MIGRATE LEGACY VUE FILES:</span>
+  skeleton/resources/js/views/module/*.vue
+  → Parse filename (PascalCase) → strip module prefix → snake_case
+  → Match to menu.json routes
+  → Copy to resources/js/pages/{matched_route}.vue (no overwrite)
+
+  <span class="bl">CREATE DB RECORD:</span>
+  Module::create([name, alias, version, depends, status='installed', ...])
+
+  <span class="bl">RUN LEGACY CI INSTALLER:</span>
+  Define globals: BASEPATH, db_prefix(), get_staff_user_id(), get_instance()
+  $CI->db->query() → rewrites tbl_modules→modules, active=1→status='active'
+  $CI->db->table_exists() → Schema::hasTable()
+  Run: Modules/{alias}/install.php
+  Scan: Modules/{alias}/migrations/*.php → class Migration_* → ->up()
+
+  <span class="bl">RUN LARAVEL MIGRATIONS:</span>
+  Artisan::call('migrate', ['--path' => 'Modules/{alias}/Database/Migrations'])
+
+  <span class="bl">FLUSH CACHE + FIRE EVENT:</span> ModuleInstalled
+
+<span class="pp">4. AUTO-ACTIVATE:</span>   ModuleManager::activate($module->id)
+
+  <span class="bl">DEPENDENCY CHECK:</span>
+  foreach ($depends as $dep) → Module::where('alias',$dep)->where('status','active')->exists()
+
+  <span class="bl">HEALTH CHECK:</span>  is_dir("Modules/{$alias}")
+
+  <span class="bl">DB TRANSACTION:</span>
+  a) Read permissions.json:
+     - Permission::firstOrCreate(['name' => $key])
+     - ModulePermission::create([module_id, permission_name])
+     - Admin role → DB::table('role_permissions')->insertOrIgnore([role_id, permission_id])
+
+  b) Read menu.json → registerMenuNode() recursive:
+     ModuleMenu::create([module_id, parent_id, title, route, icon, permission])
+     foreach children → registerMenuNode(moduleId, child, $menuNode->id)
+     [No menu.json → auto-generate from Views/ subfolder names]
+
+  c) modules.status = 'active', activated_at = now()
+
+  <span class="bl">FIRE EVENT:</span> ModuleActivated
+
+<span class="pp">5. CLEANUP:</span>  unlink($fullTempPath)
+<span class="pp">6. RESPONSE:</span> 201 { success: true, message: "Plugin uploaded, installed, activated" }</pre>
+
+<hr class="div"/>
+
+<!-- ═══ PART 8 ═══ -->
+<div class="ph"><div class="pn">8</div><div><div class="pt">menus() API — Exact Response Structure</div><div class="ps">GET /api/plugins/menus — how DB data becomes sidebar items</div></div></div>
+
+<pre><span class="c">// ModuleController@menus — GET /api/plugins/menus</span>
+
+$activeModules = Module::where(<span class="s">'status'</span>, <span class="s">'active'</span>)->get()
+
+foreach ($activeModules as $mod) {
+  $rootMenus = ModuleMenu::where(<span class="s">'module_id'</span>, $mod->id)->whereNull(<span class="s">'parent_id'</span>)->get()
+
+  foreach ($rootMenus as $root) {
+    <span class="c">// Root permission gate</span>
+    <span class="k">if</span> ($root->permission &amp;&amp; !$user->hasPermission($root->permission)) continue;
+
+    $children = ModuleMenu::where(<span class="s">'parent_id'</span>, $root->id)->get()
+      ->filter(fn($c) => !$c->permission || $user->hasPermission($c->permission))
+      ->map(fn($c) => [
+        <span class="s">'name'</span> => ModuleManager::formatMenuTitle($c->title),
+        <span class="s">'path'</span> => <span class="s">"/admin/module/{$mod->alias}"</span> . $c->route,
+      ]);
+
+    $menuList[] = [
+      <span class="s">'name'</span>     => ModuleManager::formatMenuTitle($root->title),
+      <span class="s">'icon'</span>     => $root->icon,
+      <span class="s">'path'</span>     => $root->route ? <span class="s">"/admin/module/{$alias}"</span> . $root->route : null,
+      <span class="s">'children'</span> => !empty($children) ? $children->values()->toArray() : null,
+      <span class="s">'dynamic'</span>  => true,
+      <span class="s">'slug'</span>     => $mod->alias,
+    ];
+  }
+}
+
+<span class="c">// Response example:</span>
+[
+  {
+    <span class="s">"name"</span>: <span class="s">"HR Payroll"</span>,
+    <span class="s">"icon"</span>: <span class="s">"fa fa-users"</span>,
+    <span class="s">"path"</span>: null,
+    <span class="s">"children"</span>: [
+      { <span class="s">"name"</span>: <span class="s">"Manage Employees"</span>, <span class="s">"path"</span>: <span class="s">"/admin/module/hr-payroll/manage_employees"</span> },
+      { <span class="s">"name"</span>: <span class="s">"Attendance"</span>,       <span class="s">"path"</span>: <span class="s">"/admin/module/hr-payroll/manage_attendance"</span> }
+    ],
+    <span class="s">"dynamic"</span>: true,
+    <span class="s">"slug"</span>: <span class="s">"hr-payroll"</span>
+  }
+]</pre>
+
+<hr class="div"/>
+
+<!-- ═══ PART 9 ═══ -->
+<div class="ph"><div class="pn">9</div><div><div class="pt">All API Endpoints</div><div class="ps">Complete routes/api.php — all 229 lines mapped</div></div></div>
+
+<h3>Auth (open — no middleware)</h3>
+<ul class="ep">
+  <li class="epi"><span class="mt mp">POST</span><span class="eu">/api/auth/register</span><span class="ed">Register staff user</span></li>
+  <li class="epi"><span class="mt mp">POST</span><span class="eu">/api/auth/login</span><span class="ed">Login → Bearer token</span></li>
+  <li class="epi"><span class="mt mp">POST</span><span class="eu">/api/auth/forgot-password</span><span class="ed">Send reset email</span></li>
+  <li class="epi"><span class="mt mp">POST</span><span class="eu">/api/auth/reset-password</span><span class="ed">Reset with token</span></li>
+  <li class="epi"><span class="mt mp">POST</span><span class="eu">/api/auth/logout</span><span class="ed">Logout (sanctum)</span></li>
+  <li class="epi"><span class="mt mg">GET</span><span class="eu">/api/auth/user</span><span class="ed">Current user (sanctum)</span></li>
+</ul>
+
+<h3>Plugins / Modules (auth:sanctum — /plugins is primary, /modules is alias)</h3>
+<ul class="ep">
+  <li class="epi"><span class="mt mg">GET</span><span class="eu">/api/plugins</span><span class="ed">List all (search param)</span></li>
+  <li class="epi"><span class="mt mp">POST</span><span class="eu">/api/plugins</span><span class="ed">Upload + install + activate ZIP</span></li>
+  <li class="epi"><span class="mt md">DEL</span><span class="eu">/api/plugins/{id}?delete_data=true</span><span class="ed">Uninstall</span></li>
+  <li class="epi"><span class="mt mg">GET</span><span class="eu">/api/plugins/sso-url?redirect=...</span><span class="ed">One-time SSO token</span></li>
+  <li class="epi"><span class="mt mg">GET</span><span class="eu">/api/plugins/active</span><span class="ed">Active modules + sidebar info</span></li>
+  <li class="epi"><span class="mt mg">GET</span><span class="eu">/api/plugins/menus</span><span class="ed">Module menus (filtered by permissions)</span></li>
+  <li class="epi"><span class="mt mpa">PATCH</span><span class="eu">/api/plugins/{id}/toggle</span><span class="ed">Toggle active/inactive</span></li>
+  <li class="epi"><span class="mt mpa">PATCH</span><span class="eu">/api/plugins/{id}/activate</span><span class="ed">Activate module</span></li>
+  <li class="epi"><span class="mt mpa">PATCH</span><span class="eu">/api/plugins/{id}/deactivate</span><span class="ed">Deactivate module</span></li>
+  <li class="epi"><span class="mt mg">GET</span><span class="eu">/api/plugins/{alias}/settings</span><span class="ed">Schema + current values</span></li>
+  <li class="epi"><span class="mt mpu">PUT</span><span class="eu">/api/plugins/{alias}/settings</span><span class="ed">Save settings</span></li>
+  <li class="epi"><span class="mt mp">POST</span><span class="eu">/api/plugins/{alias}/settings/reset</span><span class="ed">Reset to defaults</span></li>
+  <li class="epi"><span class="mt mp">POST</span><span class="eu">/api/plugins/{id}/repair</span><span class="ed">Re-run migrations + re-register</span></li>
+  <li class="epi"><span class="mt mp">POST</span><span class="eu">/api/plugins/{id}/rollback</span><span class="ed">Rollback migrations + deactivate</span></li>
+</ul>
+
+<h3>Core Business APIs (all auth:sanctum)</h3>
+<div class="tw"><table>
+  <thead><tr><th>Resource</th><th>Method(s)</th><th>Special Routes</th></tr></thead>
+  <tbody>
+    <tr><td>Clients</td><td>apiResource</td><td>PUT /{id}/status</td></tr>
+    <tr><td>Contacts</td><td>GET/POST/PUT/DELETE</td><td>PUT /{id}/status</td></tr>
+    <tr><td>Leads</td><td>apiResource</td><td>PUT /{id}/status, POST /import</td></tr>
+    <tr><td>Staff</td><td>apiResource</td><td>GET /roles/list, POST /{id}/image</td></tr>
+    <tr><td>Roles</td><td>apiResource</td><td>—</td></tr>
+    <tr><td>Invoices</td><td>apiResource</td><td>—</td></tr>
+    <tr><td>Recurring Invoices</td><td>apiResource</td><td>—</td></tr>
+    <tr><td>Payments</td><td>apiResource</td><td>—</td></tr>
+    <tr><td>Credit Notes</td><td>apiResource</td><td>—</td></tr>
+    <tr><td>Predefined Items</td><td>apiResource</td><td>—</td></tr>
+    <tr><td>Subscriptions</td><td>apiResource</td><td>—</td></tr>
+    <tr><td>Tasks</td><td>apiResource</td><td>GET /overview</td></tr>
+    <tr><td>Announcements / Goals / Surveys / Mail Lists / Media</td><td>apiResource</td><td>—</td></tr>
+    <tr><td>Expenses / Projects</td><td>apiResource</td><td>—</td></tr>
+    <tr><td>Contracts</td><td>apiResource</td><td>GET /contract-types</td></tr>
+    <tr><td>Tickets</td><td>apiResource</td><td>GET /metadata, GET /weekly-stats, POST /{id}/reply</td></tr>
+    <tr><td>Estimate Requests + Forms</td><td>apiResource</td><td>—</td></tr>
+    <tr><td>KB Articles / Categories</td><td>apiResource</td><td>GET /report (articles)</td></tr>
+    <tr><td>Reports</td><td>GET</td><td>/sales /expenses /finance /team</td></tr>
+    <tr><td>Sales Report</td><td>GET</td><td>invoices/items/payments/credit-notes/proposals/estimates/customers/charts/total-income/payment-modes/customer-groups</td></tr>
+    <tr><td>Client Files</td><td>GET+POST per client</td><td>PUT/DELETE per file</td></tr>
+    <tr><td>Client Vaults</td><td>GET+POST per client</td><td>PUT/DELETE/decrypt per entry</td></tr>
+    <tr><td>Reminders</td><td>GET+POST per client</td><td>DELETE</td></tr>
+    <tr><td>Database Backups</td><td>GET/POST/download/DELETE</td><td>POST /toggle-auto</td></tr>
+    <tr><td>Ticket Pipe Logs</td><td>GET/DELETE</td><td>DELETE /clear</td></tr>
+    <tr><td>Activity Logs</td><td>GET/DELETE</td><td>—</td></tr>
+    <tr><td>Dashboard Metrics</td><td>GET</td><td>/dashboard-metrics</td></tr>
+  </tbody>
+</table></div>
+
+<hr class="div"/>
+
+<!-- ═══ PART 10 ═══ -->
+<div class="ph"><div class="pn">10</div><div><div class="pt">Web Routes — routes/web.php</div><div class="ps">645 lines — SSO, legacy CI bridge, controller dispatch, SPA fallback</div></div></div>
+
+<ul class="ep">
+  <li class="epi"><span class="mt mg">GET</span><span class="eu">/plugins/sso?token=...</span><span class="ed">SSO login → web session → redirect</span></li>
+  <li class="epi"><span class="mt mg">GET</span><span class="eu">/modules/sso?token=...</span><span class="ed">Alias (backward compat)</span></li>
+  <li class="epi"><span class="mt mg">GET</span><span class="eu">/plugins/{alias}/{page?}</span><span class="ed">Legacy CI page bridge (or Vue redirect)</span></li>
+  <li class="epi"><span class="mt mg">GET</span><span class="eu">/admin/{controller}/{method?}</span><span class="ed">Legacy CI controller dispatch</span></li>
+  <li class="epi"><span class="mt mg">GET</span><span class="eu">/debug-db</span><span class="ed">Dump modules/menus/users (dev tool)</span></li>
+  <li class="epi"><span class="mt mg">GET</span><span class="eu">fallback (all others)</span><span class="ed">welcome.blade.php → Vue SPA</span></li>
+</ul>
+
+<div class="al al-inf"><div class="al-ic">💡</div><div><div class="al-t">/plugins/{alias}/{page} Smart Routing</div><div class="al-d">Checks if <code>Modules/{alias}/resources/js/pages/{page}.vue</code> exists. YES → redirect <code>/admin/module/{alias}/{page}</code> (Vue SPA). NO → run full CI compatibility layer (define BASEPATH, db_prefix, get_instance, base_url, site_url, admin_url, html_escape, _l, has_permission, form_hidden...) → include CI controller → render view.</div></div></div>
+
+<div class="al al-inf"><div class="al-ic">⚙️</div><div><div class="al-t">/admin/{controller}/{method} Dispatch</div><div class="al-d">Scans all active module <code>controllers/</code> folders to find the class. Creates a stub <code>AdminController</code> base class with <code>$this->load</code> (for view includes) and <code>$this->input</code> (for POST/GET). Then instantiates the controller and calls the method.</div></div></div>
+
+<hr class="div"/>
+
+<!-- ═══ PART 11 ═══ -->
+<div class="ph"><div class="pn">11</div><div><div class="pt">Module ZIP — Complete File Reference</div><div class="ps">Every file that can be in a module ZIP, exactly when and how it's used</div></div></div>
+
+<div class="tw"><table>
+  <thead><tr><th>File / Folder</th><th>Required?</th><th>When Used</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>module.json</code></td><td><span class="tg tr">Required</span></td><td>Install</td><td>name, alias, version, minimum_core_version, sdk_version, depends, settings_route</td></tr>
+    <tr><td><code>menu.json</code></td><td><span class="tg tw2">Recommended</span></td><td>Activate</td><td>Sidebar navigation tree with routes + permissions</td></tr>
+    <tr><td><code>permissions.json</code></td><td><span class="tg tw2">Recommended</span></td><td>Activate</td><td>Permission keys registered in DB + assigned to Admin role</td></tr>
+    <tr><td><code>routes/api.php</code></td><td><span class="tg tb">Optional</span></td><td>Every boot</td><td>Module REST API (prefix /api/, middleware api)</td></tr>
+    <tr><td><code>routes/web.php</code></td><td><span class="tg tb">Optional</span></td><td>Every boot</td><td>Module web routes (middleware web)</td></tr>
+    <tr><td><code>Controllers/Api/</code></td><td><span class="tg tb">Optional</span></td><td>Runtime</td><td>Laravel controllers (PSR-4 auto-registered)</td></tr>
+    <tr><td><code>Database/Migrations/</code></td><td><span class="tg tb">Optional</span></td><td>Install</td><td>Laravel migrations — creates your DB tables</td></tr>
+    <tr><td><code>resources/js/pages/*.vue</code></td><td><span class="tg tb">Optional</span></td><td>Page load</td><td>Native Vue pages — resolved by ModulePageLoader.js</td></tr>
+    <tr><td><code>settings-schema.json</code></td><td><span class="tg tb">Optional</span></td><td>Settings API</td><td>Schema for auto-generated settings UI (13 field types)</td></tr>
+    <tr><td><code>Views/</code></td><td><span class="tg tb">Optional</span></td><td>Every boot</td><td>Blade/PHP views (legacy, rendered in SSO iframe)</td></tr>
+    <tr><td><code>install.php</code></td><td><span class="tg tb">Optional</span></td><td>Install only</td><td>Legacy CI install script (run with CI compat globals)</td></tr>
+    <tr><td><code>uninstall.php</code></td><td><span class="tg tb">Optional</span></td><td>Uninstall</td><td>Cleanup before files are deleted</td></tr>
+    <tr><td><code>upgrade.php</code></td><td><span class="tg tb">Optional</span></td><td>Upgrade</td><td>Data migration for version upgrades</td></tr>
+    <tr><td><code>migrations/*.php</code></td><td><span class="tg tb">Legacy</span></td><td>Install</td><td>CI Migration_* classes → ->up() called on install</td></tr>
+    <tr><td><code>helpers/*.php</code></td><td><span class="tg tb">Legacy</span></td><td>Install</td><td>Helper functions loaded before install.php runs</td></tr>
+    <tr><td><code>skeleton/resources/js/views/</code></td><td><span class="tg tb">Legacy</span></td><td>Install</td><td>Old Vue files → auto-migrated to resources/js/pages/</td></tr>
+  </tbody>
+</table></div>
+
+<hr class="div"/>
+
+<!-- ═══ PART 12 ═══ -->
+<div class="ph"><div class="pn">12</div><div><div class="pt">Database Tables — Core Module System</div><div class="ps">All 5 tables with exact columns from Module.php and migrations</div></div></div>
+
+<h3>modules table</h3>
+<div class="tw"><table>
+  <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>UUID string</td><td>Auto-generated via Str::uuid() in model boot</td></tr>
+    <tr><td><code>name</code></td><td>string</td><td>Display name from module.json</td></tr>
+    <tr><td><code>alias</code></td><td>string UNIQUE</td><td>kebab-case — folder name, URL slug, all lookups</td></tr>
+    <tr><td><code>version</code></td><td>string</td><td>Semantic X.Y.Z</td></tr>
+    <tr><td><code>minimum_core_version</code></td><td>string</td><td>Checked against core=3.0.0 on install</td></tr>
+    <tr><td><code>depends</code></td><td>JSON → array</td><td>Array of alias strings</td></tr>
+    <tr><td><code>description</code></td><td>text</td><td>Shown in modules list UI</td></tr>
+    <tr><td><code>status</code></td><td>enum</td><td>installed | active | inactive</td></tr>
+    <tr><td><code>author</code></td><td>string</td><td></td></tr>
+    <tr><td><code>settings_route</code></td><td>string null</td><td>Path suffix for settings page</td></tr>
+    <tr><td><code>icon</code></td><td>string null</td><td>Icon class or SVG</td></tr>
+    <tr><td><code>is_core</code></td><td>boolean</td><td>Core module flag</td></tr>
+    <tr><td><code>installed_at</code></td><td>datetime</td><td></td></tr>
+    <tr><td><code>activated_at</code></td><td>datetime</td><td>Set on each activate() call</td></tr>
+  </tbody>
+</table></div>
+
+<h3>module_menus table</h3>
+<div class="tw"><table>
+  <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>bigint</td><td>PK</td></tr>
+    <tr><td><code>module_id</code></td><td>UUID FK</td><td>→ modules.id (cascade delete)</td></tr>
+    <tr><td><code>parent_id</code></td><td>bigint null</td><td>NULL = root menu node; set = child node</td></tr>
+    <tr><td><code>title</code></td><td>string</td><td>Translation key or display text (formatMenuTitle() converts)</td></tr>
+    <tr><td><code>route</code></td><td>string</td><td>Path suffix e.g. /manage_employees</td></tr>
+    <tr><td><code>icon</code></td><td>string null</td><td>CSS class or SVG (root nodes only)</td></tr>
+    <tr><td><code>permission</code></td><td>string null</td><td>Permission key checked before showing</td></tr>
+  </tbody>
+</table></div>
+
+<h3>module_permissions / module_settings / module_events</h3>
+<div class="tw"><table>
+  <thead><tr><th>Table</th><th>Key Columns</th></tr></thead>
+  <tbody>
+    <tr><td>module_permissions</td><td>module_id (FK), permission_name (string)</td></tr>
+    <tr><td>module_settings</td><td>module_id (FK), setting_key (string), setting_value (text — JSON/encrypted)</td></tr>
+    <tr><td>module_events</td><td>module_id, module_alias, event_name (ModuleInstalled/Activated/Deactivated/Upgraded/Uninstalled/Repaired/RolledBack), payload (JSON)</td></tr>
+  </tbody>
+</table></div>
+
+<hr class="div"/>
+
+<!-- ═══ PART 13 ═══ -->
+<div class="ph"><div class="pn">13</div><div><div class="pt">Settings System — ModuleSettingsService</div><div class="ps">Schema-driven, cached, validated, field types, encryption</div></div></div>
+
+<pre><span class="c">// ModuleSettingsService (240 lines)</span>
+
+<span class="pp">Schema loading:</span>
+  Reads module.json → settings.schema path → loads settings-schema.json
+  Cached in Cache::remember("module.schema.{alias}", 3600)
+
+<span class="pp">Schema structure:</span>
+  { "sections": [{ "title": "...", "fields": [{
+    "key": "api_key",        <span class="c">// storage key + validation identifier</span>
+    "label": "API Key",      <span class="c">// UI label</span>
+    "type": "password",      <span class="c">// field type (see 13 types below)</span>
+    "default": "",           <span class="c">// returned if no DB value exists</span>
+    "width": 24,             <span class="c">// Ant Design grid col span (1–24)</span>
+    "help": "hint text",     <span class="c">// help text below field</span>
+    "validation": { "required": true }
+  }]}]}
+
+<span class="pp">Value encoding (setting_value in DB):</span>
+  multiselect → json_encode($value)
+  password    → encrypt((string)$value)      <span class="c">← Laravel encrypt()</span>
+  others      → (string)$value
+
+<span class="pp">Value decoding (reading from DB):</span>
+  multiselect → json_decode → array
+  number      → (float)
+  boolean     → in_array($val, ['1',1,'true',true])
+  password    → decrypt($value) catch → raw value
+  others      → raw string
+
+<span class="pp">13 Field Types → Vue Components:</span>
+  text       → TextField.vue          textarea   → TextAreaField.vue
+  password   → PasswordField.vue      number     → NumberField.vue
+  boolean    → BooleanField.vue       select     → SelectField.vue
+  multiselect→ SelectField.vue        color      → ColorField.vue
+  date       → DateField.vue          datetime   → DateTimeField.vue
+  file       → FileField.vue          image      → ImageField.vue
+  richtext   → RichTextField.vue      (markdown  → MarkdownField.vue)</pre>
+
+<hr class="div"/>
+
+<!-- ═══ PART 14 ═══ -->
+<div class="ph"><div class="pn">14</div><div><div class="pt">End-to-End: Upload → Module Page Renders</div><div class="ps">Every single step from ZIP upload to page rendering in browser</div></div></div>
+
+<pre><span class="c">ADMIN UPLOADS module.zip</span>
+        │
+        ▼
+<span class="pp">POST /api/plugins</span>  (multipart/form-data, module_file=*.zip)
+        │
+        ▼
+<span class="bl">ModuleController@store</span>
+  ├── validate mimes:zip
+  ├── store to storage/app/temp_uploads/
+  ├── ModuleManager::install() → [see Part 7 for full detail]
+  │     ├── Extract ZIP, find manifest, normalize alias
+  │     ├── Duplicate? → upgrade(); else → validate + copy
+  │     ├── Run legacy install.php + migrations/
+  │     └── Artisan migrate --path=Modules/{alias}/Database/Migrations
+  └── ModuleManager::activate()
+        ├── permissions.json → DB permissions + admin role assignment
+        ├── menu.json → DB module_menus tree
+        └── status = 'active'
+        │
+        ▼
+<span class="pp">201 Response: success</span>
+        │
+        ▼
+<span class="c">NEXT HTTP REQUEST — Laravel boots</span>
+
+<span class="bl">ModuleServiceProvider::register()</span>
+  └── $loader->addPsr4("Modules\\MyModule\\", "Modules/my-module/")
+
+<span class="bl">ModuleServiceProvider::boot()</span>
+  ├── Route::group(Modules/my-module/routes/api.php)   → /api/{module-routes}
+  ├── Route::group(Modules/my-module/routes/web.php)   → /{module-web-routes}
+  ├── loadViewsFrom(Modules/my-module/Views, 'my-module')
+  └── loadMigrationsFrom(Modules/my-module/Database/Migrations)
+        │
+        ▼
+<span class="c">FRONTEND — moduleStore.fetchActiveMenus()</span>
+
+<span class="bl">GET /api/plugins/menus</span>
+  └── module_menus table → filtered by user permissions
+      → [{ name:"My Module", children:[{name:"Dashboard",path:"/admin/module/my-module/dashboard"}] }]
+        │
+        ▼
+<span class="bl">AdminLayout.vue — dynamicModuleItems</span>
+  └── Module group + children appear in sidebar below divider
+        │
+        ▼
+<span class="c">USER CLICKS "Dashboard" in sidebar</span>
+
+<span class="bl">Vue Router → /admin/module/my-module/dashboard</span>
+        │
+        ▼
+<span class="bl">ModuleView.vue</span>
+
+  <span class="pp">Try 1:</span> resolveModulePage('my-module', 'dashboard')
+    ModulePageLoader: import.meta.glob finds
+    Modules/my-module/resources/js/pages/dashboard.vue
+    <span class="g">→ defineAsyncComponent → renders natively in SPA ✓</span>
+
+  <span class="pp">Try 2:</span> Settings route match
+    <span class="g">→ GenericModuleSettings (schema form) ✓</span>
+
+  <span class="pp">Try 3:</span> SSO Iframe
+    GET /api/plugins/sso-url?redirect=/plugins/my-module/dashboard
+    → Cache token (1 min) → iframe src=/plugins/sso?token={X}
+    → auth('web')->loginUsingId() → redirect /plugins/my-module/dashboard
+    → Check native Vue exists → redirect /admin/module/my-module/dashboard
+    → OR render CI view in iframe
+    <span class="g">→ Module page renders inside iframe ✓</span>
+
+<span class="r">═══════════════════════════════════════════════════
+MODULE IS FULLY OPERATIONAL
+═══════════════════════════════════════════════════</span></pre>
+
+  <div style="text-align:center;padding:48px 0 60px;border-top:1px solid #e2e8f0;margin-top:40px">
+    <p style="color:#64748b;margin-bottom:16px;font-size:13px">Open in Chrome → Press Cmd+P → Destination: Save as PDF → Save</p>
+    <button onclick="window.print()" style="background:linear-gradient(135deg,#4f46e5,#0ea5e9);color:white;border:none;padding:14px 32px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 4px 20px rgba(79,70,229,.4)">🖨️ Save as PDF</button>
+  </div>
+</div>
+</body>
+</html>

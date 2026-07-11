@@ -1,3 +1,6 @@
+# Allow file uploads up to 256MB
+LimitRequestBody 268435456
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

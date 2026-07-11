@@ -1,0 +1,29 @@
+<?php
+
+namespace Modules\{{ namespace }}\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+
+class {{ model }} extends Model
+{
+    use HasUuids;
+
+    protected $table = '{{ tableName }}';
+
+    protected $fillable = [
+        'title',
+        'description',
+        'content',
+        'status',
+        'created_by',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+        ];
+    }
+}

@@ -111,3 +111,378 @@ export function numberToWords(num, isLowercase = false) {
     return words.charAt(0).toUpperCase() + words.slice(1);
   }
 }
+
+export function applyThemeStyles(settings) {
+  if (!settings) return;
+  let styleEl = document.getElementById('crm-dynamic-theme-styles');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'crm-dynamic-theme-styles';
+    document.head.appendChild(styleEl);
+  }
+
+  let css = '';
+
+  // 1. Admin Area
+  if (settings.admin_sidebar_bg) {
+    css += `
+      .crm-sidebar {
+        background: linear-gradient(135deg, #d35400 0%, \${settings.admin_sidebar_bg} 50%, #0b579f 100%) !important;
+      }
+    `;
+  }
+  if (settings.admin_sidebar_link) {
+    css += `
+      .crm-nav-item, .crm-submenu-item {
+        color: \${settings.admin_sidebar_link} !important;
+      }
+    `;
+  }
+  if (settings.admin_sidebar_active_bg) {
+    css += `
+      .crm-nav-item--active, .crm-submenu-item--active {
+        background: \${settings.admin_sidebar_active_bg} !important;
+      }
+      .crm-nav-item--active::after {
+        background: \${settings.admin_sidebar_active_link || '#ffffff'} !important;
+      }
+    `;
+  }
+  if (settings.admin_sidebar_active_link) {
+    css += `
+      .crm-nav-item--active, .crm-submenu-item--active {
+        color: \${settings.admin_sidebar_active_link} !important;
+      }
+    `;
+  }
+  if (settings.admin_header_bg) {
+    css += `
+      .crm-header {
+        background: \${settings.admin_header_bg} !important;
+      }
+    `;
+  }
+  if (settings.admin_header_link) {
+    css += `
+      .crm-header-link {
+        color: \${settings.admin_header_link} !important;
+      }
+    `;
+  }
+  if (settings.admin_content_bg) {
+    css += `
+      .crm-content-body, .crm-main, .settings-card {
+        background-color: \${settings.admin_content_bg} !important;
+      }
+    `;
+  }
+
+  // 2. Customers Area (Portal Nav)
+  if (settings.cust_nav_bg) {
+    css += `
+      .portal-navbar {
+        background: linear-gradient(135deg, #d35400 0%, \${settings.cust_nav_bg} 50%, #0b579f 100%) !important;
+      }
+    `;
+  }
+  if (settings.cust_nav_link) {
+    css += `
+      .portal-navbar-link {
+        color: \${settings.cust_nav_link} !important;
+      }
+    `;
+  }
+  if (settings.cust_footer_bg) {
+    css += `
+      .portal-footer {
+        background-color: \${settings.cust_footer_bg} !important;
+      }
+    `;
+  }
+  if (settings.cust_footer_text) {
+    css += `
+      .portal-footer-text {
+        color: \${settings.cust_footer_text} !important;
+      }
+    `;
+  }
+
+  // 3. Buttons
+  if (settings.btn_primary) {
+    css += `
+      :root, body {
+        --ant-primary-color: \${settings.btn_primary} !important;
+        --ant-primary-color-hover: \${settings.btn_primary}cc !important;
+        --ant-primary-color-active: \${settings.btn_primary}e6 !important;
+        --ant-primary-color-outline: \${settings.btn_primary}22 !important;
+        --primary-color: \${settings.btn_primary} !important;
+        --primary-color-hover: \${settings.btn_primary}cc !important;
+        --primary-color-active: \${settings.btn_primary}e6 !important;
+      }
+      .ant-btn-primary,
+      button.ant-btn-primary,
+      .btn-primary,
+      button.btn-primary,
+      input[type="button"].btn-primary,
+      input[type="submit"].btn-primary {
+        background: linear-gradient(135deg, #d35400 0%, \${settings.btn_primary} 50%, #0b579f 100%) !important;
+        background-image: linear-gradient(135deg, #d35400 0%, \${settings.btn_primary} 50%, #0b579f 100%) !important;
+        border-color: transparent !important;
+        border: none !important;
+        color: #ffffff !important;
+        box-shadow: 0px 4px 14px 0px rgba(126, 30, 142, 0.2) !important;
+      }
+      .ant-btn-primary:hover,
+      .ant-btn-primary:focus,
+      .ant-btn-primary:active,
+      button.ant-btn-primary:hover,
+      .btn-primary:hover,
+      .btn-primary:focus,
+      .btn-primary:active,
+      button.btn-primary:hover {
+        background: linear-gradient(135deg, #d35400 0%, \${settings.btn_primary} 50%, #0b579f 100%) !important;
+        background-image: linear-gradient(135deg, #d35400 0%, \${settings.btn_primary} 50%, #0b579f 100%) !important;
+        opacity: 0.9 !important;
+        color: #ffffff !important;
+      }
+      .ant-btn-primary span,
+      .btn-primary span {
+        color: #ffffff !important;
+      }
+    `;
+  }
+  if (settings.btn_default) {
+    css += `
+      .ant-btn-default,
+      button.ant-btn-default,
+      .btn-default,
+      button.btn-default {
+        background: linear-gradient(135deg, #d35400 0%, \${settings.btn_default} 50%, #0b579f 100%) !important;
+        background-image: linear-gradient(135deg, #d35400 0%, \${settings.btn_default} 50%, #0b579f 100%) !important;
+        border-color: transparent !important;
+        border: none !important;
+        color: #ffffff !important;
+      }
+      .ant-btn-default:hover,
+      .ant-btn-default:focus,
+      .ant-btn-default:active,
+      .btn-default:hover,
+      .btn-default:focus,
+      .btn-default:active {
+        background: linear-gradient(135deg, #d35400 0%, \${settings.btn_default} 50%, #0b579f 100%) !important;
+        background-image: linear-gradient(135deg, #d35400 0%, \${settings.btn_default} 50%, #0b579f 100%) !important;
+        opacity: 0.9 !important;
+        color: #ffffff !important;
+      }
+      .ant-btn-default span,
+      .btn-default span {
+        color: #ffffff !important;
+      }
+    `;
+  }
+  if (settings.btn_success) {
+    css += `
+      :root, body {
+        --ant-success-color: \${settings.btn_success} !important;
+        --ant-success-color-hover: \${settings.btn_success}cc !important;
+        --ant-success-color-active: \${settings.btn_success}e6 !important;
+      }
+      .ant-btn-success,
+      button.ant-btn-success,
+      .btn-success,
+      button.btn-success {
+        background: linear-gradient(135deg, #d35400 0%, \${settings.btn_success} 50%, #0b579f 100%) !important;
+        background-image: linear-gradient(135deg, #d35400 0%, \${settings.btn_success} 50%, #0b579f 100%) !important;
+        border-color: transparent !important;
+        border: none !important;
+        color: #ffffff !important;
+      }
+      .ant-btn-success:hover,
+      .ant-btn-success:focus,
+      .ant-btn-success:active,
+      .btn-success:hover,
+      .btn-success:focus,
+      .btn-success:active {
+        background: linear-gradient(135deg, #d35400 0%, \${settings.btn_success} 50%, #0b579f 100%) !important;
+        background-image: linear-gradient(135deg, #d35400 0%, \${settings.btn_success} 50%, #0b579f 100%) !important;
+        opacity: 0.9 !important;
+        color: #ffffff !important;
+      }
+      .ant-btn-success span,
+      .btn-success span {
+        color: #ffffff !important;
+      }
+    `;
+  }
+  if (settings.btn_danger) {
+    css += `
+      :root, body {
+        --ant-error-color: \${settings.btn_danger} !important;
+        --ant-error-color-hover: \${settings.btn_danger}cc !important;
+        --ant-error-color-active: \${settings.btn_danger}e6 !important;
+      }
+      .ant-btn-danger,
+      button.ant-btn-danger,
+      .btn-danger,
+      button.btn-danger {
+        background: linear-gradient(135deg, #d35400 0%, \${settings.btn_danger} 50%, #0b579f 100%) !important;
+        background-image: linear-gradient(135deg, #d35400 0%, \${settings.btn_danger} 50%, #0b579f 100%) !important;
+        border-color: transparent !important;
+        border: none !important;
+        color: #ffffff !important;
+      }
+      .ant-btn-danger:hover,
+      .ant-btn-danger:focus,
+      .ant-btn-danger:active,
+      .btn-danger:hover,
+      .btn-danger:focus,
+      .btn-danger:active {
+        background: linear-gradient(135deg, #d35400 0%, \${settings.btn_danger} 50%, #0b579f 100%) !important;
+        background-image: linear-gradient(135deg, #d35400 0%, \${settings.btn_danger} 50%, #0b579f 100%) !important;
+        opacity: 0.9 !important;
+        color: #ffffff !important;
+      }
+      .ant-btn-danger span,
+      .btn-danger span {
+        color: #ffffff !important;
+      }
+    `;
+  }
+  if (settings.btn_info) {
+    css += `
+      :root, body {
+        --ant-info-color: \${settings.btn_info} !important;
+        --ant-info-color-hover: \${settings.btn_info}cc !important;
+        --ant-info-color-active: \${settings.btn_info}e6 !important;
+      }
+      .ant-btn-info,
+      button.ant-btn-info,
+      .btn-info,
+      button.btn-info {
+        background: linear-gradient(135deg, #d35400 0%, \${settings.btn_info} 50%, #0b579f 100%) !important;
+        background-image: linear-gradient(135deg, #d35400 0%, \${settings.btn_info} 50%, #0b579f 100%) !important;
+        border-color: transparent !important;
+        border: none !important;
+        color: #ffffff !important;
+      }
+      .ant-btn-info:hover,
+      .ant-btn-info:focus,
+      .ant-btn-info:active,
+      .btn-info:hover,
+      .btn-info:focus,
+      .btn-info:active {
+        background: linear-gradient(135deg, #d35400 0%, \${settings.btn_info} 50%, #0b579f 100%) !important;
+        background-image: linear-gradient(135deg, #d35400 0%, \${settings.btn_info} 50%, #0b579f 100%) !important;
+        opacity: 0.9 !important;
+        color: #ffffff !important;
+      }
+      .ant-btn-info span,
+      .btn-info span {
+        color: #ffffff !important;
+      }
+    `;
+  }
+
+  // 4. Modals
+  if (settings.modal_heading_bg) {
+    css += `
+      .ant-modal-header, .modal-header {
+        background: linear-gradient(135deg, #d35400 0%, \${settings.modal_heading_bg} 50%, #0b579f 100%) !important;
+      }
+      .ant-modal-title, .modal-title {
+        color: #ffffff !important;
+      }
+    `;
+  }
+  if (settings.modal_heading_color) {
+    css += `
+      .ant-modal-body h4, .modal-body h4 {
+        color: \${settings.modal_heading_color} !important;
+      }
+    `;
+  }
+  if (settings.modal_close_color) {
+    css += `
+      .ant-modal-close, .modal-close {
+        color: \${settings.modal_close_color} !important;
+      }
+    `;
+  }
+
+  // 5. Tables
+  if (settings.table_items_heading_bg) {
+    css += `
+      .ant-table-thead > tr > th, .table thead th {
+        background: linear-gradient(135deg, #d35400 0%, \${settings.table_items_heading_bg} 50%, #0b579f 100%) !important;
+        color: \${settings.table_items_heading_text || '#ffffff'} !important;
+      }
+    `;
+  }
+  if (settings.table_link) {
+    css += `
+      .ant-table-cell a, .table a {
+        color: \${settings.table_link} !important;
+      }
+    `;
+  }
+  if (settings.table_link_hover) {
+    css += `
+      .ant-table-cell a:hover, .table a:hover {
+        color: \${settings.table_link_hover} !important;
+      }
+    `;
+  }
+
+  // 6. General Links & Muted Text
+  if (settings.gen_link) {
+    css += `
+      a {
+        color: \${settings.gen_link} !important;
+      }
+    `;
+  }
+  if (settings.gen_link_hover) {
+    css += `
+      a:hover {
+        color: \${settings.gen_link_hover} !important;
+      }
+    `;
+  }
+  if (settings.gen_text_muted) {
+    css += `
+      .text-muted, .ant-typography-secondary {
+        color: \${settings.gen_text_muted} !important;
+      }
+    `;
+  }
+  if (settings.gen_text_danger) {
+    css += `
+      .text-danger {
+        color: \${settings.gen_text_danger} !important;
+      }
+    `;
+  }
+  if (settings.gen_text_warning) {
+    css += `
+      .text-warning {
+        color: \${settings.gen_text_warning} !important;
+      }
+    `;
+  }
+  if (settings.gen_text_info) {
+    css += `
+      .text-info {
+        color: \${settings.gen_text_info} !important;
+      }
+    `;
+  }
+  if (settings.gen_text_success) {
+    css += `
+      .text-success {
+        color: \${settings.gen_text_success} !important;
+      }
+    `;
+  }
+
+  styleEl.textContent = css;
+}

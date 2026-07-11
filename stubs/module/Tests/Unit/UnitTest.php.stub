@@ -1,0 +1,21 @@
+<?php
+
+namespace Modules\{{ namespace }}\Tests\Unit;
+
+use Tests\TestCase;
+
+/**
+ * Class UnitTest
+ * 
+ * Auto-generated unit tests for {{ moduleName }} plugin.
+ */
+class UnitTest extends TestCase
+{
+    /**
+     * A basic unit test.
+     */
+    public function test_basic_addition(): void
+    {
+        $this->assertTrue(true);
+    }
+}

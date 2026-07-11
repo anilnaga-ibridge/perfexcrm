@@ -1,5 +1,12 @@
 <template>
   <div class="crm-app-shell">
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div 
+      v-if="!sidebarCollapsed" 
+      class="crm-sidebar-backdrop" 
+      @click="toggleSidebar"
+    ></div>
+
     <!-- Sidebar -->
     <aside :class="['crm-sidebar', { 'crm-sidebar--collapsed': sidebarCollapsed }]">
       <!-- Logo Header -->
@@ -383,7 +390,7 @@
 </template>
 
 <script>
-import { defineComponent, ref, reactive, computed, watch } from 'vue';
+import { defineComponent, ref, reactive, computed, watch, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../store/authStore';
 import { message } from 'ant-design-vue';
@@ -438,6 +445,12 @@ export default defineComponent({
     const authStore = useAuthStore();
     const sidebarCollapsed = ref(false);
     const setupMode = ref(false);
+
+    onMounted(() => {
+      if (window.innerWidth <= 768) {
+        sidebarCollapsed.value = true;
+      }
+    });
 
     const expandedGroups = reactive({
       Sales: false,
@@ -680,6 +693,9 @@ export default defineComponent({
       } else {
         setupMode.value = false;
       }
+      if (window.innerWidth <= 768) {
+        sidebarCollapsed.value = true;
+      }
     }, { immediate: true });
 
     const toggleSidebar = () => { sidebarCollapsed.value = !sidebarCollapsed.value; };
@@ -713,13 +729,7 @@ export default defineComponent({
       }
     };
 
-    const resolvedLogoUrl = computed(() => {
-      if (logoUrl && logoUrl.startsWith('/')) {
-        const basePath = window.config?.path?.replace(/\/$/, '') || '';
-        return basePath + logoUrl;
-      }
-      return logoUrl;
-    });
+    const resolvedLogoUrl = computed(() => logoUrl);
 
     // ── Notifications ──────────────────────────────────────────────
     const notifDropdownOpen = ref(false);
@@ -1328,7 +1338,12 @@ export default defineComponent({
   flex: 1;
   overflow-y: auto;
   padding: 24px 18px;
-  background: #f8fafc;
+  background:
+    radial-gradient(ellipse at 15% 15%, rgba(99,102,241,0.15) 0%, transparent 45%),
+    radial-gradient(ellipse at 75% 75%, rgba(236,72,153,0.12) 0%, transparent 45%),
+    radial-gradient(ellipse at 55% 5%, rgba(6,182,212,0.10) 0%, transparent 40%),
+    radial-gradient(ellipse at 85% 20%, rgba(168,85,247,0.08) 0%, transparent 35%),
+    linear-gradient(135deg, #eef2ff 0%, #f1f5f9 40%, #fdf2f8 70%, #ecfeff 100%);
 }
 
 /* ── Dropdown menu overrides ──────────────────────────────────────── */
@@ -1385,5 +1400,53 @@ export default defineComponent({
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: rgba(255, 255, 255, 0.4);
+}
+
+/* ── Mobile Responsive Layout Adjustments ── */
+.crm-sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .crm-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 40;
+  }
+
+  .crm-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100vh;
+    z-index: 50;
+    transform: translateX(0);
+    width: 240px !important;
+    min-width: 240px !important;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .crm-sidebar--collapsed {
+    transform: translateX(-100%) !important;
+  }
+
+  .crm-hamburger--mobile {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .crm-search {
+    display: none !important; /* Hide search to save header space on small mobile screen */
+  }
+  
+  .crm-header {
+    padding: 0 12px !important;
+  }
 }
 </style>

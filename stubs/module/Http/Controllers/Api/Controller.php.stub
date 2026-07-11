@@ -1,0 +1,18 @@
+<?php
+
+namespace Modules\{{ namespace }}\Http\Controllers\Api;
+
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class {{ model }}Controller
+{
+    public function index(Request $request): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [],
+            'message' => '{{ moduleName }} module is active.',
+        ]);
+    }
+}

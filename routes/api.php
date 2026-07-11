@@ -37,9 +37,14 @@ use App\Http\Controllers\Api\DatabaseBackupController;
 use App\Http\Controllers\Api\TicketPipeLogController;
 use App\Http\Controllers\Api\SalesReportController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\ModuleController;
+use App\Http\Controllers\Api\HrPayrollController;
 
 Route::prefix('auth')->group(function () {
+    Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
+    Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('reset-password', [AuthController::class, 'resetPassword']);
     
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
@@ -77,6 +82,48 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Roles
     Route::apiResource('roles', RoleController::class);
+
+    // Plugins (primary routes)
+    Route::apiResource('plugins', ModuleController::class)->only(['index', 'store', 'destroy']);
+    Route::get('plugins/sso-url', [ModuleController::class, 'ssoUrl']);
+    Route::get('plugins/active', [ModuleController::class, 'active']);
+    Route::get('plugins/menus', [ModuleController::class, 'menus']);
+    Route::patch('plugins/{id}/toggle', [ModuleController::class, 'toggleStatus']);
+    Route::patch('plugins/{id}/deactivate', [ModuleController::class, 'deactivate']);
+    Route::patch('plugins/{id}/activate', [ModuleController::class, 'activate']);
+    Route::get('plugins/{alias}/settings', [ModuleController::class, 'getSettings']);
+    Route::put('plugins/{alias}/settings', [ModuleController::class, 'saveSettings']);
+    Route::post('plugins/{alias}/settings/reset', [ModuleController::class, 'resetSettings']);
+    Route::post('plugins/{id}/repair', [ModuleController::class, 'repair']);
+    Route::post('plugins/{id}/rollback', [ModuleController::class, 'rollback']);
+    Route::get('plugins/{plugin}/metadata', function ($plugin) {
+        $meta = app(\App\Plugin\Metadata\PluginMetadata::class)->get($plugin);
+        if (!$meta) {
+            return response()->json(['error' => 'Plugin not found'], 404);
+        }
+        return response()->json($meta);
+    });
+
+    // Modules (backward-compat aliases — deprecated, use /plugins instead)
+    Route::apiResource('modules', ModuleController::class)->only(['index', 'store', 'destroy']);
+    Route::get('modules/sso-url', [ModuleController::class, 'ssoUrl']);
+    Route::get('modules/active', [ModuleController::class, 'active']);
+    Route::get('modules/menus', [ModuleController::class, 'menus']);
+    Route::patch('modules/{id}/toggle', [ModuleController::class, 'toggleStatus']);
+    Route::patch('modules/{id}/deactivate', [ModuleController::class, 'deactivate']);
+    Route::patch('modules/{id}/activate', [ModuleController::class, 'activate']);
+    Route::get('modules/{alias}/settings', [ModuleController::class, 'getSettings']);
+    Route::put('modules/{alias}/settings', [ModuleController::class, 'saveSettings']);
+    Route::post('modules/{alias}/settings/reset', [ModuleController::class, 'resetSettings']);
+    Route::post('modules/{id}/repair', [ModuleController::class, 'repair']);
+    Route::post('modules/{id}/rollback', [ModuleController::class, 'rollback']);
+    Route::get('modules/{plugin}/metadata', function ($plugin) {
+        $meta = app(\App\Plugin\Metadata\PluginMetadata::class)->get($plugin);
+        if (!$meta) {
+            return response()->json(['error' => 'Plugin not found'], 404);
+        }
+        return response()->json($meta);
+    });
     
     // Invoices
     Route::apiResource('invoices', InvoiceController::class);
@@ -193,4 +240,132 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('sales-report/total-income', [SalesReportController::class, 'totalIncome']);
     Route::get('sales-report/payment-modes', [SalesReportController::class, 'paymentModes']);
     Route::get('sales-report/customer-groups', [SalesReportController::class, 'customerGroups']);
+
+    // ─── HR Payroll (hr-payroll module CI compat) ────────────────────────────────
+
+    // Settings
+    Route::get('hr-payroll/settings', [HrPayrollController::class, 'settings']);
+    Route::get('hr-payroll/settings/payroll-columns', [HrPayrollController::class, 'getPayrollColumns']);
+    Route::post('hr-payroll/settings/payroll-columns', [HrPayrollController::class, 'storePayrollColumn']);
+    Route::put('hr-payroll/settings/payroll-columns/{id}', [HrPayrollController::class, 'updatePayrollColumn']);
+    Route::delete('hr-payroll/settings/payroll-columns/{id}', [HrPayrollController::class, 'deletePayrollColumn']);
+
+    Route::get('hr-payroll/settings/earnings', [HrPayrollController::class, 'getEarnings']);
+    Route::post('hr-payroll/settings/earnings', [HrPayrollController::class, 'storeEarning']);
+    Route::put('hr-payroll/settings/earnings/{id}', [HrPayrollController::class, 'updateEarning']);
+    Route::delete('hr-payroll/settings/earnings/{id}', [HrPayrollController::class, 'deleteEarning']);
+
+    Route::get('hr-payroll/settings/deductions', [HrPayrollController::class, 'getDeductionsList']);
+    Route::post('hr-payroll/settings/deductions', [HrPayrollController::class, 'storeDeductionList']);
+    Route::put('hr-payroll/settings/deductions/{id}', [HrPayrollController::class, 'updateDeductionList']);
+    Route::delete('hr-payroll/settings/deductions/{id}', [HrPayrollController::class, 'deleteDeductionList']);
+
+    Route::get('hr-payroll/settings/insurance', [HrPayrollController::class, 'getInsuranceList']);
+    Route::post('hr-payroll/settings/insurance', [HrPayrollController::class, 'storeInsuranceListItem']);
+    Route::put('hr-payroll/settings/insurance/{id}', [HrPayrollController::class, 'updateInsuranceListItem']);
+    Route::delete('hr-payroll/settings/insurance/{id}', [HrPayrollController::class, 'deleteInsuranceListItem']);
+
+    Route::get('hr-payroll/settings/income-tax-rates', [HrPayrollController::class, 'getIncomeTaxRates']);
+    Route::post('hr-payroll/settings/income-tax-rates', [HrPayrollController::class, 'storeIncomeTaxRate']);
+    Route::put('hr-payroll/settings/income-tax-rates/{id}', [HrPayrollController::class, 'updateIncomeTaxRate']);
+    Route::delete('hr-payroll/settings/income-tax-rates/{id}', [HrPayrollController::class, 'deleteIncomeTaxRate']);
+
+    Route::get('hr-payroll/settings/income-tax-rebates', [HrPayrollController::class, 'getIncomeTaxRebates']);
+    Route::post('hr-payroll/settings/income-tax-rebates', [HrPayrollController::class, 'storeIncomeTaxRebate']);
+    Route::put('hr-payroll/settings/income-tax-rebates/{id}', [HrPayrollController::class, 'updateIncomeTaxRebate']);
+    Route::delete('hr-payroll/settings/income-tax-rebates/{id}', [HrPayrollController::class, 'deleteIncomeTaxRebate']);
+
+    // Employees
+    Route::get('hr-payroll/employees', [HrPayrollController::class, 'getEmployees']);
+    Route::post('hr-payroll/employees', [HrPayrollController::class, 'storeEmployees']);
+    Route::post('hr-payroll/employees/filter', [HrPayrollController::class, 'filterEmployees']);
+    Route::post('hr-payroll/employees/copy', [HrPayrollController::class, 'copyEmployees']);
+
+    // Attendance
+    Route::get('hr-payroll/attendance', [HrPayrollController::class, 'getAttendance']);
+    Route::post('hr-payroll/attendance', [HrPayrollController::class, 'storeAttendance']);
+    Route::post('hr-payroll/attendance/filter', [HrPayrollController::class, 'filterAttendance']);
+    Route::post('hr-payroll/attendance/calculation', [HrPayrollController::class, 'calculateAttendance']);
+
+    // Deductions
+    Route::get('hr-payroll/deductions', [HrPayrollController::class, 'getDeductions']);
+    Route::post('hr-payroll/deductions', [HrPayrollController::class, 'storeDeductions']);
+    Route::post('hr-payroll/deductions/filter', [HrPayrollController::class, 'filterDeductions']);
+
+    // Commissions
+    Route::get('hr-payroll/commissions', [HrPayrollController::class, 'getCommissions']);
+    Route::post('hr-payroll/commissions', [HrPayrollController::class, 'storeCommissions']);
+    Route::post('hr-payroll/commissions/filter', [HrPayrollController::class, 'filterCommissions']);
+
+    // Insurance
+    Route::get('hr-payroll/insurances', [HrPayrollController::class, 'getInsurances']);
+    Route::post('hr-payroll/insurances', [HrPayrollController::class, 'storeInsurances']);
+    Route::post('hr-payroll/insurances/filter', [HrPayrollController::class, 'filterInsurances']);
+
+    // Bonuses / KPI
+    Route::get('hr-payroll/bonuses', [HrPayrollController::class, 'getBonuses']);
+    Route::post('hr-payroll/bonuses', [HrPayrollController::class, 'storeBonuses']);
+    Route::post('hr-payroll/bonuses/filter', [HrPayrollController::class, 'filterBonuses']);
+
+    // Income Tax
+    Route::get('hr-payroll/income-tax', [HrPayrollController::class, 'getIncomeTax']);
+
+    // Payslips
+    Route::get('hr-payroll/payslips', [HrPayrollController::class, 'getPayslips']);
+    Route::post('hr-payroll/payslips', [HrPayrollController::class, 'storePayslip']);
+    Route::get('hr-payroll/payslips/{id}', [HrPayrollController::class, 'getPayslip']);
+    Route::put('hr-payroll/payslips/{id}', [HrPayrollController::class, 'updatePayslip']);
+    Route::delete('hr-payroll/payslips/{id}', [HrPayrollController::class, 'deletePayslip']);
+    Route::post('hr-payroll/payslips/{id}/close', [HrPayrollController::class, 'closePayslip']);
+    Route::put('hr-payroll/payslips/{id}/status', [HrPayrollController::class, 'updatePayslipStatus']);
+    Route::get('hr-payroll/payslips/{id}/details', [HrPayrollController::class, 'getPayslipDetails']);
+
+    // Payslip Templates
+    Route::get('hr-payroll/payslip-templates', [HrPayrollController::class, 'getPayslipTemplates']);
+    Route::post('hr-payroll/payslip-templates', [HrPayrollController::class, 'storePayslipTemplate']);
+    Route::get('hr-payroll/payslip-templates/{id}', [HrPayrollController::class, 'getPayslipTemplate']);
+    Route::put('hr-payroll/payslip-templates/{id}', [HrPayrollController::class, 'updatePayslipTemplate']);
+    Route::delete('hr-payroll/payslip-templates/{id}', [HrPayrollController::class, 'deletePayslipTemplate']);
+
+    // Currency Rates
+    Route::get('hr-payroll/currency-rates', [HrPayrollController::class, 'getCurrencyRates']);
+    Route::post('hr-payroll/currency-rates', [HrPayrollController::class, 'storeCurrencyRate']);
+    Route::put('hr-payroll/currency-rates/{id}', [HrPayrollController::class, 'updateCurrencyRate']);
+    Route::delete('hr-payroll/currency-rates/{id}', [HrPayrollController::class, 'deleteCurrencyRate']);
+    Route::post('hr-payroll/currency-rates/online', [HrPayrollController::class, 'getOnlineCurrencyRates']);
+
+    // Reports
+    Route::get('hr-payroll/reports', [HrPayrollController::class, 'getReports']);
+    Route::post('hr-payroll/reports/income-summary', [HrPayrollController::class, 'incomeSummaryReport']);
+    Route::post('hr-payroll/reports/insurance-summary', [HrPayrollController::class, 'insuranceSummaryReport']);
+    Route::post('hr-payroll/reports/payslip-chart', [HrPayrollController::class, 'payslipChartReport']);
+    Route::post('hr-payroll/reports/department-chart', [HrPayrollController::class, 'departmentChartReport']);
+
+    // Timesheet Leaves
+    Route::get('hr-payroll/timesheet-leaves', [HrPayrollController::class, 'getTimesheetLeaves']);
+    Route::post('hr-payroll/timesheet-leaves', [HrPayrollController::class, 'storeTimesheetLeaves']);
+    Route::post('hr-payroll/timesheet-leaves/filter', [HrPayrollController::class, 'filterTimesheetLeaves']);
+    Route::post('hr-payroll/timesheet-leaves/calculation', [HrPayrollController::class, 'calculateTimesheetLeaves']);
+
+    // Permissions
+    Route::get('hr-payroll/permissions', [HrPayrollController::class, 'getPermissions']);
+    Route::post('hr-payroll/permissions', [HrPayrollController::class, 'storePermissions']);
+    Route::delete('hr-payroll/permissions/{id}', [HrPayrollController::class, 'deletePermission']);
+
+    // Staff, Departments, Roles (reference data)
+    Route::get('hr-payroll/staff', [HrPayrollController::class, 'getStaffList']);
+    Route::get('hr-payroll/staff/{id}', [HrPayrollController::class, 'getStaffMember']);
+    Route::get('hr-payroll/departments', [HrPayrollController::class, 'getDepartments']);
+    Route::get('hr-payroll/roles', [HrPayrollController::class, 'getRoles']);
+
+    // Data Integration
+    Route::get('hr-payroll/data-integration', [HrPayrollController::class, 'getDataIntegration']);
+    Route::post('hr-payroll/data-integration', [HrPayrollController::class, 'storeDataIntegration']);
+
+    // PDF Templates
+    Route::get('hr-payroll/pdf-templates', [HrPayrollController::class, 'getPdfTemplates']);
+    Route::post('hr-payroll/pdf-templates', [HrPayrollController::class, 'storePdfTemplate']);
+    Route::get('hr-payroll/pdf-templates/{id}', [HrPayrollController::class, 'getPdfTemplate']);
+    Route::put('hr-payroll/pdf-templates/{id}', [HrPayrollController::class, 'updatePdfTemplate']);
+    Route::delete('hr-payroll/pdf-templates/{id}', [HrPayrollController::class, 'deletePdfTemplate']);
 });

@@ -1,0 +1,3 @@
+[
+  { "name": "{{ permissionPrefix }}_view", "description": "View {{ moduleName }}" }
+]

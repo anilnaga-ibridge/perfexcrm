@@ -1,0 +1,67 @@
+<template>
+  <div class="create-page">
+    <div class="page-header">
+      <h1>Create {{ moduleName }}</h1>
+    </div>
+    <div class="card">
+      <Form
+        submit-label="Create"
+        :busy="saving"
+        :errors="errors"
+        @submit="handleSubmit"
+        @cancel="goBack"
+      />
+    </div>
+  </div>
+</template>
+
+<script>
+import { ref, reactive } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import axios from 'axios';
+import { message } from 'ant-design-vue';
+import Form from '../../components/Form.vue';
+
+export default {
+  name: '{{ model }}Create',
+  components: { Form },
+  setup() {
+    const router = useRouter();
+    const route = useRoute();
+    const saving = ref(false);
+    const errors = reactive({});
+    const moduleSlug = route.params.slug;
+
+    const handleSubmit = async (form) => {
+      saving.value = true;
+      Object.keys(errors).forEach(k => delete errors[k]);
+      try {
+        await axios.post('/api/{{ moduleAlias }}', { ...form });
+        message.success('Created successfully.');
+        router.push(`/admin/module/${moduleSlug}/{{ modelPlural }}`);
+      } catch (e) {
+        const resp = e.response?.data;
+        if (resp?.errors) {
+          Object.assign(errors, resp.errors);
+        }
+        message.error(resp?.message || 'Failed to create.');
+      } finally {
+        saving.value = false;
+      }
+    };
+
+    const goBack = () => {
+      router.push(`/admin/module/${moduleSlug}/{{ modelPlural }}`);
+    };
+
+    return { saving, errors, handleSubmit, goBack };
+  },
+};
+</script>
+
+<style scoped>
+.create-page { padding: 20px; }
+.page-header { margin-bottom: 20px; }
+.page-header h1 { font-size: 24px; font-weight: 700; color: #1e293b; margin: 0; }
+.card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; }
+</style>

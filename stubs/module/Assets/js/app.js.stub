@@ -1,0 +1,1 @@
+console.log('{{ moduleName }} plugin assets loaded successfully.');

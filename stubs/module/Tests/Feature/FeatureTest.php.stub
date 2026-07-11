@@ -1,0 +1,20 @@
+<?php
+
+namespace Modules\Tests\Feature;
+
+use Tests\TestCase;
+
+class {{ model }}Test extends TestCase
+{
+    public function test_can_list_items(): void
+    {
+        $response = $this->getJson('/api/{{ moduleAlias }}');
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'success',
+                'data',
+                'meta' => ['current_page', 'last_page', 'per_page', 'total'],
+            ]);
+    }
+}

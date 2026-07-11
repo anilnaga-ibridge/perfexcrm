@@ -1,0 +1,90 @@
+<?php
+
+namespace Modules\{{ namespace }}\Http\Controllers\Api;
+
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Modules\{{ namespace }}\Models\{{ model }};
+use Modules\{{ namespace }}\Http\Requests\Store{{ model }}Request;
+use Modules\{{ namespace }}\Http\Requests\Update{{ model }}Request;
+
+class {{ model }}Controller
+{
+    public function index(Request $request): JsonResponse
+    {
+        $query = {{ model }}::query();
+
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $perPage = min((int) $request->get('per_page', 15), 100);
+        $items = $query->orderBy('created_at', 'desc')->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $items->items(),
+            'meta' => [
+                'current_page' => $items->currentPage(),
+                'last_page' => $items->lastPage(),
+                'per_page' => $items->perPage(),
+                'total' => $items->total(),
+            ],
+        ]);
+    }
+
+    public function show(string $id): JsonResponse
+    {
+        $item = {{ model }}::findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $item,
+        ]);
+    }
+
+    public function store(Store{{ model }}Request $request): JsonResponse
+    {
+        $item = {{ model }}::create([
+            'title' => $request->title,
+            'description' => $request->description,
+            'content' => $request->content,
+            'status' => $request->status,
+            'created_by' => $request->user()?->id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => '{{ model }} created successfully.',
+            'data' => $item,
+        ], 201);
+    }
+
+    public function update(Update{{ model }}Request $request, string $id): JsonResponse
+    {
+        $item = {{ model }}::findOrFail($id);
+        $item->update($request->only([
+            'title', 'description', 'content', 'status',
+        ]));
+
+        return response()->json([
+            'success' => true,
+            'message' => '{{ model }} updated successfully.',
+            'data' => $item->fresh(),
+        ]);
+    }
+
+    public function destroy(string $id): JsonResponse
+    {
+        $item = {{ model }}::findOrFail($id);
+        $item->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => '{{ model }} deleted successfully.',
+        ]);
+    }
+}

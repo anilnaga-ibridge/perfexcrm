@@ -1,0 +1,6 @@
+[
+  { "name": "{{ permissionPrefix }}_view", "description": "View {{ moduleName }}" },
+  { "name": "{{ permissionPrefix }}_create", "description": "Create {{ moduleName }}" },
+  { "name": "{{ permissionPrefix }}_edit", "description": "Edit {{ moduleName }}" },
+  { "name": "{{ permissionPrefix }}_delete", "description": "Delete {{ moduleName }}" }
+]

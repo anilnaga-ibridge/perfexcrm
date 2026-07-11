@@ -1,0 +1,21 @@
+<?php
+
+namespace Modules\{{ namespace }}\Listeners;
+
+use Modules\{{ namespace }}\Events\PluginEvent;
+
+/**
+ * Class PluginListener
+ * 
+ * Auto-generated event listener for {{ moduleName }} plugin.
+ */
+class PluginListener
+{
+    /**
+     * Handle the event.
+     */
+    public function handle(PluginEvent $event): void
+    {
+        // Event processing logic
+    }
+}

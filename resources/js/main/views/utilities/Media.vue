@@ -242,9 +242,7 @@ export default defineComponent({
           if (currentFolderId.value) {
             formData.append('parent_id', currentFolderId.value);
           }
-          await axios.post('/api/media', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-          });
+          await axios.post('/api/media', formData);
         }
         message.success('Files uploaded successfully');
         loadMedia();

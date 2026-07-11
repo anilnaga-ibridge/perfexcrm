@@ -1,0 +1,7 @@
+{
+  "setting_key": {
+    "type": "string",
+    "label": "Setting Label",
+    "default": ""
+  }
+}

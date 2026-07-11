@@ -75,12 +75,20 @@
 </template>
 
 <script>
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 
 export default defineComponent({
   name: 'MyTodos',
   setup() {
+    const route = useRoute();
     const showTodoDrawer = ref(false);
+
+    onMounted(() => {
+      if (route.query.new === 'true') {
+        showTodoDrawer.value = true;
+      }
+    });
     const todoForm = ref({ description: '' });
 
     const unfinishedTodos = ref([

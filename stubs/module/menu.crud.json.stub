@@ -1,0 +1,13 @@
+{
+  "title": "{{ moduleName }}",
+  "route": "",
+  "icon": "modules",
+  "permission": "{{ permissionPrefix }}_view",
+  "children": [
+    {
+      "title": "All {{ modelPluralTitle }}",
+      "route": "/{{ modelPlural }}",
+      "permission": "{{ permissionPrefix }}_view"
+    }
+  ]
+}

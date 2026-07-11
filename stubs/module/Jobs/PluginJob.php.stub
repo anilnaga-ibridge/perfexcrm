@@ -1,0 +1,27 @@
+<?php
+
+namespace Modules\{{ namespace }}\Jobs;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+
+/**
+ * Class PluginJob
+ * 
+ * Auto-generated background job for {{ moduleName }} plugin.
+ */
+class PluginJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    /**
+     * Execute the job.
+     */
+    public function handle(): void
+    {
+        // Job execution logic
+    }
+}

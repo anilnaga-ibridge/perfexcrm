@@ -12,11 +12,10 @@ import router from './main/router';
 axios.defaults.baseURL = window.config.path + '/api';
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
-// Clean duplicate /api prefix from request URLs
 axios.interceptors.request.use(
     (config) => {
         if (config.url && config.url.startsWith('/api/')) {
-            config.url = config.url.substring(4);
+            config.url = config.url.substring(5);
         }
         return config;
     },
@@ -37,10 +36,14 @@ axios.interceptors.response.use(
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_user');
             delete axios.defaults.headers.common['Authorization'];
-            // Redirect to login
+            // Only redirect if we're not already on the login page
+            const currentPath = window.location.pathname;
             const basePath = window.config.path.startsWith('http') ? new URL(window.config.path).pathname : window.config.path;
             const cleanPath = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
-            window.location.href = cleanPath + '/admin/login';
+            const loginPath = cleanPath + '/admin/login';
+            if (currentPath !== loginPath) {
+                window.location.href = loginPath;
+            }
         }
         return Promise.reject(error);
     }

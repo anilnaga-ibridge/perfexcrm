@@ -3,25 +3,67 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Module extends Model
 {
+    public $incrementing = false;
+    protected $keyType = 'string';
+
     protected $fillable = [
+        'id',
         'name',
-        'description',
+        'alias',
         'version',
-        'slug',
-        'is_active',
-        'is_installed',
+        'minimum_core_version',
+        'depends',
+        'description',
+        'status',
+        'author',
+        'settings_route',
+        'icon',
+        'homepage',
+        'license',
+        'is_core',
         'file_path',
-        'settings_link',
-        'permissions',
+        'installed_at',
+        'activated_at',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
-        'is_installed' => 'boolean',
-        'settings_link' => 'array',
-        'permissions' => 'array',
+        'depends' => 'array',
+        'is_core' => 'boolean',
+        'installed_at' => 'datetime',
+        'activated_at' => 'datetime',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if (empty($model->{$model->getKeyName()})) {
+                $model->{$model->getKeyName()} = (string) Str::uuid();
+            }
+        });
+    }
+
+    public function menus()
+    {
+        return $this->hasMany(ModuleMenu::class);
+    }
+
+    public function modulePermissions()
+    {
+        return $this->hasMany(ModulePermission::class);
+    }
+
+    public function settings()
+    {
+        return $this->hasMany(ModuleSetting::class);
+    }
+
+    public function events()
+    {
+        return $this->hasMany(ModuleEvent::class);
+    }
 }
