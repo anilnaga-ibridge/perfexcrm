@@ -15,6 +15,9 @@ class LeadController extends Controller
      */
     public function index(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Leads.view')) {
+            abort(403, 'Unauthorized. Missing required permission: Leads.view');
+        }
         // Check if Kanban group response is requested
         if ($request->boolean('kanban')) {
             $statuses = LeadStatus::orderBy('order_num', 'asc')->get();
@@ -61,7 +64,7 @@ class LeadController extends Controller
             $query->where('assigned_id', $request->input('assigned_id'));
         }
 
-        $perPage = $request->input('per_page', 10);
+        $perPage = min($request->input('per_page', 10), 100);
         $leads = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return response()->json($leads);
@@ -115,6 +118,10 @@ class LeadController extends Controller
      */
     public function update(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Leads.edit')) {
+            abort(403, 'Unauthorized. Missing required permission: Leads.edit');
+        }
+
         $lead = Lead::find($id);
 
         if (!$lead) {
@@ -172,6 +179,10 @@ class LeadController extends Controller
      */
     public function import(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Leads.create')) {
+            abort(403, 'Unauthorized. Missing required permission: Leads.create');
+        }
+
         $validated = $request->validate([
             'leads' => 'required|array',
             'leads.*.name' => 'required|string|max:255',
@@ -186,8 +197,15 @@ class LeadController extends Controller
 
         $created = [];
         foreach ($validated['leads'] as $data) {
-            $data['status_id'] ??= LeadStatus::first()->id;
-            $data['source_id'] ??= LeadSource::first()->id;
+            $defaultStatus = LeadStatus::first();
+            $defaultSource = LeadSource::first();
+            $data['status_id'] ??= $defaultStatus?->id;
+            $data['source_id'] ??= $defaultSource?->id;
+
+            // Skip leads that have no status or source
+            if (empty($data['status_id']) || empty($data['source_id'])) {
+                continue;
+            }
             $created[] = Lead::create($data);
         }
 
@@ -197,8 +215,12 @@ class LeadController extends Controller
     /**
      * Remove the specified lead from database.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Leads.delete')) {
+            abort(403, 'Unauthorized. Missing required permission: Leads.delete');
+        }
+
         $lead = Lead::find($id);
 
         if (!$lead) {

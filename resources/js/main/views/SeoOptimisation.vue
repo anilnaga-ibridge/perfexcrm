@@ -1872,7 +1872,7 @@ export default defineComponent({
     const fileSearch = ref('');
 
     const files = ref([
-      { name: 'perfex_crm.png', type: 'image/png', last_activity: 'No Activity', comments: 0, visible: true, uploaded_by: 'Llewellyn Heaney', date_uploaded: '2016-09-26 23:02:26' },
+      { name: 'ibridge_crm.png', type: 'image/png', last_activity: 'No Activity', comments: 0, visible: true, uploaded_by: 'Llewellyn Heaney', date_uploaded: '2016-09-26 23:02:26' },
     ]);
 
     const filteredFiles = computed(() => {

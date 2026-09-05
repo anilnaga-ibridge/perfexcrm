@@ -1,5 +1,5 @@
 <?php
-// One-shot activation script — access via browser
+// One-shot activation script — requires admin authentication
 // Usage: /activate.php?alias=hrm  or  /activate.php?alias=hr-payroll
 
 define('LARAVEL_START', microtime(true));
@@ -11,9 +11,24 @@ $response = $kernel->handle($request = \Illuminate\Http\Request::capture());
 
 header('Content-Type: application/json');
 
+// Require admin authentication
+$user = auth('web')->user() ?? auth('sanctum')->user();
+if (!$user || !is_admin()) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Forbidden: admin authentication required'], JSON_PRETTY_PRINT);
+    exit;
+}
+
 $alias = $_GET['alias'] ?? null;
 if (!$alias) {
     echo json_encode(['error' => 'Pass ?alias=<module_alias>'], JSON_PRETTY_PRINT);
+    exit;
+}
+
+// Validate alias format to prevent path traversal
+if (!preg_match('/^[a-z0-9][a-z0-9\-]*[a-z0-9]$/', $alias) && strlen($alias) > 1) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid module alias format'], JSON_PRETTY_PRINT);
     exit;
 }
 

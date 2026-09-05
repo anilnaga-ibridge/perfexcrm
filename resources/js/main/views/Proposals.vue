@@ -61,7 +61,7 @@
         </button>
 
         <!-- New Proposal Button -->
-        <button class="btn-primary" @click="goToCreatePage">
+        <button v-if="canCreate" class="btn-primary" @click="goToCreatePage">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13" class="mr-1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New Proposal
         </button>
@@ -190,18 +190,19 @@
             </div>
           </div>
 
+          <!-- Desktop Table View -->
           <table class="data-table">
             <thead>
               <tr>
-                <th class="w-8"><input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" /></th>
-                <th>#</th>
-                <th>Subject</th>
-                <th>To</th>
-                <th>Status</th>
-                <th>Amount</th>
-                <th>Date</th>
-                <th>Open Till</th>
-                <th></th>
+                <th style="width: 44px; min-width: 44px;" class="col-checkbox"><input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" /></th>
+                <th style="width: 10%;">#</th>
+                <th style="width: 26%;">Subject</th>
+                <th style="width: 16%;">To</th>
+                <th style="width: 10%;">Status</th>
+                <th style="width: 12%;" class="text-right">Amount</th>
+                <th style="width: 10%;">Date</th>
+                <th style="width: 10%;">Open Till</th>
+                <th style="width: 4%;"></th>
               </tr>
             </thead>
             <tbody>
@@ -210,10 +211,14 @@
                 :key="row.id" 
                 :class="[{ 'row-selected': selectedIds.includes(row.id) }, { 'row-active': activeProposal && activeProposal.id === row.id }]"
               >
-                <td><input type="checkbox" :value="row.id" v-model="selectedIds" /></td>
+                <td class="col-checkbox"><input type="checkbox" :value="row.id" v-model="selectedIds" /></td>
                 <td><a class="link-blue" @click="selectProposal(row)">{{ row.number }}</a></td>
-                <td><strong class="cursor-pointer hover:text-indigo-600" @click="selectProposal(row)">{{ row.subject }}</strong></td>
-                <td>{{ row.to }}</td>
+                <td class="cell-truncate" :title="row.subject">
+                  <strong class="cursor-pointer hover:text-indigo-600 block truncate" @click="selectProposal(row)">{{ row.subject }}</strong>
+                </td>
+                <td class="cell-truncate" :title="row.to">
+                  <span class="block truncate">{{ row.to }}</span>
+                </td>
                 <td><span class="badge" :class="statusClass(row.status)">{{ row.status }}</span></td>
                 <td class="text-right font-semibold">{{ fmtCur(row.amount) }}</td>
                 <td>{{ row.date }}</td>
@@ -229,6 +234,51 @@
               </tr>
             </tbody>
           </table>
+
+          <!-- Mobile Responsive Card View -->
+          <div class="mobile-cards-list">
+            <div 
+              v-for="row in filteredRows" 
+              :key="'m-prop-' + row.id"
+              class="mobile-row-card"
+              @click="selectProposal(row)"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" :value="row.id" v-model="selectedIds" @click.stop />
+                  <span class="font-extrabold text-sm text-indigo-600">{{ row.number }}</span>
+                </div>
+                <span class="badge" :class="statusClass(row.status)">{{ row.status }}</span>
+              </div>
+
+              <div class="font-bold text-sm text-slate-800 line-clamp-2">
+                {{ row.subject }}
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100">
+                <div class="flex items-center gap-1.5 text-slate-600">
+                  <span class="text-slate-400">👤</span>
+                  <span class="truncate font-medium">{{ row.to }}</span>
+                </div>
+                <div class="flex items-center justify-end gap-1.5 font-extrabold text-slate-900 text-sm">
+                  <span class="text-slate-400 font-normal">💰</span>
+                  <span>{{ fmtCur(row.amount) }}</span>
+                </div>
+                <div class="flex items-center gap-1.5 text-slate-500">
+                  <span class="text-slate-400">📅</span>
+                  <span>{{ row.date }}</span>
+                </div>
+                <div class="flex items-center justify-end gap-1.5 text-slate-400">
+                  <span>Till: {{ row.open_till }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="filteredRows.length === 0" class="text-center p-6 text-slate-400 text-xs font-semibold">
+              No proposals found
+            </div>
+          </div>
+
           <div class="table-footer">Showing {{ filteredRows.length }} of {{ rows.length }} proposals</div>
         </div>
       </div>
@@ -299,10 +349,10 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11" class="mr-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m4-5l5 5 5-5m-5 5V3"/></svg>
                 PDF Preview
               </button>
-              <button class="btn-outline-sm border rounded text-[11px] px-2.5 py-1.5 text-slate-600 hover:bg-slate-100 font-bold" @click="editProposal(activeProposal)">
+              <button v-if="canEdit" class="btn-outline-sm border rounded text-[11px] px-2.5 py-1.5 text-slate-600 hover:bg-slate-100 font-bold" @click="editProposal(activeProposal)">
                 Edit Proposal
               </button>
-              <button class="btn-outline-sm border rounded text-[11px] px-2.5 py-1.5 text-rose-600 hover:bg-rose-50 font-bold border-rose-100" @click="deleteSingleProposal(activeProposal.id)">
+              <button v-if="canDelete" class="btn-outline-sm border rounded text-[11px] px-2.5 py-1.5 text-rose-600 hover:bg-rose-50 font-bold border-rose-100" @click="deleteSingleProposal(activeProposal.id)">
                 Delete
               </button>
             </div>
@@ -318,6 +368,7 @@
 import { defineComponent, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useProposalsStore } from '../store/proposalsStore';
+import { useAuthStore } from '../store/authStore';
 import { message } from 'ant-design-vue';
 
 export default defineComponent({
@@ -325,6 +376,11 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const proposalsStore = useProposalsStore();
+    const authStore = useAuthStore();
+
+    const canCreate = computed(() => authStore.hasPermission('Proposals', 'create'));
+    const canEdit   = computed(() => authStore.hasPermission('Proposals', 'edit'));
+    const canDelete = computed(() => authStore.hasPermission('Proposals', 'delete'));
 
     const viewType = ref('list');
     const perPage = ref('25'); 
@@ -462,6 +518,9 @@ export default defineComponent({
     };
 
     return {
+      canCreate,
+      canEdit,
+      canDelete,
       viewType,
       perPage,
       search,
@@ -498,8 +557,16 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 100%;
   align-items: stretch;
   transition: all 0.2s ease;
+}
+
+.left-pane {
+  width: 100%;
+  max-width: 100%;
+  flex: 1 1 100%;
+  min-width: 0;
 }
 
 @media (min-width: 1024px) {
@@ -507,10 +574,14 @@ export default defineComponent({
     flex-direction: row;
   }
   .layout-grid.split-active .left-pane {
-    max-width: 50%;
+    width: 55%;
+    max-width: 55%;
+    flex: 0 0 55%;
   }
   .layout-grid.split-active .right-pane {
-    width: 50%;
+    width: 45%;
+    max-width: 45%;
+    flex: 0 0 45%;
   }
 }
 

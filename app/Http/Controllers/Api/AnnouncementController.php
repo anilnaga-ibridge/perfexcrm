@@ -21,7 +21,7 @@ class AnnouncementController extends Controller
             });
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $announcements = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return response()->json([

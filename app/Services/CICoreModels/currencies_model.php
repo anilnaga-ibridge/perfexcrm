@@ -10,11 +10,11 @@ class Currencies_model extends CI_Model {
 
     public function get($currency_id = '') {
         if (is_numeric($currency_id) && $currency_id !== '') {
-            $this->db->where('currencyid', $currency_id);
+            $this->db->where('id', $currency_id);
             return $this->db->get(db_prefix() . 'currency_rates')->row();
         }
 
-        $this->db->order_by('isdefault', 'desc');
+        $this->db->order_by('id', 'asc');
         return $this->db->get(db_prefix() . 'currency_rates')->result();
     }
 
@@ -23,12 +23,12 @@ class Currencies_model extends CI_Model {
     }
 
     public function update($data, $currency_id) {
-        $this->db->where('currencyid', $currency_id);
+        $this->db->where('id', $currency_id);
         return $this->db->update(db_prefix() . 'currency_rates', $data);
     }
 
     public function delete($currency_id) {
-        $this->db->where('currencyid', $currency_id);
+        $this->db->where('id', $currency_id);
         return $this->db->delete(db_prefix() . 'currency_rates');
     }
 }

@@ -15,7 +15,7 @@ class SurveyController extends Controller
             $query->where('subject', 'like', "%{$search}%");
         }
         return response()->json([
-            'surveys' => $query->orderBy('id', 'desc')->paginate($request->per_page ?? 25)
+            'surveys' => $query->orderBy('id', 'desc')->paginate(min($request->per_page ?? 25, 100))
         ]);
     }
 

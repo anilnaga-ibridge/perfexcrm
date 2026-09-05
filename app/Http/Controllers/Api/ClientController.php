@@ -16,6 +16,10 @@ class ClientController extends Controller
      */
     public function index(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Customers.view')) {
+            abort(403, 'Unauthorized. Missing required permission: Customers.view');
+        }
+
         $query = Client::withCount('contacts');
 
         // Search filter
@@ -35,7 +39,7 @@ class ClientController extends Controller
         }
 
         // Pagination
-        $perPage = $request->input('per_page', 10);
+        $perPage = min($request->input('per_page', 10), 100);
         $clients = $query->orderBy('company', 'asc')->paginate($perPage);
 
         // Summaries
@@ -63,6 +67,10 @@ class ClientController extends Controller
      */
     public function store(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Customers.create')) {
+            abort(403, 'Unauthorized. Missing required permission: Customers.create');
+        }
+
         $validated = $request->validate([
             'company' => 'required|string|max:255',
             'vat' => 'nullable|string|max:255',
@@ -99,7 +107,7 @@ class ClientController extends Controller
             'contact_email' => 'nullable|email|unique:contacts,email|max:255',
             'contact_phone' => 'nullable|string|max:255',
             'contact_title' => 'nullable|string|max:255',
-            'contact_password' => 'nullable|string|min:6',
+            'contact_password' => 'nullable|string|min:8',
         ]);
 
         try {
@@ -179,6 +187,10 @@ class ClientController extends Controller
      */
     public function update(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Customers.edit')) {
+            abort(403, 'Unauthorized. Missing required permission: Customers.edit');
+        }
+
         $client = Client::find($id);
 
         if (!$client) {
@@ -225,8 +237,12 @@ class ClientController extends Controller
     /**
      * Remove the specified client from database.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Customers.delete')) {
+            abort(403, 'Unauthorized. Missing required permission: Customers.delete');
+        }
+
         $client = Client::find($id);
 
         if (!$client) {
@@ -237,6 +253,9 @@ class ClientController extends Controller
 
         return response()->json(['message' => 'Customer deleted successfully']);
     }
+
+    /**
+     * Toggle active status of customer.
 
     /**
      * Toggle active status of customer.

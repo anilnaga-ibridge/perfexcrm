@@ -28,6 +28,7 @@
         <a-table
           :dataSource="filteredRoles"
           :columns="roleColumns"
+          :loading="loading"
           :pagination="{ pageSize: pageSize, total: filteredRoles.length, showTotal: (total, range) => `Showing ${range[0]} to ${range[1]} of ${total} entries` }"
           row-key="id"
           size="small"
@@ -84,8 +85,8 @@
                     <a-checkbox
                       v-for="cap in feat.caps"
                       :key="cap"
-                      :checked="!!form.permissions[feat.name]?.[cap]"
-                      @change="(e) => setPermission(feat.name, cap, e.target.checked)"
+                      :checked="Boolean(getCapPerm(feat.name, cap))"
+                      @change="(e) => setCapPerm(feat.name, cap, e.target.checked)"
                     >
                       {{ getCapLabel(cap) }}
                     </a-checkbox>
@@ -108,8 +109,10 @@
 </template>
 
 <script>
-import { defineComponent, ref, reactive, computed } from 'vue';
+import { defineComponent, ref, reactive, computed, onMounted } from 'vue';
 import { message } from 'ant-design-vue';
+import axios from 'axios';
+import { getPermission, setPermission } from '../../utils/permissions';
 
 export default defineComponent({
   name: 'RolesView',
@@ -117,21 +120,11 @@ export default defineComponent({
     const search = ref('');
     const pageSize = ref(25);
     const openDrawer = ref(false);
+    const loading = ref(false);
     const saving = ref(false);
     const editingId = ref(null);
 
-    const rolesList = ref([
-      {
-        id: 1,
-        name: 'Employee',
-        users_count: 0,
-        permissions: {
-          'Bulk PDF Export': { view_global: true },
-          'Contracts': { view_own: true, view_global: true, create: true },
-          'Tasks': { view_own: true, view_global: true, create: true, edit: true }
-        }
-      }
-    ]);
+    const rolesList = ref([]);
 
     const form = reactive({
       name: '',
@@ -160,7 +153,7 @@ export default defineComponent({
       { name: 'Tasks', caps: ['view_own', 'view_global', 'create', 'edit', 'delete', 'edit_timesheets_global', 'edit_own_timesheets', 'delete_timesheets_global', 'delete_own_timesheets'] },
       { name: 'Task Checklist Templates', caps: ['create', 'delete'] },
       { name: 'Estimate Request', caps: ['view_own', 'view_global', 'create', 'edit', 'delete'] },
-      { name: 'Leads', caps: ['view_global', 'delete'] },
+      { name: 'Leads', caps: ['view_global', 'create', 'edit', 'delete'] },
       { name: 'Surveys', caps: ['view_global', 'create', 'edit', 'delete'] },
       { name: 'e-Invoice', caps: ['bulk_export'] },
       { name: 'Goals', caps: ['view_global', 'create', 'edit', 'delete'] }
@@ -191,6 +184,21 @@ export default defineComponent({
       { title: 'Options', key: 'options', width: 140 }
     ];
 
+    const loadRoles = async () => {
+      loading.value = true;
+      try {
+        const res = await axios.get('/api/roles');
+        const roleData = res.data?.data || res.data || [];
+        rolesList.value = Array.isArray(roleData) ? roleData : [];
+      } catch (e) {
+        console.error('Error loading roles:', e);
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    onMounted(loadRoles);
+
     const filteredRoles = computed(() => {
       const sorted = [...rolesList.value].sort((a, b) => b.id - a.id);
       if (!search.value) return sorted;
@@ -207,47 +215,59 @@ export default defineComponent({
       editingId.value = record.id;
       form.name = record.name;
       form.permissions = JSON.parse(JSON.stringify(record.permissions || {}));
+      console.log('[editRole]', 'type:', typeof form.permissions, 'data:', JSON.parse(JSON.stringify(form.permissions)));
       openDrawer.value = true;
     };
 
-    const deleteRole = (id) => {
-      rolesList.value = rolesList.value.filter(r => r.id !== id);
-      message.success('Role deleted successfully');
-    };
-
-    const setPermission = (feature, cap, checked) => {
-      if (!form.permissions[feature]) {
-        form.permissions[feature] = {};
+    const deleteRole = async (id) => {
+      if (!confirm('Are you sure you want to delete this role?')) return;
+      try {
+        await axios.delete(`/api/roles/${id}`);
+        message.success('Role deleted successfully');
+        loadRoles();
+      } catch (e) {
+        message.error(e.response?.data?.message || 'Failed to delete role');
       }
-      form.permissions[feature][cap] = checked;
     };
 
-    const saveRole = () => {
+    const getCapPerm = (feature, cap) => {
+      const val = getPermission(form.permissions, feature, cap);
+      return val;
+    };
+
+    const setCapPerm = (feature, cap, checked) => {
+      setPermission(form.permissions, feature, cap, checked);
+      console.log('[setCapPerm]', feature, cap, 'checked:', checked, 'type:', typeof form.permissions, 'data:', JSON.parse(JSON.stringify(form.permissions)));
+    };
+
+    const saveRole = async () => {
       if (!form.name.trim()) return;
       saving.value = true;
 
       try {
+        const slug = form.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'role';
+        const payload = {
+          name: form.name.trim(),
+          slug: slug,
+          permissions: form.permissions
+        };
+        console.log('[Before PUT/POST]', 'type:', typeof payload.permissions, 'data:', JSON.parse(JSON.stringify(payload.permissions)));
+
         if (editingId.value) {
-          const item = rolesList.value.find(r => r.id === editingId.value);
-          if (item) {
-            item.name = form.name.trim();
-            item.permissions = JSON.parse(JSON.stringify(form.permissions));
-          }
+          const res = await axios.put(`/api/roles/${editingId.value}`, payload);
+          console.log('[After PUT Response]', 'type permissions:', typeof res.data.permissions, 'data:', res.data.permissions);
           message.success('Role updated successfully');
         } else {
-          const maxId = rolesList.value.reduce((max, r) => r.id > max ? r.id : max, 0);
-          rolesList.value.push({
-            id: maxId + 1,
-            name: form.name.trim(),
-            users_count: 0,
-            permissions: JSON.parse(JSON.stringify(form.permissions))
-          });
+          const res = await axios.post('/api/roles', payload);
+          console.log('[After POST Response]', 'type permissions:', typeof res.data.permissions, 'data:', res.data.permissions);
           message.success('Role added successfully');
         }
         openDrawer.value = false;
         resetForm();
+        await loadRoles();
       } catch (e) {
-        message.error('Error saving role');
+        const msg = e.response?.data?.message || 'Error saving role';
+        message.error(msg);
       } finally {
         saving.value = false;
       }
@@ -257,7 +277,6 @@ export default defineComponent({
       editingId.value = null;
       form.name = '';
       form.permissions = {};
-      // Initialize permissions object with false/empty states for all features
       featuresList.forEach(f => {
         form.permissions[f.name] = {};
         f.caps.forEach(c => {
@@ -270,6 +289,7 @@ export default defineComponent({
       search,
       pageSize,
       openDrawer,
+      loading,
       saving,
       editingId,
       rolesList,
@@ -281,7 +301,8 @@ export default defineComponent({
       openNewRoleDrawer,
       editRole,
       deleteRole,
-      setPermission,
+      getCapPerm,
+      setCapPerm,
       saveRole,
       resetForm
     };

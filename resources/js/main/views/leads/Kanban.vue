@@ -15,11 +15,11 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
           </button>
         </div>
-        <button class="ld-btn-import" @click="showImportModal = true">
+        <button v-if="canCreate" class="ld-btn-import" @click="showImportModal = true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Import
         </button>
-        <button class="ld-btn-primary" @click="openCreateModal">
+        <button v-if="canCreate" class="ld-btn-primary" @click="openCreateModal">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New Lead
         </button>
@@ -72,12 +72,12 @@
               <div class="ld-kcard-hd">
                 <span class="ld-kcard-id">#{{ lead.id }}</span>
                 <div class="ld-kcard-actions">
-                  <button class="ld-kcard-btn" @click.stop="editLead(lead)" title="Edit">
+                  <button v-if="canEdit" class="ld-kcard-btn" @click.stop="editLead(lead)" title="Edit">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
                   </button>
                 </div>
               </div>
-              <div class="ld-kcard-name" @click="editLead(lead)">{{ lead.name }}</div>
+              <div class="ld-kcard-name" :class="{ 'cursor-pointer': canEdit }" @click="canEdit ? editLead(lead) : null">{{ lead.name }}</div>
               <div class="ld-kcard-meta">
                 <span v-if="lead.source" class="ld-kcard-source">Source: {{ lead.source.name }}</span>
                 <span v-if="lead.lead_value > 0" class="ld-kcard-val">${{ lead.lead_value }}</span>
@@ -139,6 +139,7 @@
       </div>
 
       <div class="ld-table-wrap">
+        <!-- Desktop Table View -->
         <table class="ld-table">
           <thead>
             <tr>
@@ -151,15 +152,13 @@
               <th>Tags</th>
               <th>Assigned</th>
               <th style="width:100px;">Status</th>
-              <th>Source</th>
-              <th style="width:100px;">Last Contact</th>
               <th style="width:100px;">Created</th>
-              <th style="width:160px;"></th>
+              <th style="width:100px;"></th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td colspan="13" class="ld-empty-cell">
+              <td colspan="11" class="ld-empty-cell">
                 <svg class="animate-spin" fill="none" viewBox="0 0 24 24" width="18" height="18"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
               </td>
             </tr>
@@ -167,42 +166,36 @@
               <td class="ld-cell-muted">{{ idx + 1 + (page - 1) * (+perPage) }}</td>
               <td>
                 <div class="ld-name-cell">
-                  <span class="ld-name">{{ lead.name }}</span>
+                  <span class="ld-name" @click="editLead(lead)">{{ lead.name }}</span>
                   <span v-if="lead.title" class="ld-pos">{{ lead.title }}</span>
                 </div>
               </td>
               <td class="ld-cell-muted">{{ lead.company || '—' }}</td>
               <td class="ld-cell-muted">{{ lead.email || '—' }}</td>
               <td class="ld-cell-muted">{{ lead.phonenumber || '—' }}</td>
-              <td class="ld-cell-muted">${{ lead.lead_value }}</td>
+              <td class="font-semibold text-slate-800">${{ lead.lead_value || 0 }}</td>
               <td>
                 <div class="ld-tags">
                   <span v-if="!lead.tags" class="text-slate-300">—</span>
                   <span v-for="tag in parseTags(lead.tags)" :key="tag" class="ld-tag">{{ tag }}</span>
                 </div>
               </td>
-              <td class="ld-cell-muted">{{ lead.assigned?.name || '—' }}</td>
+              <td class="ld-cell-muted">{{ lead.assigned?.name || 'Unassigned' }}</td>
               <td>
-                <span class="ld-status-badge" :style="{ background: lead.status?.color + '20', color: lead.status?.color, border: '1px solid ' + lead.status?.color + '40' }">
-                  {{ lead.status?.name || '—' }}
+                <span class="ld-status-badge" :style="{ background: lead.status?.color + '20', color: lead.status?.color || '#6366f1' }">
+                  {{ lead.status?.name || 'New' }}
                 </span>
               </td>
-              <td class="ld-cell-muted">{{ lead.source?.name || '—' }}</td>
-              <td class="ld-cell-muted">{{ lead.last_contacted ? timeAgo(lead.last_contacted) : '—' }}</td>
-              <td class="ld-cell-muted">{{ fmtDate(lead.created_at) }}</td>
+              <td class="ld-cell-muted">{{ timeAgo(lead.created_at) }}</td>
               <td>
                 <div class="ld-row-actions">
-                  <button class="ld-act-btn" @click="viewLead(lead)">View</button>
-                  <button class="ld-act-btn" @click="editLead(lead)">Edit</button>
-                  <button class="ld-act-btn text-rose-600 hover:text-rose-700" @click="deleteLead(lead)">Delete</button>
+                  <button v-if="canEdit" @click="editLead(lead)" class="ld-act-btn" title="Edit">Edit</button>
+                  <button v-if="canDelete" @click="deleteLead(lead)" class="ld-act-btn text-rose-600 hover:text-rose-700" title="Delete">Delete</button>
                 </div>
               </td>
             </tr>
             <tr v-if="!loading && !leads.length">
-              <td colspan="13" class="ld-empty-cell">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" width="32" height="32"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-                <p class="text-slate-400 text-sm mt-2">No leads found</p>
-              </td>
+              <td colspan="11" class="ld-empty-cell">No leads found</td>
             </tr>
           </tbody>
         </table>
@@ -216,155 +209,202 @@
       </div>
     </div>
 
-    <!-- Create/Edit Modal -->
-    <Teleport to="body">
-      <div v-if="showModal" class="ld-modal-overlay" @click.self="closeModal">
-        <div class="ld-modal-box ld-modal-wide">
-          <div class="ld-modal-hd">
-            <div class="ld-modal-hd-left">
-              <div class="ld-modal-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              </div>
-              <div>
-                <div class="ld-modal-title">{{ editingLead ? 'Edit Lead' : 'Add New Lead' }}</div>
-                <div class="ld-modal-sub">Fill in the lead details below</div>
-              </div>
-            </div>
-            <button class="ld-modal-close" @click="closeModal">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
+    <!-- Create/Edit Drawer -->
+    <a-drawer
+      v-model:open="showModal"
+      placement="right"
+      :width="640"
+      :footer-style="{ padding: '16px 24px', background: '#fafafa', borderTop: '1px solid #f1f5f9' }"
+      :header-style="{ padding: '20px 24px', background: '#ffffff', borderBottom: '1px solid #f1f5f9' }"
+      @close="closeModal"
+    >
+      <template #title>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl text-white flex items-center justify-center shadow-md shrink-0 theme-primary-grad">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
-
-          <div class="ld-modal-body">
-            <div class="ld-form-grid">
-              <!-- Pipeline -->
-              <div class="ld-form-group">
-                <label>Status <span class="ld-req">*</span></label>
-                <select v-model="form.status_id" class="ld-input">
-                  <option :value="null">Select Status</option>
-                  <option v-for="s in metadata.statuses" :key="s.id" :value="s.id">{{ s.name }}</option>
-                </select>
-              </div>
-              <div class="ld-form-group">
-                <label>Source <span class="ld-req">*</span></label>
-                <select v-model="form.source_id" class="ld-input">
-                  <option :value="null">Select Source</option>
-                  <option v-for="s in metadata.sources" :key="s.id" :value="s.id">{{ s.name }}</option>
-                </select>
-              </div>
-              <div class="ld-form-group">
-                <label>Assigned</label>
-                <select v-model="form.assigned_id" class="ld-input">
-                  <option :value="null">Tre Stamm (default)</option>
-                  <option v-for="s in metadata.staff" :key="s.id" :value="s.id">{{ s.name }}</option>
-                </select>
-              </div>
-              <div class="ld-form-group span-2">
-                <label>Tags</label>
-                <div class="ld-tag-input-wrap">
-                  <div class="ld-tag-list">
-                    <span v-for="(tag, i) in form.tagList" :key="i" class="ld-tag-pill">
-                      {{ tag }}
-                      <button class="ld-tag-pill-del" @click="form.tagList.splice(i, 1); form.tags = form.tagList.join(',')">&times;</button>
-                    </span>
-                    <input v-model="tagInput" placeholder="Type tag and press Enter" class="ld-tag-field" @keydown.enter.prevent="addTag" @keydown.,.prevent="addTag" />
-                  </div>
-                </div>
-              </div>
-
-              <!-- Contact -->
-              <div class="ld-form-group">
-                <label>Name <span class="ld-req">*</span></label>
-                <input v-model="form.name" placeholder="Full name" class="ld-input" />
-              </div>
-              <div class="ld-form-group">
-                <label>Position</label>
-                <input v-model="form.title" placeholder="e.g. Sales Director" class="ld-input" />
-              </div>
-              <div class="ld-form-group">
-                <label>Email Address</label>
-                <input v-model="form.email" placeholder="email@example.com" class="ld-input" />
-              </div>
-              <div class="ld-form-group">
-                <label>Website</label>
-                <input v-model="form.website" placeholder="example.com" class="ld-input" />
-              </div>
-              <div class="ld-form-group">
-                <label>Phone</label>
-                <input v-model="form.phonenumber" placeholder="+1 555-0199" class="ld-input" />
-              </div>
-              <div class="ld-form-group">
-                <label>Lead value ($)</label>
-                <input v-model="form.lead_value" type="number" min="0" step="0.01" placeholder="0.00" class="ld-input" />
-              </div>
-              <div class="ld-form-group">
-                <label>Company</label>
-                <input v-model="form.company" placeholder="Company name" class="ld-input" />
-              </div>
-
-              <!-- Address -->
-              <div class="ld-form-group span-2">
-                <label>Address</label>
-                <input v-model="form.address" placeholder="Street address" class="ld-input" />
-              </div>
-              <div class="ld-form-group">
-                <label>City</label>
-                <input v-model="form.city" placeholder="City" class="ld-input" />
-              </div>
-              <div class="ld-form-group">
-                <label>State</label>
-                <input v-model="form.state" placeholder="State" class="ld-input" />
-              </div>
-              <div class="ld-form-group">
-                <label>Country</label>
-                <input v-model="form.country" placeholder="Country" class="ld-input" />
-              </div>
-              <div class="ld-form-group">
-                <label>Zip Code</label>
-                <input v-model="form.zip" placeholder="ZIP" class="ld-input" />
-              </div>
-              <div class="ld-form-group">
-                <label>Default Language</label>
-                <select v-model="form.default_language" class="ld-input">
-                  <option value="">System Default</option>
-                  <option value="en">English</option>
-                  <option value="es">Spanish</option>
-                  <option value="fr">French</option>
-                  <option value="de">German</option>
-                  <option value="ar">Arabic</option>
-                </select>
-              </div>
-
-              <!-- Extra options -->
-              <div class="ld-form-group span-2">
-                <div class="ld-chk-row">
-                  <label class="ld-chk-label">
-                    <input type="checkbox" v-model="form.is_public" />
-                    <span>Public</span>
-                  </label>
-                  <label class="ld-chk-label">
-                    <input type="checkbox" v-model="contactedToday" />
-                    <span>Contacted Today</span>
-                  </label>
-                </div>
-              </div>
-
-              <div class="ld-form-group span-2">
-                <label>Description</label>
-                <textarea v-model="form.description" rows="4" placeholder="Lead description..." class="ld-input ld-textarea"></textarea>
-              </div>
-            </div>
-          </div>
-
-          <div class="ld-modal-ft">
-            <button class="ld-btn-secondary" @click="closeModal">Cancel</button>
-            <button class="ld-btn-primary" @click="saveLead" :disabled="saving">
-              {{ saving ? 'Saving...' : (editingLead ? 'Save Changes' : 'Create Lead') }}
-            </button>
+          <div class="min-w-0">
+            <h3 class="text-base font-extrabold text-slate-800 m-0 leading-snug whitespace-nowrap">{{ editingLead ? 'Edit Lead' : 'Add New Lead' }}</h3>
+            <p class="text-xs text-slate-400 font-medium m-0 mt-0.5 whitespace-nowrap">Fill in the lead details below</p>
           </div>
         </div>
+      </template>
+
+      <div class="p-1 space-y-4">
+        <!-- Top Status Pills -->
+        <div class="p-3.5 bg-gradient-to-r from-slate-50 via-slate-100/40 to-slate-50 rounded-2xl border border-slate-200/80 flex items-center gap-4 shadow-2xs">
+          <label class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white border border-slate-200/80 hover:border-slate-300 cursor-pointer transition-all shadow-2xs text-xs font-bold text-slate-700 select-none">
+            <input type="checkbox" v-model="form.is_public" class="w-4 h-4 rounded border-slate-300 cursor-pointer theme-accent-chk" />
+            <span>Public</span>
+          </label>
+          <label class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white border border-slate-200/80 hover:border-slate-300 cursor-pointer transition-all shadow-2xs text-xs font-bold text-slate-700 select-none">
+            <input type="checkbox" v-model="contactedToday" class="w-4 h-4 rounded border-slate-300 cursor-pointer theme-accent-chk" />
+            <span>Contacted Today</span>
+          </label>
+        </div>
+
+        <!-- Status, Source & Assigned -->
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Status <span class="text-rose-500">*</span></label>
+            <select v-model="form.status_id" class="w-full h-10 px-3 text-xs font-semibold theme-input-ctrl cursor-pointer">
+              <option :value="null">Select Status</option>
+              <option v-for="s in metadata.statuses" :key="s.id" :value="s.id">{{ s.name }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Source <span class="text-rose-500">*</span></label>
+            <select v-model="form.source_id" class="w-full h-10 px-3 text-xs font-semibold theme-input-ctrl cursor-pointer">
+              <option :value="null">Select Source</option>
+              <option v-for="s in metadata.sources" :key="s.id" :value="s.id">{{ s.name }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Assigned</label>
+            <select v-model="form.assigned_id" class="w-full h-10 px-3 text-xs font-semibold theme-input-ctrl cursor-pointer">
+              <option :value="null">Select Staff</option>
+              <option v-for="s in metadata.staff" :key="s.id" :value="s.id">{{ s.name }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Tags</label>
+          <div class="p-2.5 border border-slate-200/80 rounded-2xl bg-slate-50/50 flex flex-wrap items-center gap-1.5 focus-within:bg-white theme-input-ctrl transition-all">
+            <div class="flex flex-wrap gap-1.5">
+              <span
+                v-for="(tag, i) in form.tagList"
+                :key="i"
+                class="px-2.5 py-1 text-[11px] font-bold rounded-lg inline-flex items-center gap-1.5 shadow-2xs theme-tag-chip"
+              >
+                {{ tag }}
+                <button type="button" @click="form.tagList.splice(i, 1); form.tags = form.tagList.join(',')" class="hover:opacity-75 font-extrabold text-xs">&times;</button>
+              </span>
+            </div>
+            <input
+              v-model="tagInput"
+              placeholder="Type tag and press Enter..."
+              class="text-xs font-semibold bg-transparent outline-none flex-1 min-w-[140px] text-slate-800 placeholder-slate-400"
+              @keydown.enter.prevent="addTag"
+              @keydown.,.prevent="addTag"
+            />
+          </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1.5">
+              Name <span class="text-rose-500">*</span>
+            </label>
+            <input v-model="form.name" placeholder="Full name" class="w-full h-10 px-3.5 text-xs font-semibold theme-input-ctrl" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Position</label>
+            <input v-model="form.title" placeholder="e.g. Sales Director" class="w-full h-10 px-3.5 text-xs font-semibold theme-input-ctrl" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Email Address</label>
+            <input v-model="form.email" placeholder="email@example.com" class="w-full h-10 px-3.5 text-xs font-semibold theme-input-ctrl" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Website</label>
+            <input v-model="form.website" placeholder="example.com" class="w-full h-10 px-3.5 text-xs font-semibold theme-input-ctrl" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Phone</label>
+            <input v-model="form.phonenumber" placeholder="+1 555-0199" class="w-full h-10 px-3 text-xs font-semibold theme-input-ctrl" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Lead Value ($)</label>
+            <input v-model="form.lead_value" type="number" min="0" step="0.01" placeholder="0.00" class="w-full h-10 px-3 text-xs font-semibold theme-input-ctrl" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Company</label>
+            <input v-model="form.company" placeholder="Company name" class="w-full h-10 px-3 text-xs font-semibold theme-input-ctrl" />
+          </div>
+        </div>
+
+        <!-- Address -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Address</label>
+          <input v-model="form.address" placeholder="Street address" class="w-full h-10 px-3.5 text-xs font-semibold theme-input-ctrl" />
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">City</label>
+            <input v-model="form.city" placeholder="City" class="w-full h-10 px-3 text-xs font-semibold theme-input-ctrl" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">State</label>
+            <input v-model="form.state" placeholder="State" class="w-full h-10 px-3 text-xs font-semibold theme-input-ctrl" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Zip Code</label>
+            <input v-model="form.zip" placeholder="ZIP" class="w-full h-10 px-3 text-xs font-semibold theme-input-ctrl" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Country</label>
+            <input v-model="form.country" placeholder="Country" class="w-full h-10 px-3.5 text-xs font-semibold theme-input-ctrl" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Default Language</label>
+            <select v-model="form.default_language" class="w-full h-10 px-3.5 text-xs font-semibold theme-input-ctrl cursor-pointer">
+              <option value="">System Default</option>
+              <option value="en">English</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="ar">Arabic</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Description</label>
+          <textarea
+            v-model="form.description"
+            rows="4"
+            placeholder="Lead description..."
+            class="w-full p-4 text-xs font-semibold theme-input-ctrl text-slate-800 placeholder-slate-400 resize-y leading-relaxed"
+          ></textarea>
+        </div>
       </div>
-    </Teleport>
+
+      <template #footer>
+        <div class="flex items-center justify-end gap-3">
+          <button
+            type="button"
+            class="px-5 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer border border-slate-200/80"
+            @click="closeModal"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="px-7 py-2.5 text-xs font-bold text-white rounded-xl cursor-pointer shadow-md transition-all flex items-center gap-2 disabled:opacity-50 theme-primary-grad"
+            @click="saveLead"
+            :disabled="saving"
+          >
+            <svg v-if="saving" class="animate-spin" fill="none" viewBox="0 0 24 24" width="14" height="14"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            {{ saving ? 'Saving...' : (editingLead ? 'Save Changes' : 'Create Lead') }}
+          </button>
+        </div>
+      </template>
+    </a-drawer>
 
     <!-- Import Modal -->
     <Teleport to="body">
@@ -424,6 +464,10 @@ import axios from 'axios'
 import { useAuthStore } from '../../store/authStore'
 
 const authStore = useAuthStore()
+
+const canCreate = computed(() => authStore.hasPermission('Leads', 'create'))
+const canEdit   = computed(() => authStore.hasPermission('Leads', 'edit'))
+const canDelete = computed(() => authStore.hasPermission('Leads', 'delete'))
 
 const leads = ref([])
 const kanbanColumns = ref([])
@@ -559,6 +603,7 @@ async function moveLead(id, statusId) {
 }
 
 function openCreateModal() {
+  if (!canCreate.value) return;
   editingLead.value = null
   Object.assign(form, {
     name: '', title: '', company: '', email: '', website: '', phonenumber: '',
@@ -573,6 +618,7 @@ function openCreateModal() {
 }
 
 function editLead(lead) {
+  if (!canEdit.value) return;
   editingLead.value = lead
   Object.assign(form, {
     name: lead.name, title: lead.title || '', company: lead.company || '',
@@ -606,6 +652,7 @@ async function saveLead() {
 }
 
 async function deleteLead(lead) {
+  if (!canDelete.value) return;
   if (!confirm(`Delete lead "${lead.name}"?`)) return
   try { await axios.delete(`/leads/${lead.id}`); fetchLeads() }
   catch { alert('Failed to delete lead') }
@@ -812,6 +859,100 @@ watch(currentView, () => fetchLeads())
 .opacity-25 { opacity: .25; }
 .opacity-75 { opacity: .75; }
 
+/* Dynamic Theme Utility Classes */
+.theme-primary-btn {
+  background: var(--theme-primary, #6366f1) !important;
+  color: #ffffff !important;
+}
+.theme-primary-btn:hover {
+  background: var(--theme-primary-hover, #4f46e5) !important;
+}
+.theme-primary-grad {
+  background: linear-gradient(135deg, var(--theme-primary, #6366f1) 0%, var(--theme-primary-hover, #4f46e5) 100%) !important;
+  color: #ffffff !important;
+}
+.theme-input-ctrl {
+  background-color: rgba(248, 250, 252, 0.8);
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+}
+.theme-input-ctrl:focus {
+  background-color: #ffffff;
+  border-color: var(--theme-primary, #6366f1) !important;
+  box-shadow: 0 0 0 4px var(--theme-primary-light, rgba(99, 102, 241, 0.15)) !important;
+  outline: none;
+}
+.theme-accent-chk {
+  accent-color: var(--theme-primary, #6366f1) !important;
+}
+.theme-tag-chip {
+  background: var(--theme-primary-light, rgba(99, 102, 241, 0.12)) !important;
+  color: var(--theme-primary, #6366f1) !important;
+  border: 1px solid var(--theme-primary-light, rgba(99, 102, 241, 0.25)) !important;
+}
+
+/* Mobile Cards List Hidden by Default on Desktop */
+.mobile-cards-list {
+  display: none;
+}
+
 @media (max-width: 1200px) { .ld-stats-row { grid-template-columns: repeat(4,1fr); } }
-@media (max-width: 768px) { .ld-stats-row { grid-template-columns: repeat(2,1fr); } }
+
+@media (max-width: 768px) {
+  .ld-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .ld-header-actions {
+    width: 100% !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .ld-stats-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .ld-kanban-filters, .ld-filters {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .ld-filters-left, .ld-filters-right {
+    width: 100% !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+  }
+  .ld-search-wrap, .ld-search-input, .ld-filter-select {
+    width: 100% !important;
+  }
+  .ld-kanban-cols {
+    flex-direction: column !important;
+    overflow-x: visible !important;
+    gap: 16px !important;
+  }
+  .ld-kanban-col {
+    min-width: 100% !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .ld-table {
+    display: none !important;
+  }
+  .mobile-cards-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 560px) {
+  .ld-stats-row {
+    grid-template-columns: 1fr !important;
+  }
+  .ld-form-grid { grid-template-columns: 1fr; }
+}
 </style>

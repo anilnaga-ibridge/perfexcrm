@@ -9,23 +9,23 @@
             <div class="pl-avatar-ring">
               <div class="pl-avatar-wrapper">
                 <img
-                  v-if="user.profile_image"
+                  v-if="user.profile_image && !imageError"
                   :src="getProfileImageUrl(user.profile_image)"
                   :alt="user.name"
+                  @error="imageError = true"
                   class="pl-avatar"
                 />
                 <div
                   v-else
-                  class="pl-avatar-fallback"
-                  :style="{ background: avatarColor(user.name) }"
+                  class="w-20 h-20 rounded-2xl relative overflow-hidden flex items-center justify-center shadow-lg animated-avatar-wrap"
                 >
-                  {{ initials(user.name) }}
+                  <img :src="clayAvatarUrl" alt="Avatar" class="w-16 h-16 object-contain animate-avatar-float drop-shadow-md" />
                 </div>
               </div>
             </div>
             <h2 class="pl-name">{{ user.name }}</h2>
             <p class="pl-email">{{ user.email }}</p>
-            <span v-if="user.role" class="pl-role">{{ user.role }}</span>
+            <span v-if="user.role" class="pl-role">{{ getRoleName(user) }}</span>
           </div>
         </div>
 
@@ -54,11 +54,13 @@
 </template>
 
 <script>
-import { defineComponent, computed } from 'vue';
+import { defineComponent, ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../store/authStore';
 import ProfileOverview from './profile/ProfileOverview.vue';
 import ProfileEdit from './profile/ProfileEdit.vue';
+import clayAvatarUrl from '../assets/clay_avatar.png';
+import { getRoleName } from '../utils/permissions';
 
 export default defineComponent({
   name: 'ProfileLayout',
@@ -70,6 +72,11 @@ export default defineComponent({
     const route = useRoute();
     const authStore = useAuthStore();
     const user = computed(() => authStore.user || {});
+    const imageError = ref(false);
+
+    watch(() => user.value?.profile_image, () => {
+      imageError.value = false;
+    });
 
     const isActive = (path) => route.path === path;
 
@@ -98,7 +105,7 @@ export default defineComponent({
     ];
 
     return {
-      user, profileMenuItems, isActive, getProfileImageUrl, initials, avatarColor,
+      user, profileMenuItems, isActive, getProfileImageUrl, initials, avatarColor, clayAvatarUrl, imageError, getRoleName,
     };
   },
 });
@@ -280,5 +287,26 @@ const editIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 .pl-main {
   flex: 1;
   min-width: 0;
+}
+
+.animated-avatar-wrap {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #3730a3 100%);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+  animation: avatarPulseGlow 4s ease-in-out infinite alternate;
+}
+
+.animate-avatar-float {
+  animation: avatarFloat 3.5s ease-in-out infinite alternate;
+}
+
+@keyframes avatarFloat {
+  0% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-3px) scale(1.04); }
+  100% { transform: translateY(0px) scale(1); }
+}
+
+@keyframes avatarPulseGlow {
+  0% { box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3); }
+  100% { box-shadow: 0 6px 20px rgba(99, 102, 241, 0.55); }
 }
 </style>

@@ -261,7 +261,7 @@ const defaultEstimates = [
 
 export const useEstimatesStore = defineStore('estimates', {
   state: () => {
-    const stored = localStorage.getItem('perfex_estimates');
+    const stored = localStorage.getItem('ibridge_estimates');
     return {
       estimates: stored ? JSON.parse(stored) : defaultEstimates,
     };
@@ -269,7 +269,7 @@ export const useEstimatesStore = defineStore('estimates', {
   
   actions: {
     saveToStorage() {
-      localStorage.setItem('perfex_estimates', JSON.stringify(this.estimates));
+      localStorage.setItem('ibridge_estimates', JSON.stringify(this.estimates));
     },
     
     addEstimate(estimate) {

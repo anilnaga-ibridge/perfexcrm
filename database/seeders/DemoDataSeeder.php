@@ -212,7 +212,7 @@ class DemoDataSeeder extends Seeder
         $clientIds = DB::table('clients')->pluck('id')->toArray();
 
         if ($currentInvoiceCount < 13 && !empty($clientIds)) {
-            // Match Perfex demo: 1 Draft, 13 Not Sent→unpaid, 9 Unpaid, 3 Partially Paid, 0 Overdue, 2 Paid
+            // Match iBridge demo: 1 Draft, 13 Not Sent→unpaid, 9 Unpaid, 3 Partially Paid, 0 Overdue, 2 Paid
             $invoiceRows = [
                 ['status' => 'draft',          'subtotal' => 1050.00,  'daysAgo' => 3],
                 ['status' => 'unpaid',         'subtotal' => 2500.00,  'daysAgo' => 5],
@@ -553,7 +553,7 @@ class DemoDataSeeder extends Seeder
         // ── Announcements & Goals ─────────────────────────────────
         if (DB::table('announcements')->count() === 0) {
             DB::table('announcements')->insert([
-                ['subject' => 'Welcome to Perfex CRM!', 'message' => 'Please complete your setup profile and add client accounts.', 'show_to_staff' => true, 'show_to_clients' => true, 'created_at' => now(), 'updated_at' => now()],
+                ['subject' => 'Welcome to iBridge CRM!', 'message' => 'Please complete your setup profile and add client accounts.', 'show_to_staff' => true, 'show_to_clients' => true, 'created_at' => now(), 'updated_at' => now()],
                 ['subject' => 'Quarterly Planning Session', 'message' => 'The quarterly planning meeting is scheduled for next Friday at 10 AM.', 'show_to_staff' => true, 'show_to_clients' => false, 'created_at' => now(), 'updated_at' => now()],
             ]);
         }

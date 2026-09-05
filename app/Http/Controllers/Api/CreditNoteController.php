@@ -11,6 +11,10 @@ class CreditNoteController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Credit Notes.view')) {
+            abort(403, 'Unauthorized. Missing required permission: Credit Notes.view');
+        }
+
         $query = CreditNote::with('client:id,company');
 
         if ($request->filled('search')) {
@@ -26,7 +30,7 @@ class CreditNoteController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $creditNotes = $query->orderBy('date', 'desc')->paginate($perPage);
 
         // Summary stats
@@ -47,6 +51,10 @@ class CreditNoteController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Credit Notes.create')) {
+            abort(403, 'Unauthorized. Missing required permission: Credit Notes.create');
+        }
+
         $validated = $request->validate([
             'client_id'  => 'required|exists:clients,id',
             'number'     => 'nullable|string|unique:credit_notes,number',
@@ -59,8 +67,10 @@ class CreditNoteController extends Controller
         ]);
 
         if (empty($validated['number'])) {
-            $last = CreditNote::max('id') ?? 0;
-            $validated['number'] = 'CN-' . str_pad($last + 1, 5, '0', STR_PAD_LEFT);
+            $validated['number'] = \DB::transaction(function () {
+                $last = CreditNote::max('id') ?? 0;
+                return 'CN-' . str_pad($last + 1, 5, '0', STR_PAD_LEFT);
+            });
         }
 
         $creditNote = CreditNote::create($validated);
@@ -76,6 +86,10 @@ class CreditNoteController extends Controller
 
     public function update(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Credit Notes.edit')) {
+            abort(403, 'Unauthorized. Missing required permission: Credit Notes.edit');
+        }
+
         $creditNote = CreditNote::find($id);
         if (!$creditNote) return response()->json(['message' => 'Credit Note not found'], 404);
 
@@ -92,8 +106,12 @@ class CreditNoteController extends Controller
         return response()->json($creditNote->load('client'));
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Credit Notes.delete')) {
+            abort(403, 'Unauthorized. Missing required permission: Credit Notes.delete');
+        }
+
         $creditNote = CreditNote::find($id);
         if (!$creditNote) return response()->json(['message' => 'Credit Note not found'], 404);
         $creditNote->delete();

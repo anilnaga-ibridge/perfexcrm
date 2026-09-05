@@ -5,7 +5,7 @@
         <h1 class="page-title">Goals Tracking</h1>
         <p class="text-xs text-slate-500 mt-0.5">Define business goals and monitor performance achievements</p>
       </div>
-      <button class="btn-primary" @click="openCreateDrawer">
+      <button v-if="canCreate" class="btn-primary" @click="openCreateDrawer">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14" class="inline mr-1"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         New Goal
       </button>
@@ -20,6 +20,7 @@
         </a-input>
       </div>
 
+      <!-- Table -->
       <a-table
         :dataSource="filteredGoals"
         :columns="columns"
@@ -47,15 +48,139 @@
             </div>
           </template>
           <template v-else-if="column.key === 'actions'">
-            <a-button type="link" size="small" @click="openEditDrawer(record)">View</a-button>
-            <a-popconfirm title="Delete this goal?" @confirm="deleteGoal(record.id)">
-              <a-button type="link" size="small" danger>Delete</a-button>
-            </a-popconfirm>
+            <div class="flex items-center gap-1">
+              <a-button type="link" size="small" @click="openViewModal(record)">View</a-button>
+              <a-button v-if="canEdit" type="link" size="small" @click="openEditDrawer(record)">Edit</a-button>
+              <a-popconfirm v-if="canDelete" title="Delete this goal?" @confirm="deleteGoal(record.id)">
+                <a-button type="link" size="small" danger>Delete</a-button>
+              </a-popconfirm>
+            </div>
           </template>
         </template>
       </a-table>
+
+      <!-- Mobile Responsive Card View -->
+      <div class="mobile-cards-list" v-if="!loading">
+        <div 
+          v-for="g in filteredGoals" 
+          :key="'m-gl-' + g.id"
+          class="mobile-row-card"
+          @click="openViewModal(g)"
+        >
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+              {{ formatGoalType(g.goal_type) }}
+            </span>
+            <div class="flex items-center gap-2">
+              <button @click.stop="openViewModal(g)" class="text-xs font-semibold text-indigo-600 hover:underline">View</button>
+              <button v-if="canEdit" @click.stop="openEditDrawer(g)" class="text-xs font-semibold text-slate-600 hover:underline">Edit</button>
+            </div>
+          </div>
+
+          <div class="font-bold text-sm text-slate-800 pt-1">
+            {{ g.subject }}
+          </div>
+          <div class="text-xs text-slate-500">
+            👤 {{ g.staff?.name || g.staff_member_name || 'All Staff' }}
+          </div>
+
+          <div class="space-y-1.5 pt-2 border-t border-slate-100">
+            <div class="flex items-center justify-between text-xs text-slate-600">
+              <span>Achievement:</span>
+              <span class="font-bold text-slate-800">{{ formatValue(g.current_value) }} / {{ formatValue(g.target_value) }}</span>
+            </div>
+            <div class="progress-cell">
+              <div class="progress-bar-bg flex-1">
+                <div class="progress-bar-fill" :style="{ width: getPercentage(g) + '%' }" :class="progressClass(g)"></div>
+              </div>
+              <span class="progress-pct font-bold text-xs">{{ getPercentage(g) }}%</span>
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+              <span>📅 Start: {{ g.start_date }}</span>
+              <span>End: {{ g.end_date }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="!filteredGoals.length" class="text-center p-6 text-slate-400 text-xs font-semibold">
+          No goals found
+        </div>
+      </div>
     </div>
 
+    <!-- View Goal Details Modal -->
+    <a-modal
+      v-model:open="showViewModal"
+      title="Goal Details"
+      :footer="null"
+      :width="520"
+      centered
+    >
+      <div v-if="viewGoalData" class="space-y-4 pt-1">
+        <!-- Header Summary -->
+        <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-indigo-600 bg-indigo-100/70 px-2.5 py-0.5 rounded-full">
+              {{ formatGoalType(viewGoalData.goal_type) }}
+            </span>
+            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full" :class="getPercentage(viewGoalData) >= 100 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'">
+              {{ getPercentage(viewGoalData) >= 100 ? 'Achieved' : 'In Progress' }}
+            </span>
+          </div>
+          <h3 class="text-base font-bold text-slate-800 m-0">{{ viewGoalData.subject }}</h3>
+          <p class="text-xs text-slate-500 mt-1 mb-0" v-if="viewGoalData.description">{{ viewGoalData.description }}</p>
+        </div>
+
+        <!-- Achievement Progress Card -->
+        <div class="border border-slate-200 rounded-xl p-4 space-y-2">
+          <div class="flex items-center justify-between text-xs text-slate-600">
+            <span class="font-medium">Achievement Progress</span>
+            <span class="font-bold text-slate-800">{{ formatValue(viewGoalData.current_value) }} / {{ formatValue(viewGoalData.target_value) }}</span>
+          </div>
+          <div class="progress-cell">
+            <div class="progress-bar-bg flex-1" style="height: 10px; border-radius: 5px;">
+              <div class="progress-bar-fill" :style="{ width: getPercentage(viewGoalData) + '%' }" :class="progressClass(viewGoalData)"></div>
+            </div>
+            <span class="progress-pct text-xs font-bold">{{ getPercentage(viewGoalData) }}%</span>
+          </div>
+        </div>
+
+        <!-- Info Grid -->
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+            <span class="text-slate-400 block mb-0.5">Assigned Staff</span>
+            <span class="font-semibold text-slate-700">{{ viewGoalData.staff?.name || viewGoalData.staff_member_name || 'All Staff Members' }}</span>
+          </div>
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+            <span class="text-slate-400 block mb-0.5">Timeline</span>
+            <span class="font-semibold text-slate-700">{{ viewGoalData.start_date }} → {{ viewGoalData.end_date }}</span>
+          </div>
+        </div>
+
+        <!-- Notification Preferences -->
+        <div class="border-t border-slate-100 pt-3 space-y-2 text-xs">
+          <div class="font-semibold text-slate-700">Notification Preferences:</div>
+          <div class="flex items-center gap-2 text-slate-600">
+            <span class="w-2 h-2 rounded-full" :class="viewGoalData.notify_when_achieve ? 'bg-emerald-500' : 'bg-slate-300'"></span>
+            <span>Notify staff members when goal achieve: <strong>{{ viewGoalData.notify_when_achieve ? 'Yes' : 'No' }}</strong></span>
+          </div>
+          <div class="flex items-center gap-2 text-slate-600">
+            <span class="w-2 h-2 rounded-full" :class="viewGoalData.notify_when_fail ? 'bg-emerald-500' : 'bg-slate-300'"></span>
+            <span>Notify staff members when goal failed: <strong>{{ viewGoalData.notify_when_fail ? 'Yes' : 'No' }}</strong></span>
+          </div>
+        </div>
+
+        <!-- Footer actions -->
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <a-button @click="showViewModal = false">Close</a-button>
+          <a-button v-if="canEdit" type="primary" @click="switchToEdit(viewGoalData)">
+            Edit Goal
+          </a-button>
+        </div>
+      </div>
+    </a-modal>
+
+    <!-- Create / Edit Drawer -->
     <a-drawer
       v-model:open="showDrawer"
       :title="isEdit ? 'Edit Goal' : 'Add New Goal'"
@@ -127,18 +252,35 @@
 import { defineComponent, ref, reactive, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { message } from 'ant-design-vue';
+import { useAuthStore } from '../../store/authStore';
 
 export default defineComponent({
   name: 'GoalsPage',
   setup() {
+    const authStore = useAuthStore();
+    const canCreate = computed(() => authStore.hasPermission('Goals', 'create'));
+    const canEdit   = computed(() => authStore.hasPermission('Goals', 'edit'));
+    const canDelete = computed(() => authStore.hasPermission('Goals', 'delete'));
     const loading = ref(false);
     const saving = ref(false);
     const goals = ref([]);
     const staffMembers = ref([]);
     const showDrawer = ref(false);
+    const showViewModal = ref(false);
+    const viewGoalData = ref(null);
     const isEdit = ref(false);
     const editingId = ref(null);
     const search = ref('');
+
+    const openViewModal = (record) => {
+      viewGoalData.value = record;
+      showViewModal.value = true;
+    };
+
+    const switchToEdit = (record) => {
+      showViewModal.value = false;
+      openEditDrawer(record);
+    };
 
     const columns = [
       { title: 'Subject', dataIndex: 'subject', key: 'subject', sorter: (a, b) => a.subject?.localeCompare(b.subject) },
@@ -297,8 +439,9 @@ export default defineComponent({
     });
 
     return {
-      loading, saving, goals, staffMembers, showDrawer, isEdit, goalForm, search, columns,
-      filteredGoals, openCreateDrawer, openEditDrawer, saveGoal, deleteGoal,
+      canCreate, canEdit, canDelete,
+      loading, saving, goals, staffMembers, showDrawer, showViewModal, viewGoalData, isEdit, goalForm, search, columns,
+      filteredGoals, openCreateDrawer, openEditDrawer, openViewModal, switchToEdit, saveGoal, deleteGoal,
       getPercentage, progressClass, formatGoalType, formatValue,
     };
   }
@@ -383,4 +526,29 @@ export default defineComponent({
   border-top: 1px solid #e2e8f0;
 }
 :deep(.ant-table-cell) { font-size: 13px; }
+
+/* Mobile Cards List Hidden by Default on Desktop */
+.mobile-cards-list {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .goals-toolbar .ant-input {
+    width: 100% !important;
+  }
+  :deep(.ant-table-wrapper) {
+    display: none !important;
+  }
+  .mobile-cards-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+}
 </style>

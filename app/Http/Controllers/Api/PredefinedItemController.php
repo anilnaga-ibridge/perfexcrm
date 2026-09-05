@@ -10,6 +10,10 @@ class PredefinedItemController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Items.view')) {
+            abort(403, 'Unauthorized. Missing required permission: Items.view');
+        }
+
         $query = PredefinedItem::query();
 
         if ($request->filled('search')) {
@@ -20,7 +24,7 @@ class PredefinedItemController extends Controller
             });
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $items = $query->orderBy('name', 'asc')->paginate($perPage);
 
         return response()->json([
@@ -30,6 +34,10 @@ class PredefinedItemController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Items.create')) {
+            abort(403, 'Unauthorized. Missing required permission: Items.create');
+        }
+
         $validated = $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -51,6 +59,10 @@ class PredefinedItemController extends Controller
 
     public function update(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Items.edit')) {
+            abort(403, 'Unauthorized. Missing required permission: Items.edit');
+        }
+
         $item = PredefinedItem::find($id);
         if (!$item) return response()->json(['message' => 'Predefined item not found'], 404);
 
@@ -66,8 +78,12 @@ class PredefinedItemController extends Controller
         return response()->json($item);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Items.delete')) {
+            abort(403, 'Unauthorized. Missing required permission: Items.delete');
+        }
+
         $item = PredefinedItem::find($id);
         if (!$item) return response()->json(['message' => 'Predefined item not found'], 404);
         $item->delete();

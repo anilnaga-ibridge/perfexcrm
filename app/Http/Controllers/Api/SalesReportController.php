@@ -33,7 +33,7 @@ class SalesReportController extends Controller
             $query->where('sale_agent', $request->input('sale_agent'));
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $invoices = $query->orderBy('date', 'desc')->paginate($perPage);
 
         $invoices->getCollection()->transform(function ($inv) {
@@ -72,7 +72,7 @@ class SalesReportController extends Controller
             $query->where('name', 'like', "%{$s}%");
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $items = $query->orderBy('name')->paginate($perPage);
 
         return response()->json(['items' => $items]);
@@ -91,7 +91,7 @@ class SalesReportController extends Controller
             });
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $payments = $query->orderBy('date', 'desc')->paginate($perPage);
 
         $payments->getCollection()->transform(function ($p) {
@@ -128,7 +128,7 @@ class SalesReportController extends Controller
             $query->whereIn('status', (array) $request->input('status'));
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $notes = $query->orderBy('date', 'desc')->paginate($perPage);
 
         $notes->getCollection()->transform(function ($cn) {
@@ -169,7 +169,7 @@ class SalesReportController extends Controller
             $query->whereIn('status', (array) $request->input('status'));
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $items = $query->orderBy('date', 'desc')->paginate($perPage);
 
         $items->getCollection()->transform(function ($e) {
@@ -211,7 +211,7 @@ class SalesReportController extends Controller
             $query->whereIn('status', (array) $request->input('status'));
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $items = $query->orderBy('date', 'desc')->paginate($perPage);
 
         $items->getCollection()->transform(function ($e) {
@@ -248,7 +248,7 @@ class SalesReportController extends Controller
             $query->where('company', 'like', "%{$s}%");
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $clients = $query->orderBy('company')->paginate($perPage);
 
         $clients->getCollection()->transform(function ($c) {

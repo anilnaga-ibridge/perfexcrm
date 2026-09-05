@@ -1,379 +1,707 @@
 <template>
-  <div class="reports-page">
+  <div class="reports-page p-6 max-w-[1600px] mx-auto min-h-screen bg-[#F8F7FA] font-['Public_Sans',sans-serif]">
     <!-- Header -->
-    <div class="page-header">
-      <div class="header-left">
-        <h1>Reports &amp; Analytics</h1>
-        <span class="subtitle">Business insights and performance metrics</span>
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="p-2 bg-[#7367F0]/10 text-[#7367F0] rounded-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+          </span>
+          <div>
+            <h1 class="text-2xl font-bold text-[#4B465C] tracking-tight m-0">Reports &amp; Analytics</h1>
+            <span class="text-xs text-[#82868B] font-medium">Business insights, conversion funnels &amp; performance metrics</span>
+          </div>
+        </div>
       </div>
-      <div class="header-actions">
-        <select v-model="selectedYear" @change="loadAll" class="year-select">
-          <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
-        </select>
-        <button class="btn-export" @click="exportReport">📄 Export</button>
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-[#EBE9F1] shadow-sm">
+          <span class="text-xs font-semibold text-[#82868B]">Fiscal Year:</span>
+          <select v-model="selectedYear" @change="loadAll" class="border-0 bg-transparent text-sm font-bold text-[#4B465C] focus:outline-none cursor-pointer">
+            <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+          </select>
+        </div>
+        <button class="flex items-center gap-2 px-4 py-2 bg-white border border-[#DBDADE] hover:bg-[#F8F7FA] text-[#4B465C] rounded-lg text-sm font-semibold transition-all shadow-sm" @click="exportReport">
+          <svg class="w-4 h-4 text-[#7367F0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          Export Report
+        </button>
       </div>
     </div>
 
     <!-- Finance Overview Cards -->
-    <div class="finance-cards" v-if="finance">
-      <div class="finance-card income">
-        <div class="card-label">Total Income</div>
-        <div class="card-value">${{ formatMoney(finance.income) }}</div>
-        <div class="card-sub">Invoiced this year</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" v-if="finance">
+      <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm transition-all hover:shadow-md flex items-center justify-between border-l-4 border-l-[#28C76F]">
+        <div>
+          <div class="text-[11px] font-bold uppercase tracking-wider text-[#82868B] mb-1">Total Income</div>
+          <div class="text-2xl font-bold text-[#4B465C]">${{ formatMoney(finance.income) }}</div>
+          <div class="text-xs text-[#82868B] mt-1 font-medium">Invoiced in {{ selectedYear }}</div>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-[#28C76F]/10 text-[#28C76F] flex items-center justify-center font-bold text-lg">
+          $
+        </div>
       </div>
-      <div class="finance-card expenses">
-        <div class="card-label">Total Expenses</div>
-        <div class="card-value">${{ formatMoney(finance.expenses) }}</div>
-        <div class="card-sub">Spent this year</div>
+
+      <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm transition-all hover:shadow-md flex items-center justify-between border-l-4 border-l-[#EA5455]">
+        <div>
+          <div class="text-[11px] font-bold uppercase tracking-wider text-[#82868B] mb-1">Total Expenses</div>
+          <div class="text-2xl font-bold text-[#4B465C]">${{ formatMoney(finance.expenses) }}</div>
+          <div class="text-xs text-[#82868B] mt-1 font-medium">Spent in {{ selectedYear }}</div>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-[#EA5455]/10 text-[#EA5455] flex items-center justify-center font-bold text-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+        </div>
       </div>
-      <div class="finance-card payments">
-        <div class="card-label">Payments Received</div>
-        <div class="card-value">${{ formatMoney(finance.payments) }}</div>
-        <div class="card-sub">Collected this year</div>
+
+      <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm transition-all hover:shadow-md flex items-center justify-between border-l-4 border-l-[#7367F0]">
+        <div>
+          <div class="text-[11px] font-bold uppercase tracking-wider text-[#82868B] mb-1">Payments Received</div>
+          <div class="text-2xl font-bold text-[#4B465C]">${{ formatMoney(finance.payments) }}</div>
+          <div class="text-xs text-[#82868B] mt-1 font-medium">Collected in {{ selectedYear }}</div>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-[#7367F0]/10 text-[#7367F0] flex items-center justify-center font-bold text-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
       </div>
-      <div class="finance-card profit" :class="finance.profit >= 0 ? 'positive' : 'negative'">
-        <div class="card-label">Net Profit</div>
-        <div class="card-value">${{ formatMoney(finance.profit) }}</div>
-        <div class="card-sub">Income minus expenses</div>
+
+      <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm transition-all hover:shadow-md flex items-center justify-between border-l-4" :class="finance.profit >= 0 ? 'border-l-[#28C76F]' : 'border-l-[#EA5455]'">
+        <div>
+          <div class="text-[11px] font-bold uppercase tracking-wider text-[#82868B] mb-1">Net Profit</div>
+          <div class="text-2xl font-bold" :class="finance.profit >= 0 ? 'text-[#28C76F]' : 'text-[#EA5455]'">${{ formatMoney(finance.profit) }}</div>
+          <div class="text-xs text-[#82868B] mt-1 font-medium">{{ finance.profit >= 0 ? 'Profitable Operations' : 'Operating Deficit' }}</div>
+        </div>
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg" :class="finance.profit >= 0 ? 'bg-[#28C76F]/10 text-[#28C76F]' : 'bg-[#EA5455]/10 text-[#EA5455]'">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+        </div>
       </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="tabs">
-      <button v-for="tab in tabs" :key="tab.key" class="tab-btn" :class="{ active: activeTab === tab.key }" @click="activeTab = tab.key">
-        {{ tab.icon }} {{ tab.label }}
+    <!-- Navigation Tabs Bar -->
+    <div class="bg-white border border-[#EBE9F1] rounded-lg p-1.5 mb-6 shadow-sm flex flex-wrap gap-1">
+      <button 
+        v-for="tab in tabs" 
+        :key="tab.key" 
+        class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer"
+        :class="activeTab === tab.key ? 'bg-[#7367F0] text-white shadow-sm shadow-[#7367F0]/40' : 'text-[#82868B] hover:text-[#4B465C] hover:bg-[#F8F7FA]'"
+        @click="activeTab = tab.key"
+      >
+        <span>{{ tab.icon }}</span>
+        <span>{{ tab.label }}</span>
       </button>
     </div>
 
-    <!-- Sales Report (comprehensive) -->
-    <div v-if="activeTab === 'sales'" class="report-section">
-      <div class="section-header">
-        <h2>Sales Report</h2>
-        <div class="header-filters">
-          <select v-model="srPeriod" @change="loadSalesReport" class="year-select">
+    <!-- ========================================== -->
+    <!-- 1. LEADS REPORT (PURE WHITE UPGRADED UI/UX) -->
+    <!-- ========================================== -->
+    <div v-if="activeTab === 'leads'" class="space-y-6">
+      <!-- 5 Leads KPI Metric Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <!-- Card 1: Total Leads -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm transition-all hover:shadow-md flex items-center justify-between border-t-2 border-t-[#7367F0]">
+          <div>
+            <div class="text-[11px] font-bold uppercase tracking-wider text-[#82868B] mb-1">Total Leads</div>
+            <div class="text-2xl font-bold text-[#4B465C]">{{ leadsTotals.total_leads }}</div>
+            <div class="text-xs text-[#82868B] mt-1 font-medium">Registered in {{ selectedYear }}</div>
+          </div>
+          <div class="w-11 h-11 rounded-lg bg-[#7367F0]/10 text-[#7367F0] flex items-center justify-center font-bold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+          </div>
+        </div>
+
+        <!-- Card 2: Converted to Customer -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm transition-all hover:shadow-md flex items-center justify-between border-t-2 border-t-[#28C76F]">
+          <div>
+            <div class="text-[11px] font-bold uppercase tracking-wider text-[#82868B] mb-1">Converted Leads</div>
+            <div class="text-2xl font-bold text-[#28C76F]">{{ leadsTotals.total_converted }}</div>
+            <div class="text-xs text-[#82868B] mt-1 font-medium">Converted to clients</div>
+          </div>
+          <div class="w-11 h-11 rounded-lg bg-[#28C76F]/10 text-[#28C76F] flex items-center justify-center font-bold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+          </div>
+        </div>
+
+        <!-- Card 3: Conversion Rate -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm transition-all hover:shadow-md flex items-center justify-between border-t-2 border-t-[#00CFE8]">
+          <div>
+            <div class="text-[11px] font-bold uppercase tracking-wider text-[#82868B] mb-1">Conversion Rate</div>
+            <div class="text-2xl font-bold text-[#00CFE8]">{{ leadsTotals.conversion_rate }}%</div>
+            <div class="text-xs text-[#82868B] mt-1 font-medium">Conversion velocity</div>
+          </div>
+          <div class="w-11 h-11 rounded-lg bg-[#00CFE8]/10 text-[#00CFE8] flex items-center justify-center font-bold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+          </div>
+        </div>
+
+        <!-- Card 4: Total Lead Value -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm transition-all hover:shadow-md flex items-center justify-between border-t-2 border-t-[#FF9F43]">
+          <div>
+            <div class="text-[11px] font-bold uppercase tracking-wider text-[#82868B] mb-1">Pipeline Value</div>
+            <div class="text-2xl font-bold text-[#FF9F43]">${{ formatMoney(leadsTotals.total_value) }}</div>
+            <div class="text-xs text-[#82868B] mt-1 font-medium">Potential deal volume</div>
+          </div>
+          <div class="w-11 h-11 rounded-lg bg-[#FF9F43]/10 text-[#FF9F43] flex items-center justify-center font-bold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          </div>
+        </div>
+
+        <!-- Card 5: Sources Count -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm transition-all hover:shadow-md flex items-center justify-between border-t-2 border-t-[#EA5455]">
+          <div>
+            <div class="text-[11px] font-bold uppercase tracking-wider text-[#82868B] mb-1">Lead Channels</div>
+            <div class="text-2xl font-bold text-[#EA5455]">{{ leadsTotals.sources_count }}</div>
+            <div class="text-xs text-[#82868B] mt-1 font-medium">Active acquisition sources</div>
+          </div>
+          <div class="w-11 h-11 rounded-lg bg-[#EA5455]/10 text-[#EA5455] flex items-center justify-center font-bold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Section (Monthly Trend + Sources Breakdown + Status Distribution) -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left: Monthly Trend (2 Cols) -->
+        <div class="lg:col-span-2 bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-[#EBE9F1]">
+            <div>
+              <h3 class="text-base font-bold text-[#4B465C] m-0">Monthly Leads Created vs Converted</h3>
+              <p class="text-xs text-[#82868B] m-0">Comparison of incoming lead volume and customer conversions in {{ selectedYear }}</p>
+            </div>
+            <div class="flex items-center gap-3 text-xs font-semibold">
+              <span class="flex items-center gap-1.5 text-[#7367F0]"><span class="w-3 h-3 rounded-full bg-[#7367F0]"></span> Total Leads</span>
+              <span class="flex items-center gap-1.5 text-[#28C76F]"><span class="w-3 h-3 rounded-full bg-[#28C76F]"></span> Converted</span>
+            </div>
+          </div>
+          <div v-if="leadsLoading" class="flex items-center justify-center py-20 text-[#82868B] gap-2">
+            <div class="w-5 h-5 border-2 border-[#7367F0] border-t-transparent rounded-full animate-spin"></div> Loading charts...
+          </div>
+          <div v-else>
+            <VueApexCharts type="bar" height="320" :options="leadsChartOptions" :series="leadsChartSeries"></VueApexCharts>
+          </div>
+        </div>
+
+        <!-- Right: Leads by Source (1 Col) -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-[#EBE9F1]">
+            <div>
+              <h3 class="text-base font-bold text-[#4B465C] m-0">Leads by Source</h3>
+              <p class="text-xs text-[#82868B] m-0">Channel acquisition distribution</p>
+            </div>
+          </div>
+          <div v-if="leadsLoading" class="flex items-center justify-center py-20 text-[#82868B] gap-2">
+            <div class="w-5 h-5 border-2 border-[#7367F0] border-t-transparent rounded-full animate-spin"></div> Loading...
+          </div>
+          <div v-else-if="leadsBySource.length">
+            <VueApexCharts type="donut" height="240" :options="leadsSourceDonutOptions" :series="leadsSourceDonutSeries"></VueApexCharts>
+            <div class="mt-4 space-y-2 max-h-[140px] overflow-y-auto pr-1">
+              <div v-for="src in leadsBySource" :key="src.id" class="flex items-center justify-between text-xs py-1 px-2 rounded hover:bg-[#F8F7FA]">
+                <span class="font-medium text-[#4B465C]">{{ src.name }}</span>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-[#7367F0]">{{ src.count }} leads</span>
+                  <span class="text-[10px] font-semibold bg-[#28C76F]/10 text-[#28C76F] px-1.5 py-0.5 rounded">{{ src.conversion_rate }}% conv</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="text-center py-12 text-xs text-[#82868B]">No source data recorded</div>
+        </div>
+      </div>
+
+      <!-- Month by Month Breakdown Table & Staff Leaderboard -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Monthly Performance Table (2 Cols) -->
+        <div class="lg:col-span-2 bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-[#EBE9F1]">
+            <h3 class="text-base font-bold text-[#4B465C] m-0">Monthly Breakdown Performance</h3>
+            <span class="text-xs text-[#82868B] font-medium">{{ selectedYear }} Full Calendar Year</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-[#F8F7FA] border-b border-[#EBE9F1] text-[11px] font-bold uppercase tracking-wider text-[#82868B]">
+                  <th class="py-3 px-4">Month</th>
+                  <th class="py-3 px-4">Leads Created</th>
+                  <th class="py-3 px-4">Converted</th>
+                  <th class="py-3 px-4">Conversion Rate</th>
+                  <th class="py-3 px-4">Pipeline Value</th>
+                  <th class="py-3 px-4">Progress Ratio</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[#EBE9F1] text-xs">
+                <tr v-for="row in leadsData" :key="row.month" class="hover:bg-[#F8F7FA]/70 transition-colors">
+                  <td class="py-3 px-4 font-bold text-[#4B465C]">{{ row.name || monthName(row.month) }}</td>
+                  <td class="py-3 px-4 font-semibold text-[#7367F0]">{{ row.count }}</td>
+                  <td class="py-3 px-4 font-semibold text-[#28C76F]">{{ row.converted }}</td>
+                  <td class="py-3 px-4">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold" :class="row.conversion_rate >= 20 ? 'bg-[#28C76F]/10 text-[#28C76F]' : 'bg-[#FF9F43]/10 text-[#FF9F43]'">
+                      {{ row.conversion_rate }}%
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 font-bold text-[#4B465C]">${{ formatMoney(row.value) }}</td>
+                  <td class="py-3 px-4 min-w-[120px]">
+                    <div class="w-full bg-[#EBE9F1] rounded-full h-2 overflow-hidden flex">
+                      <div class="bg-[#7367F0] h-2" :style="{ width: compPct(row.count, Math.max(...leadsData.map(r => r.count), 1)) + '%' }"></div>
+                    </div>
+                  </td>
+                </tr>
+                <!-- Total Row -->
+                <tr class="bg-[#F8F7FA] font-bold text-[#4B465C] border-t-2 border-[#DBDADE]">
+                  <td class="py-3 px-4">Total ({{ selectedYear }})</td>
+                  <td class="py-3 px-4 text-[#7367F0]">{{ leadsTotals.total_leads }}</td>
+                  <td class="py-3 px-4 text-[#28C76F]">{{ leadsTotals.total_converted }}</td>
+                  <td class="py-3 px-4 text-[#00CFE8]">{{ leadsTotals.conversion_rate }}%</td>
+                  <td class="py-3 px-4 text-[#FF9F43]">${{ formatMoney(leadsTotals.total_value) }}</td>
+                  <td class="py-3 px-4">100% Volume</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Staff / Agent Performance (1 Col) -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-[#EBE9F1]">
+            <h3 class="text-base font-bold text-[#4B465C] m-0">Staff Lead Conversion</h3>
+            <span class="text-xs text-[#82868B]">By Assignee</span>
+          </div>
+          <div v-if="leadsByStaff.length" class="space-y-3">
+            <div v-for="st in leadsByStaff" :key="st.id" class="p-3 rounded-lg border border-[#EBE9F1] hover:border-[#7367F0]/40 transition-colors">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="font-bold text-xs text-[#4B465C]">{{ st.name }}</span>
+                <span class="text-[11px] font-semibold text-[#7367F0]">{{ st.count }} leads</span>
+              </div>
+              <div class="flex items-center justify-between text-[11px] text-[#82868B] mb-2">
+                <span>Converted: <strong class="text-[#28C76F]">{{ st.converted }}</strong></span>
+                <span>Rate: <strong class="text-[#00CFE8]">{{ st.conversion_rate }}%</strong></span>
+                <span>Val: <strong class="text-[#FF9F43]">${{ formatMoney(st.value) }}</strong></span>
+              </div>
+              <div class="w-full bg-[#EBE9F1] rounded-full h-1.5 overflow-hidden">
+                <div class="bg-[#28C76F] h-1.5 rounded-full" :style="{ width: st.conversion_rate + '%' }"></div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="text-center py-12 text-xs text-[#82868B]">No staff assigned to leads yet</div>
+        </div>
+      </div>
+
+      <!-- Detailed Leads Records Table with Filters -->
+      <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-3 border-b border-[#EBE9F1]">
+          <div>
+            <h3 class="text-base font-bold text-[#4B465C] m-0">Leads Audit Log &amp; Detailed Explorer</h3>
+            <p class="text-xs text-[#82868B] m-0">Filter and analyze individual lead records for {{ selectedYear }}</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <input 
+              v-model="leadsFilters.search" 
+              type="text" 
+              placeholder="Search leads..." 
+              class="px-3 py-1.5 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] w-48"
+            />
+            <select v-model="leadsFilters.status" class="px-3 py-1.5 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] text-[#4B465C]">
+              <option value="">All Statuses</option>
+              <option v-for="st in leadsByStatus" :key="st.id" :value="st.name">{{ st.name }}</option>
+            </select>
+            <select v-model="leadsFilters.source" class="px-3 py-1.5 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] text-[#4B465C]">
+              <option value="">All Sources</option>
+              <option v-for="src in leadsBySource" :key="src.id" :value="src.name">{{ src.name }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-[#F8F7FA] border-b border-[#EBE9F1] text-[11px] font-bold uppercase tracking-wider text-[#82868B]">
+                <th class="py-3 px-4">#</th>
+                <th class="py-3 px-4">Lead Name &amp; Company</th>
+                <th class="py-3 px-4">Contact Info</th>
+                <th class="py-3 px-4">Lead Value</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4">Source</th>
+                <th class="py-3 px-4">Assigned Staff</th>
+                <th class="py-3 px-4">Date Added</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#EBE9F1] text-xs">
+              <tr v-for="(lead, idx) in filteredLeadsList" :key="lead.id" class="hover:bg-[#F8F7FA]/70 transition-colors">
+                <td class="py-3 px-4 font-semibold text-[#82868B]">{{ idx + 1 }}</td>
+                <td class="py-3 px-4">
+                  <div class="font-bold text-[#4B465C]">{{ lead.name }}</div>
+                  <div class="text-[11px] text-[#82868B]">{{ lead.company }}</div>
+                </td>
+                <td class="py-3 px-4">
+                  <div class="text-[#4B465C]">{{ lead.email }}</div>
+                  <div class="text-[11px] text-[#82868B]">{{ lead.phonenumber }}</div>
+                </td>
+                <td class="py-3 px-4 font-bold text-[#4B465C]">
+                  ${{ formatMoney(lead.lead_value) }}
+                </td>
+                <td class="py-3 px-4">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold" :style="{ backgroundColor: (lead.status_color || '#7367F0') + '20', color: lead.status_color || '#7367F0' }">
+                    {{ lead.status }}
+                  </span>
+                </td>
+                <td class="py-3 px-4">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded bg-[#F8F7FA] border border-[#EBE9F1] text-[11px] font-semibold text-[#4B465C]">
+                    {{ lead.source }}
+                  </span>
+                </td>
+                <td class="py-3 px-4 font-medium text-[#4B465C]">
+                  {{ lead.assigned }}
+                </td>
+                <td class="py-3 px-4 text-[#82868B]">
+                  {{ lead.created_at }}
+                </td>
+              </tr>
+              <tr v-if="!filteredLeadsList.length">
+                <td colspan="8" class="text-center py-10 text-xs text-[#82868B]">No leads matching filter criteria</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 2. SALES REPORT TAB                        -->
+    <!-- ========================================== -->
+    <div v-if="activeTab === 'sales'" class="bg-white border border-[#EBE9F1] rounded-lg p-6 shadow-sm">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-[#EBE9F1]">
+        <div>
+          <h2 class="text-lg font-bold text-[#4B465C] m-0">Sales Report</h2>
+          <span class="text-xs text-[#82868B]">Detailed breakdown across invoices, items, proposals and payments</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <select v-model="srPeriod" @change="loadSalesReport" class="px-3 py-1.5 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] text-[#4B465C] font-medium">
             <option value="this_month">This Month</option>
             <option value="last_month">Last Month</option>
             <option value="this_year">This Year</option>
             <option value="last_year">Last Year</option>
             <option value="custom">Custom</option>
           </select>
-          <select v-model="selectedYear" @change="loadSalesReport" class="year-select">
+          <select v-model="selectedYear" @change="loadSalesReport" class="px-3 py-1.5 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] text-[#4B465C] font-medium">
             <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
           </select>
         </div>
       </div>
 
-      <!-- Sub-tabs -->
-      <div class="sub-tabs">
-        <button v-for="st in salesSubTabs" :key="st.key" class="sub-tab-btn" :class="{ active: salesSubTab === st.key }" @click="salesSubTab = st.key">{{ st.label }}</button>
+      <!-- Sales Sub-tabs -->
+      <div class="flex flex-wrap gap-1 bg-[#F8F7FA] p-1 rounded-lg border border-[#EBE9F1] mb-6">
+        <button 
+          v-for="st in salesSubTabs" 
+          :key="st.key" 
+          class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
+          :class="salesSubTab === st.key ? 'bg-white text-[#7367F0] shadow-sm font-bold' : 'text-[#82868B] hover:text-[#4B465C]'"
+          @click="salesSubTab = st.key"
+        >
+          {{ st.label }}
+        </button>
       </div>
 
       <!-- Invoices -->
       <div v-if="salesSubTab === 'invoices'">
-        <div class="report-toolbar">
-          <div class="toolbar-left">
-            <a-select v-model:value="srFilters.perPage" size="small" style="width:70px" @change="loadSalesReport">
-              <a-select-option :value="10">10</a-select-option>
-              <a-select-option :value="25">25</a-select-option>
-              <a-select-option :value="50">50</a-select-option>
-            </a-select>
-            <a-input-search v-model:value="srFilters.search" placeholder="Search..." size="small" style="width:220px" @search="loadSalesReport" />
-            <a-select v-model:value="srFilters.status" mode="multiple" :max-tag-count="1" size="small" style="width:160px" placeholder="Status" @change="loadSalesReport" allow-clear>
-              <a-select-option v-for="s in ['Unpaid','Paid','Partially Paid','Overdue','Draft']" :key="s" :value="s">{{ s }}</a-select-option>
-            </a-select>
-            <a-select v-model:value="srFilters.sale_agent" size="small" style="width:180px" placeholder="Sale Agent" @change="loadSalesReport" allow-clear>
-              <a-select-option v-for="a in agents" :key="a.id" :value="a.id">{{ a.name }}</a-select-option>
-            </a-select>
-          </div>
+        <div class="flex flex-wrap items-center gap-3 mb-4">
+          <a-select v-model:value="srFilters.perPage" size="small" style="width:70px" @change="loadSalesReport">
+            <a-select-option :value="10">10</a-select-option>
+            <a-select-option :value="25">25</a-select-option>
+            <a-select-option :value="50">50</a-select-option>
+          </a-select>
+          <a-input-search v-model:value="srFilters.search" placeholder="Search invoices..." size="small" style="width:220px" @search="loadSalesReport" />
+          <a-select v-model:value="srFilters.status" mode="multiple" :max-tag-count="1" size="small" style="width:160px" placeholder="Status" @change="loadSalesReport" allow-clear>
+            <a-select-option v-for="s in ['Unpaid','Paid','Partially Paid','Overdue','Draft']" :key="s" :value="s">{{ s }}</a-select-option>
+          </a-select>
+          <a-select v-model:value="srFilters.sale_agent" size="small" style="width:180px" placeholder="Sale Agent" @change="loadSalesReport" allow-clear>
+            <a-select-option v-for="a in agents" :key="a.id" :value="a.id">{{ a.name }}</a-select-option>
+          </a-select>
         </div>
-        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
-        <div v-else class="table-responsive">
-          <table class="data-table">
-            <thead><tr><th>Invoice #</th><th>Customer</th><th>Date</th><th>Due Date</th><th>Amount</th><th>Amount with tax</th><th>Total Tax</th><th>TAX1 18.00%</th><th>Discount</th><th>Adjustment</th><th>Applied Credits</th><th>Amount open</th><th>Status</th></tr></thead>
-            <tbody>
-              <tr v-for="r in srInvoices" :key="r.id">
-                <td>{{ r.number }}</td><td>{{ r.customer }}</td><td>{{ r.date }}</td><td>{{ r.duedate }}</td>
-                <td>${{ fm(r.amount) }}</td><td>${{ fm(r.amount_with_tax) }}</td><td>${{ fm(r.total_tax) }}</td><td>${{ fm(r.tax1) }}</td>
-                <td>${{ fm(r.discount) }}</td><td>${{ fm(r.adjustment) }}</td><td>${{ fm(r.applied_credits) }}</td><td>${{ fm(r.amount_open) }}</td>
-                <td><span class="status-tag" :class="statusClass(r.status)">{{ r.status }}</span></td>
-            </tr>
-            <tr v-if="!srInvoices.length"><td colspan="13" class="empty-cell">No entries found</td></tr>
+        <div v-if="srLoading" class="text-center py-12 text-[#82868B] text-xs">Loading Invoices...</div>
+        <div v-else class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-[#F8F7FA] border-b border-[#EBE9F1] text-[11px] font-bold uppercase tracking-wider text-[#82868B]">
+                <th class="py-2.5 px-3">Invoice #</th><th>Customer</th><th>Date</th><th>Due Date</th><th>Amount</th><th>With Tax</th><th>Total Tax</th><th>Discount</th><th>Open Amount</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#EBE9F1]">
+              <tr v-for="r in srInvoices" :key="r.id" class="hover:bg-[#F8F7FA]/70">
+                <td class="py-2.5 px-3 font-bold text-[#7367F0]">{{ r.number }}</td>
+                <td class="py-2.5 px-3 font-medium text-[#4B465C]">{{ r.customer }}</td>
+                <td class="py-2.5 px-3 text-[#82868B]">{{ r.date }}</td>
+                <td class="py-2.5 px-3 text-[#82868B]">{{ r.duedate }}</td>
+                <td class="py-2.5 px-3 font-semibold">${{ fm(r.amount) }}</td>
+                <td class="py-2.5 px-3 font-bold text-[#4B465C]">${{ fm(r.amount_with_tax) }}</td>
+                <td class="py-2.5 px-3 text-[#82868B]">${{ fm(r.total_tax) }}</td>
+                <td class="py-2.5 px-3 text-[#82868B]">${{ fm(r.discount) }}</td>
+                <td class="py-2.5 px-3 font-bold text-[#EA5455]">${{ fm(r.amount_open) }}</td>
+                <td class="py-2.5 px-3">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold" :class="statusClass(r.status)">
+                    {{ r.status }}
+                  </span>
+                </td>
+              </tr>
+              <tr v-if="!srInvoices.length"><td colspan="10" class="text-center py-8 text-[#82868B]">No invoices found</td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Items -->
+      <!-- Items Sub-tab -->
       <div v-if="salesSubTab === 'items'">
-        <div class="report-toolbar">
-          <a-input-search v-model:value="srFilters.search" placeholder="Search..." size="small" style="width:220px" @search="loadSalesReport" />
+        <div class="mb-4">
+          <a-input-search v-model:value="srFilters.search" placeholder="Search items..." size="small" style="width:220px" @search="loadSalesReport" />
         </div>
-        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
-        <div v-else class="table-responsive">
-          <table class="data-table">
-            <thead><tr><th>Item #</th><th>Name</th><th>Description</th><th>Rate</th><th>Tax Rate</th><th>Unit</th></tr></thead>
-            <tbody>
-              <tr v-for="r in srItems" :key="r.id"><td>{{ r.id }}</td><td>{{ r.name }}</td><td>{{ r.description || '—' }}</td><td>${{ fm(r.rate) }}</td><td>{{ r.tax_rate }}%</td><td>{{ r.unit || '—' }}</td></tr>
-              <tr v-if="!srItems.length"><td colspan="6" class="empty-cell">No entries found</td></tr>
+        <div v-if="srLoading" class="text-center py-12 text-[#82868B] text-xs">Loading items...</div>
+        <div v-else class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-[#F8F7FA] border-b border-[#EBE9F1] text-[11px] font-bold uppercase tracking-wider text-[#82868B]">
+                <th class="py-2.5 px-3">Item #</th><th>Name</th><th>Description</th><th>Rate</th><th>Tax Rate</th><th>Unit</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#EBE9F1]">
+              <tr v-for="r in srItems" :key="r.id" class="hover:bg-[#F8F7FA]/70">
+                <td class="py-2.5 px-3 font-bold text-[#7367F0]">{{ r.id }}</td>
+                <td class="py-2.5 px-3 font-semibold text-[#4B465C]">{{ r.name }}</td>
+                <td class="py-2.5 px-3 text-[#82868B]">{{ r.description || '—' }}</td>
+                <td class="py-2.5 px-3 font-bold text-[#4B465C]">${{ fm(r.rate) }}</td>
+                <td class="py-2.5 px-3 text-[#82868B]">{{ r.tax_rate }}%</td>
+                <td class="py-2.5 px-3 text-[#82868B]">{{ r.unit || '—' }}</td>
+              </tr>
+              <tr v-if="!srItems.length"><td colspan="6" class="text-center py-8 text-[#82868B]">No items found</td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Payments -->
+      <!-- Payments Sub-tab -->
       <div v-if="salesSubTab === 'payments'">
-        <div class="report-toolbar">
-          <a-input-search v-model:value="srFilters.search" placeholder="Search..." size="small" style="width:220px" @search="loadSalesReport" />
+        <div class="mb-4">
+          <a-input-search v-model:value="srFilters.search" placeholder="Search payments..." size="small" style="width:220px" @search="loadSalesReport" />
         </div>
-        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
-        <div v-else class="table-responsive">
-          <table class="data-table">
-            <thead><tr><th>Payment #</th><th>Date</th><th>Invoice #</th><th>Customer</th><th>Payment Mode</th><th>Transaction ID</th><th>Note</th><th>Amount</th></tr></thead>
-            <tbody>
-              <tr v-for="r in srPayments" :key="r.id">
-                <td>{{ r.number }}</td><td>{{ r.date }}</td><td>{{ r.invoice_number }}</td><td>{{ r.customer }}</td>
-                <td>{{ r.payment_mode }}</td><td>{{ r.transaction_id }}</td><td>{{ trunc(r.note, 40) }}</td><td>${{ fm(r.amount) }}</td>
+        <div v-if="srLoading" class="text-center py-12 text-[#82868B] text-xs">Loading payments...</div>
+        <div v-else class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-[#F8F7FA] border-b border-[#EBE9F1] text-[11px] font-bold uppercase tracking-wider text-[#82868B]">
+                <th class="py-2.5 px-3">Payment #</th><th>Date</th><th>Invoice #</th><th>Customer</th><th>Payment Mode</th><th>Transaction ID</th><th>Note</th><th>Amount</th>
               </tr>
-              <tr v-if="!srPayments.length"><td colspan="8" class="empty-cell">No entries found</td></tr>
+            </thead>
+            <tbody class="divide-y divide-[#EBE9F1]">
+              <tr v-for="r in srPayments" :key="r.id" class="hover:bg-[#F8F7FA]/70">
+                <td class="py-2.5 px-3 font-bold text-[#7367F0]">{{ r.number }}</td>
+                <td class="py-2.5 px-3 text-[#82868B]">{{ r.date }}</td>
+                <td class="py-2.5 px-3 font-medium text-[#4B465C]">{{ r.invoice_number }}</td>
+                <td class="py-2.5 px-3 font-semibold text-[#4B465C]">{{ r.customer }}</td>
+                <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-[#F8F7FA] border border-[#EBE9F1] text-[11px] font-semibold">{{ r.payment_mode }}</span></td>
+                <td class="py-2.5 px-3 font-mono text-[11px] text-[#82868B]">{{ r.transaction_id || '—' }}</td>
+                <td class="py-2.5 px-3 text-[#82868B]">{{ trunc(r.note, 40) }}</td>
+                <td class="py-2.5 px-3 font-bold text-[#28C76F]">${{ fm(r.amount) }}</td>
+              </tr>
+              <tr v-if="!srPayments.length"><td colspan="8" class="text-center py-8 text-[#82868B]">No payments found</td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Credit Notes -->
+      <!-- Credit Notes Sub-tab -->
       <div v-if="salesSubTab === 'credit-notes'">
-        <div class="report-toolbar">
-          <a-input-search v-model:value="srFilters.search" placeholder="Search..." size="small" style="width:220px" @search="loadSalesReport" />
-          <a-select v-model:value="srFilters.status" mode="multiple" :max-tag-count="1" size="small" style="width:140px" placeholder="Status" @change="loadSalesReport" allow-clear>
-            <a-select-option v-for="s in ['Open','Closed','Void']" :key="s" :value="s">{{ s }}</a-select-option>
-          </a-select>
+        <div class="mb-4">
+          <a-input-search v-model:value="srFilters.search" placeholder="Search credit notes..." size="small" style="width:220px" @search="loadSalesReport" />
         </div>
-        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
-        <div v-else class="table-responsive">
-          <table class="data-table">
-            <thead><tr><th>Credit Note #</th><th>Date</th><th>Customer</th><th>Reference #</th><th>Amount</th><th>Amount with tax</th><th>Total Tax</th><th>Discount</th><th>Adjustment</th><th>Remaining</th><th>Refunded</th><th>Status</th></tr></thead>
-            <tbody>
-              <tr v-for="r in srCreditNotes" :key="r.id">
-                <td>{{ r.number }}</td><td>{{ r.date }}</td><td>{{ r.customer }}</td><td>{{ r.reference }}</td>
-                <td>${{ fm(r.amount) }}</td><td>${{ fm(r.amount_with_tax) }}</td><td>${{ fm(r.total_tax) }}</td><td>${{ fm(r.discount) }}</td>
-                <td>${{ fm(r.adjustment) }}</td><td>${{ fm(r.remaining_amount) }}</td><td>${{ fm(r.refunded_amount) }}</td>
-                <td><span class="status-tag" :class="statusClass(r.status)">{{ r.status }}</span></td>
+        <div v-if="srLoading" class="text-center py-12 text-[#82868B] text-xs">Loading credit notes...</div>
+        <div v-else class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-[#F8F7FA] border-b border-[#EBE9F1] text-[11px] font-bold uppercase tracking-wider text-[#82868B]">
+                <th class="py-2.5 px-3">Credit Note #</th><th>Date</th><th>Customer</th><th>Reference</th><th>Amount</th><th>With Tax</th><th>Remaining</th><th>Status</th>
               </tr>
-              <tr v-if="!srCreditNotes.length"><td colspan="12" class="empty-cell">No entries found</td></tr>
+            </thead>
+            <tbody class="divide-y divide-[#EBE9F1]">
+              <tr v-for="r in srCreditNotes" :key="r.id" class="hover:bg-[#F8F7FA]/70">
+                <td class="py-2.5 px-3 font-bold text-[#7367F0]">{{ r.number }}</td>
+                <td class="py-2.5 px-3 text-[#82868B]">{{ r.date }}</td>
+                <td class="py-2.5 px-3 font-semibold text-[#4B465C]">{{ r.customer }}</td>
+                <td class="py-2.5 px-3 text-[#82868B]">{{ r.reference || '—' }}</td>
+                <td class="py-2.5 px-3 font-semibold">${{ fm(r.amount) }}</td>
+                <td class="py-2.5 px-3 font-bold text-[#4B465C]">${{ fm(r.amount_with_tax) }}</td>
+                <td class="py-2.5 px-3 font-bold text-[#28C76F]">${{ fm(r.remaining_amount) }}</td>
+                <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold" :class="statusClass(r.status)">{{ r.status }}</span></td>
+              </tr>
+              <tr v-if="!srCreditNotes.length"><td colspan="8" class="text-center py-8 text-[#82868B]">No credit notes found</td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Proposals -->
+      <!-- Proposals Sub-tab -->
       <div v-if="salesSubTab === 'proposals'">
-        <div class="report-toolbar">
-          <a-input-search v-model:value="srFilters.search" placeholder="Search..." size="small" style="width:220px" @search="loadSalesReport" />
-          <a-select v-model:value="srFilters.status" mode="multiple" :max-tag-count="1" size="small" style="width:160px" placeholder="Status" @change="loadSalesReport" allow-clear>
-            <a-select-option v-for="s in ['Draft','Sent','Open','Revised','Declined','Accepted']" :key="s" :value="s">{{ s }}</a-select-option>
-          </a-select>
+        <div class="mb-4">
+          <a-input-search v-model:value="srFilters.search" placeholder="Search proposals..." size="small" style="width:220px" @search="loadSalesReport" />
         </div>
-        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
-        <div v-else class="table-responsive">
-          <table class="data-table">
-            <thead><tr><th>Proposal #</th><th>Subject</th><th>To</th><th>Date</th><th>Open Till</th><th>Amount</th><th>Amount with tax</th><th>Total Tax</th><th>TAX1 18%</th><th>TAX1 20%</th><th>TAX3 5%</th><th>Discount</th><th>Adjustment</th><th>Status</th></tr></thead>
-            <tbody>
-              <tr v-for="r in srProposals" :key="r.number">
-                <td>{{ r.number }}</td><td>{{ r.subject }}</td><td>{{ r.to }}</td><td>{{ r.date }}</td><td>{{ r.open_till }}</td>
-                <td>${{ fm(r.amount) }}</td><td>${{ fm(r.amount_with_tax) }}</td><td>${{ fm(r.total_tax) }}</td><td>${{ fm(r.tax1_18) }}</td>
-                <td>${{ fm(r.tax1_20) }}</td><td>${{ fm(r.tax3_5) }}</td><td>${{ fm(r.discount) }}</td><td>${{ fm(r.adjustment) }}</td>
-                <td><span class="status-tag" :class="statusClass(r.status)">{{ r.status }}</span></td>
+        <div v-if="srLoading" class="text-center py-12 text-[#82868B] text-xs">Loading proposals...</div>
+        <div v-else class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-[#F8F7FA] border-b border-[#EBE9F1] text-[11px] font-bold uppercase tracking-wider text-[#82868B]">
+                <th class="py-2.5 px-3">Proposal #</th><th>Subject</th><th>To</th><th>Date</th><th>Open Till</th><th>Amount</th><th>Status</th>
               </tr>
-              <tr v-if="!srProposals.length"><td colspan="14" class="empty-cell">No entries found</td></tr>
+            </thead>
+            <tbody class="divide-y divide-[#EBE9F1]">
+              <tr v-for="r in srProposals" :key="r.number" class="hover:bg-[#F8F7FA]/70">
+                <td class="py-2.5 px-3 font-bold text-[#7367F0]">{{ r.number }}</td>
+                <td class="py-2.5 px-3 font-semibold text-[#4B465C]">{{ r.subject }}</td>
+                <td class="py-2.5 px-3 text-[#4B465C]">{{ r.to }}</td>
+                <td class="py-2.5 px-3 text-[#82868B]">{{ r.date }}</td>
+                <td class="py-2.5 px-3 text-[#82868B]">{{ r.open_till }}</td>
+                <td class="py-2.5 px-3 font-bold text-[#4B465C]">${{ fm(r.amount) }}</td>
+                <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold" :class="statusClass(r.status)">{{ r.status }}</span></td>
+              </tr>
+              <tr v-if="!srProposals.length"><td colspan="7" class="text-center py-8 text-[#82868B]">No proposals found</td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Estimates -->
+      <!-- Estimates Sub-tab -->
       <div v-if="salesSubTab === 'estimates'">
-        <div class="report-toolbar">
-          <a-input-search v-model:value="srFilters.search" placeholder="Search..." size="small" style="width:220px" @search="loadSalesReport" />
-          <a-select v-model:value="srFilters.status" mode="multiple" :max-tag-count="1" size="small" style="width:160px" placeholder="Status" @change="loadSalesReport" allow-clear>
-            <a-select-option v-for="s in ['Draft','Sent','Open','Revised','Declined','Accepted']" :key="s" :value="s">{{ s }}</a-select-option>
-          </a-select>
+        <div class="mb-4">
+          <a-input-search v-model:value="srFilters.search" placeholder="Search estimates..." size="small" style="width:220px" @search="loadSalesReport" />
         </div>
-        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
-        <div v-else class="table-responsive">
-          <table class="data-table">
-            <thead><tr><th>Estimate #</th><th>Subject</th><th>To</th><th>Date</th><th>Open Till</th><th>Amount</th><th>Amount with tax</th><th>Total Tax</th><th>TAX1 18%</th><th>TAX1 20%</th><th>TAX3 5%</th><th>Discount</th><th>Adjustment</th><th>Status</th></tr></thead>
-            <tbody>
-              <tr v-for="r in srEstimates" :key="r.number">
-                <td>{{ r.number }}</td><td>{{ r.subject }}</td><td>{{ r.to }}</td><td>{{ r.date }}</td><td>{{ r.open_till }}</td>
-                <td>${{ fm(r.amount) }}</td><td>${{ fm(r.amount_with_tax) }}</td><td>${{ fm(r.total_tax) }}</td><td>${{ fm(r.tax1_18) }}</td>
-                <td>${{ fm(r.tax1_20) }}</td><td>${{ fm(r.tax3_5) }}</td><td>${{ fm(r.discount) }}</td><td>${{ fm(r.adjustment) }}</td>
-                <td><span class="status-tag" :class="statusClass(r.status)">{{ r.status }}</span></td>
+        <div v-if="srLoading" class="text-center py-12 text-[#82868B] text-xs">Loading estimates...</div>
+        <div v-else class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-[#F8F7FA] border-b border-[#EBE9F1] text-[11px] font-bold uppercase tracking-wider text-[#82868B]">
+                <th class="py-2.5 px-3">Estimate #</th><th>Subject</th><th>To</th><th>Date</th><th>Open Till</th><th>Amount</th><th>Status</th>
               </tr>
-              <tr v-if="!srEstimates.length"><td colspan="14" class="empty-cell">No entries found</td></tr>
+            </thead>
+            <tbody class="divide-y divide-[#EBE9F1]">
+              <tr v-for="r in srEstimates" :key="r.number" class="hover:bg-[#F8F7FA]/70">
+                <td class="py-2.5 px-3 font-bold text-[#7367F0]">{{ r.number }}</td>
+                <td class="py-2.5 px-3 font-semibold text-[#4B465C]">{{ r.subject }}</td>
+                <td class="py-2.5 px-3 text-[#4B465C]">{{ r.to }}</td>
+                <td class="py-2.5 px-3 text-[#82868B]">{{ r.date }}</td>
+                <td class="py-2.5 px-3 text-[#82868B]">{{ r.open_till }}</td>
+                <td class="py-2.5 px-3 font-bold text-[#4B465C]">${{ fm(r.amount) }}</td>
+                <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold" :class="statusClass(r.status)">{{ r.status }}</span></td>
+              </tr>
+              <tr v-if="!srEstimates.length"><td colspan="7" class="text-center py-8 text-[#82868B]">No estimates found</td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Customers -->
+      <!-- Customers Sub-tab -->
       <div v-if="salesSubTab === 'customers'">
-        <div class="report-toolbar">
-          <a-input-search v-model:value="srFilters.search" placeholder="Search..." size="small" style="width:220px" @search="loadSalesReport" />
+        <div class="mb-4">
+          <a-input-search v-model:value="srFilters.search" placeholder="Search customers..." size="small" style="width:220px" @search="loadSalesReport" />
         </div>
-        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
-        <div v-else class="table-responsive">
-          <table class="data-table">
-            <thead><tr><th>Customer</th><th>Total Invoices</th><th>Amount</th><th>Amount with Tax</th></tr></thead>
-            <tbody>
-              <tr v-for="r in srCustomers" :key="r.id"><td>{{ r.company }}</td><td>{{ r.total_invoices }}</td><td>${{ fm(r.amount) }}</td><td>${{ fm(r.amount_with_tax) }}</td></tr>
-              <tr v-if="!srCustomers.length"><td colspan="4" class="empty-cell">No entries found</td></tr>
+        <div v-if="srLoading" class="text-center py-12 text-[#82868B] text-xs">Loading customers...</div>
+        <div v-else class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-[#F8F7FA] border-b border-[#EBE9F1] text-[11px] font-bold uppercase tracking-wider text-[#82868B]">
+                <th class="py-2.5 px-3">Customer</th><th>Total Invoices</th><th>Amount</th><th>Amount with Tax</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#EBE9F1]">
+              <tr v-for="r in srCustomers" :key="r.id" class="hover:bg-[#F8F7FA]/70">
+                <td class="py-2.5 px-3 font-bold text-[#4B465C]">{{ r.company }}</td>
+                <td class="py-2.5 px-3 font-semibold text-[#7367F0]">{{ r.total_invoices }}</td>
+                <td class="py-2.5 px-3 font-semibold text-[#4B465C]">${{ fm(r.amount) }}</td>
+                <td class="py-2.5 px-3 font-bold text-[#28C76F]">${{ fm(r.amount_with_tax) }}</td>
+              </tr>
+              <tr v-if="!srCustomers.length"><td colspan="4" class="text-center py-8 text-[#82868B]">No customers found</td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Charts -->
+      <!-- Charts Sub-tab -->
       <div v-if="salesSubTab === 'charts'">
-        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
-        <div v-else class="chart-and-table">
-          <div class="bar-chart">
-            <div class="chart-title">Monthly Sales vs Payments ($)</div>
-            <div class="bars">
-              <div v-for="row in srCharts" :key="row.month" class="bar-wrap">
-                <div class="bar-label-top">${{ fm(row.invoice_total) }}</div>
-                <div class="bar-col"><div class="bar" :style="{ height: srChartMax ? Math.round((row.invoice_total / srChartMax) * 300) + 'px' : '4px' }"></div></div>
-                <div class="bar-label">{{ monthName(row.month) }}</div>
+        <div v-if="srLoading" class="text-center py-12 text-[#82868B] text-xs">Loading charts...</div>
+        <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-[#F8F7FA] border border-[#EBE9F1] rounded-lg p-4">
+            <h4 class="text-xs font-bold text-[#82868B] uppercase mb-4">Monthly Invoices vs Payments ($)</h4>
+            <div class="flex items-end gap-2 h-64 border-b border-[#DBDADE] pb-2">
+              <div v-for="row in srCharts" :key="row.month" class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+                <div class="w-full bg-[#7367F0] rounded-t transition-all" :style="{ height: srChartMax ? Math.max(4, Math.round((row.invoice_total / srChartMax) * 200)) + 'px' : '4px' }"></div>
+                <span class="text-[10px] text-[#82868B]">{{ monthName(row.month) }}</span>
               </div>
             </div>
           </div>
-          <div class="summary-table">
-            <table class="data-table">
-              <thead><tr><th>Month</th><th>Invoices</th><th>Invoice $</th><th>Payments</th><th>Payment $</th></tr></thead>
-              <tbody>
-                <tr v-for="row in srCharts" :key="row.month"><td>{{ monthName(row.month) }}</td><td>{{ row.invoices }}</td><td>${{ fm(row.invoice_total) }}</td><td>{{ row.payments }}</td><td>${{ fm(row.payment_total) }}</td></tr>
-                <tr v-if="!srCharts.length"><td colspan="5" class="empty-cell">No data</td></tr>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-[#F8F7FA] border-b border-[#EBE9F1] text-[11px] font-bold uppercase text-[#82868B]">
+                  <th class="py-2 px-3">Month</th><th>Invoices</th><th>Invoice $</th><th>Payments</th><th>Payment $</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[#EBE9F1]">
+                <tr v-for="row in srCharts" :key="row.month" class="hover:bg-[#F8F7FA]/70">
+                  <td class="py-2 px-3 font-semibold text-[#4B465C]">{{ monthName(row.month) }}</td>
+                  <td class="py-2 px-3 text-[#7367F0] font-bold">{{ row.invoices }}</td>
+                  <td class="py-2 px-3 font-bold">${{ fm(row.invoice_total) }}</td>
+                  <td class="py-2 px-3 text-[#28C76F] font-bold">{{ row.payments }}</td>
+                  <td class="py-2 px-3 font-bold text-[#28C76F]">${{ fm(row.payment_total) }}</td>
+                </tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
-
-      <!-- Total Income -->
-      <div v-if="salesSubTab === 'total-income'">
-        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
-        <div v-else class="finance-cards">
-          <div class="finance-card income"><div class="card-label">Total Invoiced</div><div class="card-value">${{ fm(srIncome?.invoiced) }}</div><div class="card-sub">{{ selectedYear }}</div></div>
-          <div class="finance-card payments"><div class="card-label">Total Paid</div><div class="card-value">${{ fm(srIncome?.paid) }}</div><div class="card-sub">{{ selectedYear }}</div></div>
-          <div class="finance-card expenses"><div class="card-label">Outstanding</div><div class="card-value">${{ fm(srIncome?.outstanding) }}</div><div class="card-sub">{{ selectedYear }}</div></div>
-        </div>
-      </div>
-
-      <!-- Payment Modes -->
-      <div v-if="salesSubTab === 'payment-modes'">
-        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
-        <div v-else class="table-responsive">
-          <table class="data-table">
-            <thead><tr><th>Payment Mode</th><th>Transactions</th><th>Total Amount</th></tr></thead>
-            <tbody>
-              <tr v-for="r in srModes" :key="r.mode"><td>{{ r.mode }}</td><td>{{ r.count }}</td><td>${{ fm(r.total) }}</td></tr>
-              <tr v-if="!srModes.length"><td colspan="3" class="empty-cell">No entries found</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Customer Groups -->
-      <div v-if="salesSubTab === 'customer-groups'">
-        <div v-if="srLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
-        <div v-else class="table-responsive">
-          <table class="data-table">
-            <thead><tr><th>Customer</th><th>Total Invoices</th><th>Total Value</th></tr></thead>
-            <tbody>
-              <tr v-for="r in srGroups" :key="r.company"><td>{{ r.company }}</td><td>{{ r.total_invoices }}</td><td>${{ fm(r.total_value) }}</td></tr>
-              <tr v-if="!srGroups.length"><td colspan="3" class="empty-cell">No entries found</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
 
-    <!-- Expenses Report -->
-    <div v-if="activeTab === 'expenses'" class="report-section">
-      <div class="section-header">
-        <h2>Expenses Report — {{ selectedYear }}</h2>
-        <div class="header-filters">
-          <label class="checkbox-label">
-            <input type="checkbox" v-model="excludeBillable" @change="loadExpensesDetailed" />
+    <!-- ========================================== -->
+    <!-- 3. EXPENSES REPORT TAB                     -->
+    <!-- ========================================== -->
+    <div v-if="activeTab === 'expenses'" class="bg-white border border-[#EBE9F1] rounded-lg p-6 shadow-sm">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-[#EBE9F1]">
+        <div>
+          <h2 class="text-lg font-bold text-[#4B465C] m-0">Expenses Report — {{ selectedYear }}</h2>
+          <span class="text-xs text-[#82868B]">Category breakdowns, billable vs non-billable matrix</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <label class="flex items-center gap-2 text-xs font-semibold text-[#4B465C] cursor-pointer">
+            <input type="checkbox" v-model="excludeBillable" @change="loadExpensesDetailed" class="rounded text-[#7367F0] focus:ring-0" />
             Exclude Billable Expenses
           </label>
-          <select v-model="selectedYear" @change="loadExpensesDetailed" class="year-select">
+          <select v-model="selectedYear" @change="loadExpensesDetailed" class="px-3 py-1.5 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] text-[#4B465C] font-medium">
             <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
           </select>
         </div>
       </div>
-      <div v-if="expLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
-      <div v-else class="expenses-detailed">
-        <!-- Chart area (ApexCharts) -->
-        <div class="exp-charts-row">
-          <div class="exp-chart-box">
-            <div class="chart-title">Monthly Expenses — Not Billable ($)</div>
-            <VueApexCharts type="bar" height="320" :options="expNotBillableBarOptions" :series="expNotBillableBarSeries"></VueApexCharts>
+
+      <div v-if="expLoading" class="text-center py-16 text-xs text-[#82868B]">Loading Expenses Report...</div>
+      <div v-else class="space-y-6">
+        <!-- Expenses Charts -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-[#F8F7FA] border border-[#EBE9F1] rounded-lg p-4">
+            <h4 class="text-xs font-bold text-[#82868B] uppercase mb-2">Monthly Expenses — Not Billable ($)</h4>
+            <VueApexCharts type="bar" height="280" :options="expNotBillableBarOptions" :series="expNotBillableBarSeries"></VueApexCharts>
           </div>
-          <div v-if="!excludeBillable" class="exp-chart-box">
-            <div class="chart-title">Monthly Expenses — Billable ($)</div>
-            <VueApexCharts type="bar" height="320" :options="expBillableBarOptions" :series="expBillableBarSeries"></VueApexCharts>
-          </div>
-          <div class="exp-chart-box">
-            <div class="chart-title">Category Breakdown — Not Billable</div>
-            <VueApexCharts type="donut" height="320" :options="expNotBillableDonutOptions" :series="expNotBillableDonutSeries"></VueApexCharts>
-          </div>
-          <div v-if="!excludeBillable" class="exp-chart-box">
-            <div class="chart-title">Category Breakdown — Billable</div>
-            <VueApexCharts type="donut" height="320" :options="expBillableDonutOptions" :series="expBillableDonutSeries"></VueApexCharts>
+          <div v-if="!excludeBillable" class="bg-[#F8F7FA] border border-[#EBE9F1] rounded-lg p-4">
+            <h4 class="text-xs font-bold text-[#82868B] uppercase mb-2">Monthly Expenses — Billable ($)</h4>
+            <VueApexCharts type="bar" height="280" :options="expBillableBarOptions" :series="expBillableBarSeries"></VueApexCharts>
           </div>
         </div>
-        <!-- Not billable expenses -->
-        <div class="exp-section-group">
-          <h3 class="exp-section-title">Not billable expenses by categories</h3>
-          <div class="table-responsive">
-            <table class="data-table exp-cat-table">
+
+        <!-- Not Billable Table -->
+        <div>
+          <h4 class="text-sm font-bold text-[#4B465C] mb-3">Not Billable Expenses by Category</h4>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
               <thead>
-                <tr>
-                  <th>Category</th>
-                  <th v-for="m in monthNames" :key="m">{{ m }}</th>
-                  <th>Year ({{ selectedYear }})</th>
+                <tr class="bg-[#F8F7FA] border-b border-[#EBE9F1] text-[11px] font-bold uppercase text-[#82868B]">
+                  <th class="py-2.5 px-3 sticky left-0 bg-[#F8F7FA] z-10 min-w-[140px]">Category</th>
+                  <th v-for="m in SHORT_MONTHS" :key="m" class="py-2.5 px-2">{{ m }}</th>
+                  <th class="py-2.5 px-3">Total ({{ selectedYear }})</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr v-for="r in expNotBillable" :key="r.category" :class="{ 'total-row': r.is_total }">
-                  <td><strong>{{ r.category }}</strong></td>
-                  <td v-for="(v, i) in r.monthly" :key="i">${{ fm(v) }}</td>
-                  <td><strong>${{ fm(r.total) }}</strong></td>
+              <tbody class="divide-y divide-[#EBE9F1]">
+                <tr v-for="r in expNotBillable" :key="r.category" :class="r.is_total ? 'bg-[#F8F7FA] font-bold text-[#4B465C]' : 'hover:bg-[#F8F7FA]/70'">
+                  <td class="py-2.5 px-3 sticky left-0 bg-white z-10 font-medium" :class="r.is_total ? 'bg-[#F8F7FA] font-bold' : ''">{{ r.category }}</td>
+                  <td v-for="(v, i) in r.monthly" :key="i" class="py-2.5 px-2 text-[#82868B]">${{ fm(v) }}</td>
+                  <td class="py-2.5 px-3 font-bold text-[#EA5455]">${{ fm(r.total) }}</td>
                 </tr>
-                <tr v-if="!expNotBillable.length"><td :colspan="14" class="empty-cell">No entries found</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <!-- Billable expenses -->
-        <div class="exp-section-group">
-          <h3 class="exp-section-title">Billable expenses by categories</h3>
-          <div class="table-responsive">
-            <table class="data-table exp-cat-table">
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th v-for="m in monthNames" :key="m">{{ m }}</th>
-                  <th>Year ({{ selectedYear }})</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="r in expBillable" :key="r.category" :class="{ 'total-row': r.is_total }">
-                  <td><strong>{{ r.category }}</strong></td>
-                  <td v-for="(v, i) in r.monthly" :key="i">${{ fm(v) }}</td>
-                  <td><strong>${{ fm(r.total) }}</strong></td>
-                </tr>
-                <tr v-if="!expBillable.length"><td :colspan="14" class="empty-cell">No entries found</td></tr>
               </tbody>
             </table>
           </div>
@@ -381,79 +709,66 @@
       </div>
     </div>
 
-    <!-- Finance Report -->
-    <div v-if="activeTab === 'finance'" class="report-section">
-      <div class="section-header">
-        <h2>Finance Overview — {{ selectedYear }}</h2>
-      </div>
-      <div v-if="!finance" class="loading-wrap"><div class="loader"></div> Loading...</div>
-      <div v-else class="finance-detail">
-        <div class="finance-chart-wrap">
-          <VueApexCharts type="bar" height="280" :options="financeChartOptions" :series="financeChartSeries"></VueApexCharts>
+    <!-- ========================================== -->
+    <!-- 4. FINANCE (EXPENSES VS INCOME) TAB        -->
+    <!-- ========================================== -->
+    <div v-if="activeTab === 'finance'" class="bg-white border border-[#EBE9F1] rounded-lg p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-6 pb-4 border-b border-[#EBE9F1]">
+        <div>
+          <h2 class="text-lg font-bold text-[#4B465C] m-0">Finance Overview — {{ selectedYear }}</h2>
+          <span class="text-xs text-[#82868B]">Net margin, revenue inflow vs operating outflow</span>
         </div>
-        <div class="profit-summary" :class="finance.profit >= 0 ? 'profitable' : 'unprofitable'">
-          <span class="profit-icon">{{ finance.profit >= 0 ? '📈' : '📉' }}</span>
+      </div>
+
+      <div v-if="!finance" class="text-center py-16 text-xs text-[#82868B]">Loading Finance Report...</div>
+      <div v-else class="space-y-6">
+        <div class="bg-[#F8F7FA] border border-[#EBE9F1] rounded-lg p-4">
+          <VueApexCharts type="bar" height="300" :options="financeChartOptions" :series="financeChartSeries"></VueApexCharts>
+        </div>
+
+        <div class="p-5 rounded-lg border flex items-center gap-4" :class="finance.profit >= 0 ? 'bg-[#28C76F]/10 border-[#28C76F]/30 text-[#28C76F]' : 'bg-[#EA5455]/10 border-[#EA5455]/30 text-[#EA5455]'">
+          <div class="text-3xl font-bold">{{ finance.profit >= 0 ? '📈' : '📉' }}</div>
           <div>
-            <div class="profit-headline">{{ finance.profit >= 0 ? 'Business is Profitable' : 'Running at a Loss' }}</div>
-            <div class="profit-sub">Net: ${{ formatMoney(finance.profit) }} for {{ selectedYear }}</div>
+            <h4 class="text-base font-bold m-0" :class="finance.profit >= 0 ? 'text-[#28C76F]' : 'text-[#EA5455]'">
+              {{ finance.profit >= 0 ? 'Business is Operating with Net Profit' : 'Business is Operating at a Loss' }}
+            </h4>
+            <p class="text-xs text-[#82868B] m-0 mt-0.5">Net Profit: <strong class="text-[#4B465C]">${{ formatMoney(finance.profit) }}</strong> for calendar year {{ selectedYear }}</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Leads Report -->
-    <div v-if="activeTab === 'leads'" class="report-section">
-      <div class="section-header">
-        <h2>Leads Report — {{ selectedYear }}</h2>
-      </div>
-      <div class="leads-chart-area">
-        <div class="leads-chart-box">
-          <div class="chart-title">Monthly Leads Created vs Converted</div>
-          <VueApexCharts type="bar" height="300" :options="leadsChartOptions" :series="leadsChartSeries"></VueApexCharts>
-        </div>
-        <div class="summary-table">
-          <table class="data-table">
-            <thead><tr><th>Month</th><th>Leads</th><th>Converted</th></tr></thead>
-            <tbody>
-              <tr v-for="row in leadsData" :key="row.month">
-                <td>{{ monthName(row.month) }}</td>
-                <td>{{ row.count }}</td>
-                <td>{{ row.converted }}</td>
-              </tr>
-              <tr class="total-row">
-                <td><strong>Total</strong></td>
-                <td><strong>{{ leadsData.reduce((a,r) => a+r.count, 0) }}</strong></td>
-                <td><strong>{{ leadsData.reduce((a,r) => a+r.converted, 0) }}</strong></td>
-              </tr>
-            </tbody>
-          </table>
+    <!-- ========================================== -->
+    <!-- 5. TIMESHEETS TAB                          -->
+    <!-- ========================================== -->
+    <div v-if="activeTab === 'timesheets'" class="bg-white border border-[#EBE9F1] rounded-lg p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-6 pb-4 border-b border-[#EBE9F1]">
+        <div>
+          <h2 class="text-lg font-bold text-[#4B465C] m-0">Timesheets Overview — {{ selectedYear }}</h2>
+          <span class="text-xs text-[#82868B]">Monthly logged hours and completed task volume</span>
         </div>
       </div>
-    </div>
-
-    <!-- Timesheets Report -->
-    <div v-if="activeTab === 'timesheets'" class="report-section">
-      <div class="section-header">
-        <h2>Timesheets Overview — {{ selectedYear }}</h2>
-      </div>
-      <div class="timesheets-chart-area">
-        <div class="timesheets-chart-box">
-          <div class="chart-title">Monthly Hours Logged</div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-[#F8F7FA] border border-[#EBE9F1] rounded-lg p-4">
           <VueApexCharts type="bar" height="300" :options="timesheetsChartOptions" :series="timesheetsChartSeries"></VueApexCharts>
         </div>
-        <div class="summary-table">
-          <table class="data-table">
-            <thead><tr><th>Month</th><th>Hours</th><th>Tasks</th></tr></thead>
-            <tbody>
-              <tr v-for="row in timesheetsData" :key="row.month">
-                <td>{{ monthName(row.month) }}</td>
-                <td>{{ row.hours }}h</td>
-                <td>{{ row.tasks }}</td>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-[#F8F7FA] border-b border-[#EBE9F1] text-[11px] font-bold uppercase text-[#82868B]">
+                <th class="py-2.5 px-3">Month</th><th>Hours</th><th>Tasks</th>
               </tr>
-              <tr class="total-row">
-                <td><strong>Total</strong></td>
-                <td><strong>{{ timesheetsData.reduce((a,r) => a+r.hours, 0) }}h</strong></td>
-                <td><strong>{{ timesheetsData.reduce((a,r) => a+r.tasks, 0) }}</strong></td>
+            </thead>
+            <tbody class="divide-y divide-[#EBE9F1]">
+              <tr v-for="row in timesheetsData" :key="row.month" class="hover:bg-[#F8F7FA]/70">
+                <td class="py-2.5 px-3 font-semibold text-[#4B465C]">{{ monthName(row.month) }}</td>
+                <td class="py-2.5 px-3 font-bold text-[#7367F0]">{{ row.hours }}h</td>
+                <td class="py-2.5 px-3 font-semibold text-[#28C76F]">{{ row.tasks }}</td>
+              </tr>
+              <tr class="bg-[#F8F7FA] font-bold text-[#4B465C]">
+                <td class="py-2.5 px-3">Total</td>
+                <td class="py-2.5 px-3 text-[#7367F0]">{{ timesheetsData.reduce((a,r) => a+r.hours, 0) }}h</td>
+                <td class="py-2.5 px-3 text-[#28C76F]">{{ timesheetsData.reduce((a,r) => a+r.tasks, 0) }}</td>
               </tr>
             </tbody>
           </table>
@@ -461,44 +776,49 @@
       </div>
     </div>
 
-    <!-- KB Articles Report -->
-    <div v-if="activeTab === 'kb'" class="report-section">
-      <div class="section-header">
-        <h2>KB Articles — Voting Report</h2>
-        <select v-model="kbCategoryId" @change="loadKbReport" class="year-select">
+    <!-- ========================================== -->
+    <!-- 6. KB ARTICLES TAB                         -->
+    <!-- ========================================== -->
+    <div v-if="activeTab === 'kb'" class="bg-white border border-[#EBE9F1] rounded-lg p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-6 pb-4 border-b border-[#EBE9F1]">
+        <div>
+          <h2 class="text-lg font-bold text-[#4B465C] m-0">KB Articles — Voting Report</h2>
+          <span class="text-xs text-[#82868B]">Article feedback, helpfulness ratings and reader satisfaction</span>
+        </div>
+        <select v-model="kbCategoryId" @change="loadKbReport" class="px-3 py-1.5 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] text-[#4B465C]">
           <option value="">All Groups</option>
           <option v-for="c in kbCategories" :key="c.id" :value="c.id">{{ c.name }}</option>
         </select>
       </div>
-      <div v-if="kbLoading" class="loading-wrap"><div class="loader"></div> Loading...</div>
-      <div v-else class="kb-chart-area">
-        <div class="kb-group-label" v-if="selectedKbGroup">Group: {{ selectedKbGroup }}</div>
-        <div v-for="a in kbArticles" :key="a.id" class="kb-vote-card">
-          <div class="kb-vote-title">{{ a.title }} <span class="kb-total">(Total: {{ a.total }})</span></div>
-          <div v-if="a.total === 0" class="kb-no-votes">No votes yet</div>
+
+      <div v-if="kbLoading" class="text-center py-16 text-xs text-[#82868B]">Loading KB ratings...</div>
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div v-for="a in kbArticles" :key="a.id" class="p-4 rounded-lg border border-[#EBE9F1] bg-[#F8F7FA]">
+          <div class="font-bold text-xs text-[#4B465C] mb-2">{{ a.title }} <span class="text-[#82868B] font-normal">({{ a.total }} votes)</span></div>
+          <div v-if="a.total === 0" class="text-center py-6 text-xs text-[#82868B] italic">No votes yet</div>
           <div v-else>
-            <VueApexCharts type="donut" height="200" :options="kbDonutOptions(a)" :series="kbDonutSeries(a)"></VueApexCharts>
+            <VueApexCharts type="donut" height="180" :options="kbDonutOptions(a)" :series="kbDonutSeries(a)"></VueApexCharts>
           </div>
         </div>
-        <div v-if="!kbArticles.length" class="empty-state">
-          <p>No articles found</p>
-        </div>
+        <div v-if="!kbArticles.length" class="col-span-3 text-center py-12 text-xs text-[#82868B]">No articles found</div>
       </div>
     </div>
 
-    <!-- Team Report -->
-    <div v-if="activeTab === 'team'" class="report-section">
-      <div class="section-header">
-        <h2>Team Performance</h2>
-      </div>
-      <div v-if="loadingTeam" class="loading-wrap"><div class="loader"></div> Loading...</div>
-      <div v-else class="team-chart-area">
-        <div class="team-chart-box">
-          <VueApexCharts type="bar" height="300" :options="teamChartOptions" :series="teamChartSeries"></VueApexCharts>
+    <!-- ========================================== -->
+    <!-- 7. TEAM REPORT TAB                         -->
+    <!-- ========================================== -->
+    <div v-if="activeTab === 'team'" class="bg-white border border-[#EBE9F1] rounded-lg p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-6 pb-4 border-b border-[#EBE9F1]">
+        <div>
+          <h2 class="text-lg font-bold text-[#4B465C] m-0">Team Performance</h2>
+          <span class="text-xs text-[#82868B]">Workload distribution across team members</span>
         </div>
-        <div v-if="!teamData.length" class="empty-state">
-          <span class="empty-icon">👥</span>
-          <p>No team data available</p>
+      </div>
+
+      <div v-if="loadingTeam" class="text-center py-16 text-xs text-[#82868B]">Loading team data...</div>
+      <div v-else>
+        <div class="bg-[#F8F7FA] border border-[#EBE9F1] rounded-lg p-4 mb-4">
+          <VueApexCharts type="bar" height="300" :options="teamChartOptions" :series="teamChartSeries"></VueApexCharts>
         </div>
       </div>
     </div>
@@ -516,7 +836,7 @@ const route = useRoute()
 
 const selectedYear   = ref(new Date().getFullYear())
 const currentMonth   = new Date().getMonth() + 1
-const activeTab      = ref('sales')
+const activeTab      = ref('leads')
 const finance        = ref(null)
 const salesData        = ref([])
 const expensesData     = ref([])
@@ -530,312 +850,61 @@ const expLoading      = ref(false)
 const expNotBillable  = ref([])
 const expBillable     = ref([])
 const excludeBillable = ref(false)
-const monthNames      = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const kbArticles    = ref([])
 const kbCategories  = ref([])
 const kbCategoryId  = ref('')
 const kbLoading     = ref(false)
 
+// Leads specific reactive state
+const leadsLoading   = ref(false)
+const leadsTotals    = ref({ total_leads: 0, total_converted: 0, conversion_rate: 0, total_value: 0, sources_count: 0 })
+const leadsBySource  = ref([])
+const leadsByStatus  = ref([])
+const leadsByStaff   = ref([])
+const leadsList      = ref([])
+const leadsFilters   = ref({ search: '', status: '', source: '' })
+
+// Sales report state
+const salesSubTab    = ref('invoices')
+const srPeriod       = ref('this_year')
+const srLoading      = ref(false)
+const srFilters      = ref({ search: '', status: [], sale_agent: null, perPage: 10 })
+const srInvoices     = ref([])
+const srItems        = ref([])
+const srPayments     = ref([])
+const srCreditNotes  = ref([])
+const srProposals    = ref([])
+const srEstimates    = ref([])
+const srCustomers    = ref([])
+const srCharts       = ref([])
+const srIncome       = ref(null)
+const srModes        = ref([])
+const srGroups       = ref([])
+const agents         = ref([])
+
 const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-function shortMonth(i) { return SHORT_MONTHS[i] || '' }
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
+function monthName(m) { return SHORT_MONTHS[m - 1] || '' }
 
-const CAT_COLORS = ['#1e9aff','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#f97316','#14b8a6','#6366f1','#d946ef','#22c55e','#eab308','#3b82f6']
-
-const selectedKbGroup = computed(() => {
-  if (!kbCategoryId.value) return ''
-  const c = kbCategories.value.find(c => c.id === Number(kbCategoryId.value))
-  return c?.name ?? ''
-})
-
-function expChartCategories(rows) {
-  if (!rows?.length) return []
-  return rows.filter(r => !r.is_total).map((r, i) => ({
-    label: r.category,
-    value: r.total,
-    color: CAT_COLORS[i % CAT_COLORS.length],
-  }))
+function formatMoney(v) {
+  if (!v) return '0.00'
+  return Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
-
-const expNotBillableTotal = computed(() => {
-  const totalRow = expNotBillable.value.find(r => r.is_total)
-  return totalRow?.monthly ?? Array(12).fill(0)
-})
-
-const expBillableTotal = computed(() => {
-  const totalRow = expBillable.value.find(r => r.is_total)
-  return totalRow?.monthly ?? Array(12).fill(0)
-})
-
-const expNotBillableBarOptions = computed(() => ({
-  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
-  xaxis: { categories: SHORT_MONTHS, labels: { style: { fontSize: '11px', fontWeight: 600 } } },
-  yaxis: { labels: { formatter: v => '$' + v.toLocaleString(), style: { fontSize: '11px' } } },
-  colors: ['#ef4444'],
-  plotOptions: { bar: { columnWidth: '55%', borderRadius: 3, dataLabels: { position: 'top' } } },
-  dataLabels: { enabled: true, formatter: v => '$' + (v / 1000).toFixed(1) + 'k', style: { fontSize: '9px', fontWeight: 700, colors: ['#1e293b'] }, offsetY: -14 },
-  grid: { borderColor: '#f1f5f9' },
-  tooltip: { y: { formatter: v => '$' + v.toLocaleString() } },
-}))
-const expNotBillableBarSeries = computed(() => [{ name: 'Not Billable', data: expNotBillableTotal.value }])
-
-const expBillableBarOptions = computed(() => ({
-  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
-  xaxis: { categories: SHORT_MONTHS, labels: { style: { fontSize: '11px', fontWeight: 600 } } },
-  yaxis: { labels: { formatter: v => '$' + v.toLocaleString(), style: { fontSize: '11px' } } },
-  colors: ['#3b82f6'],
-  plotOptions: { bar: { columnWidth: '55%', borderRadius: 3, dataLabels: { position: 'top' } } },
-  dataLabels: { enabled: true, formatter: v => '$' + v.toLocaleString(), style: { fontSize: '9px', fontWeight: 700, colors: ['#1e293b'] }, offsetY: -14 },
-  grid: { borderColor: '#f1f5f9' },
-  tooltip: { y: { formatter: v => '$' + v.toLocaleString() } },
-}))
-const expBillableBarSeries = computed(() => [{ name: 'Billable', data: expBillableTotal.value }])
-
-const expNotBillableDonutOptions = computed(() => ({
-  chart: { type: 'donut', toolbar: { show: false } },
-  labels: expChartCategories(expNotBillable.value).map(r => r.label),
-  colors: expChartCategories(expNotBillable.value).map(r => r.color),
-  plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', fontSize: '13px', fontWeight: 700, color: '#1e293b', formatter: () => '$' + expChartCategories(expNotBillable.value).reduce((a, r) => a + r.value, 0).toLocaleString() } } } } },
-  dataLabels: { enabled: false },
-  legend: { position: 'bottom', fontSize: '11px', fontWeight: 600, labels: { colors: '#475569' }, itemMargin: { horizontal: 8 } },
-}))
-const expNotBillableDonutSeries = computed(() => expChartCategories(expNotBillable.value).map(r => r.value))
-
-const expBillableDonutOptions = computed(() => ({
-  chart: { type: 'donut', toolbar: { show: false } },
-  labels: expChartCategories(expBillable.value).map(r => r.label),
-  colors: expChartCategories(expBillable.value).map(r => r.color),
-  plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', fontSize: '13px', fontWeight: 700, color: '#1e293b', formatter: () => '$' + expChartCategories(expBillable.value).reduce((a, r) => a + r.value, 0).toLocaleString() } } } } },
-  dataLabels: { enabled: false },
-  legend: { position: 'bottom', fontSize: '11px', fontWeight: 600, labels: { colors: '#475569' }, itemMargin: { horizontal: 8 } },
-}))
-const expBillableDonutSeries = computed(() => expChartCategories(expBillable.value).map(r => r.value))
-
-const financeChartOptions = computed(() => ({
-  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
-  xaxis: {
-    categories: ['Total Income', 'Total Expenses', 'Payments Received', 'Net Profit'],
-    labels: { style: { fontSize: '12px', fontWeight: 600 } },
-  },
-  yaxis: {
-    labels: { formatter: v => '$' + v.toLocaleString(), style: { fontSize: '11px' } },
-  },
-  colors: ['#10b981', '#ef4444', '#3b82f6', '#8b5cf6'],
-  plotOptions: {
-    bar: { columnWidth: '50%', borderRadius: 4, dataLabels: { position: 'top' } },
-  },
-  dataLabels: {
-    enabled: true,
-    formatter: v => '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toLocaleString()),
-    style: { fontSize: '10px', fontWeight: 700, colors: ['#1e293b'] },
-    offsetY: -14,
-  },
-  grid: { borderColor: '#f1f5f9' },
-  tooltip: { y: { formatter: v => '$' + v.toLocaleString() } },
-}))
-const financeChartSeries = computed(() => {
-  if (!finance.value) return []
-  return [{
-    name: 'Amount',
-    data: [
-      finance.value.income || 0,
-      finance.value.expenses || 0,
-      finance.value.payments || 0,
-      finance.value.profit || 0,
-    ],
-  }]
-})
-
-const leadsChartOptions = computed(() => ({
-  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true }, stacked: false },
-  xaxis: {
-    categories: leadsData.value.map(r => monthName(r.month)),
-    labels: { style: { fontSize: '11px', fontWeight: 600 } },
-  },
-  yaxis: {
-    labels: { style: { fontSize: '11px' } },
-  },
-  colors: ['#1e9aff', '#10b981'],
-  plotOptions: {
-    bar: { columnWidth: '55%', borderRadius: 3, dataLabels: { position: 'top' } },
-  },
-  dataLabels: {
-    enabled: true,
-    style: { fontSize: '9px', fontWeight: 700, colors: ['#1e293b'] },
-    offsetY: -14,
-  },
-  grid: { borderColor: '#f1f5f9' },
-  tooltip: { y: { formatter: v => v + ' leads' } },
-  legend: { position: 'top', fontSize: '12px', fontWeight: 600, labels: { colors: '#475569' }, itemMargin: { horizontal: 8 } },
-}))
-const leadsChartSeries = computed(() => [{
-  name: 'Created',
-  data: leadsData.value.map(r => r.count),
-}, {
-  name: 'Converted',
-  data: leadsData.value.map(r => r.converted),
-}])
-
-const timesheetsChartOptions = computed(() => ({
-  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
-  xaxis: {
-    categories: timesheetsData.value.map(r => monthName(r.month)),
-    labels: { style: { fontSize: '11px', fontWeight: 600 } },
-  },
-  yaxis: {
-    labels: { formatter: v => v + 'h', style: { fontSize: '11px' } },
-  },
-  colors: ['#f59e0b'],
-  plotOptions: {
-    bar: { columnWidth: '55%', borderRadius: 3, dataLabels: { position: 'top' } },
-  },
-  dataLabels: {
-    enabled: true,
-    formatter: v => v + 'h',
-    style: { fontSize: '9px', fontWeight: 700, colors: ['#1e293b'] },
-    offsetY: -14,
-  },
-  grid: { borderColor: '#f1f5f9' },
-  tooltip: { y: { formatter: v => v + ' hours' } },
-}))
-const timesheetsChartSeries = computed(() => [{
-  name: 'Hours',
-  data: timesheetsData.value.map(r => r.hours),
-}])
-
-function kbDonutOptions(article) {
-  return {
-    chart: { type: 'donut', toolbar: { show: false } },
-    labels: ['Yes', 'No'],
-    colors: ['#10b981', '#ef4444'],
-    plotOptions: {
-      pie: {
-        donut: {
-          size: '65%',
-          labels: {
-            show: true,
-            total: { show: true, label: 'Total', fontSize: '13px', fontWeight: 700, color: '#1e293b', formatter: () => article.total },
-          },
-        },
-      },
-    },
-    dataLabels: {
-      enabled: true,
-      formatter: (v, { seriesIndex }) => {
-        const vals = [article.yes, article.no]
-        return vals[seriesIndex] + ' (' + v.toFixed(1) + '%)'
-      },
-      style: { fontSize: '10px', fontWeight: 600, colors: ['#fff'] },
-    },
-    legend: { position: 'bottom', fontSize: '11px', fontWeight: 600, labels: { colors: '#475569' }, itemMargin: { horizontal: 8 } },
-  }
-}
-function kbDonutSeries(article) {
-  return [article.yes, article.no]
-}
-
-const teamChartOptions = computed(() => ({
-  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
-  xaxis: {
-    categories: teamData.value.map(m => m.name),
-    labels: { style: { fontSize: '11px', fontWeight: 600 } },
-  },
-  yaxis: {
-    labels: { style: { fontSize: '11px' } },
-  },
-  colors: ['#6366f1'],
-  plotOptions: {
-    bar: { columnWidth: '55%', borderRadius: 3, horizontal: true, dataLabels: { position: 'top' } },
-  },
-  dataLabels: {
-    enabled: true,
-    formatter: v => v + ' tasks',
-    style: { fontSize: '10px', fontWeight: 700, colors: ['#1e293b'] },
-  },
-  grid: { borderColor: '#f1f5f9' },
-  tooltip: { y: { formatter: v => v + ' tasks' } },
-}))
-const teamChartSeries = computed(() => [{
-  name: 'Tasks',
-  data: teamData.value.map(m => m.task_count),
-}])
-
-const salesSubTab   = ref('invoices')
-const srLoading     = ref(false)
-const srInvoices    = ref([])
-const srItems       = ref([])
-const srPayments    = ref([])
-const srCreditNotes = ref([])
-const srProposals   = ref([])
-const srEstimates   = ref([])
-const srCustomers   = ref([])
-const srCharts      = ref([])
-const srIncome      = ref(null)
-const srModes       = ref([])
-const srGroups      = ref([])
-const agents        = ref([])
-const srFilters     = ref({ search: '', status: [], sale_agent: null, perPage: 10 })
-const srPeriod      = ref('this_month')
-
-const salesSubTabs = [
-  { key: 'invoices',      label: 'Invoices Report' },
-  { key: 'items',         label: 'Items Report' },
-  { key: 'payments',      label: 'Payments Received' },
-  { key: 'credit-notes',  label: 'Credit Notes Report' },
-  { key: 'proposals',     label: 'Proposals Report' },
-  { key: 'estimates',     label: 'Estimates Report' },
-  { key: 'customers',     label: 'Customers Report' },
-  { key: 'charts',        label: 'Charts Based Report' },
-  { key: 'total-income',  label: 'Total Income' },
-  { key: 'payment-modes', label: 'Payment Modes (Transactions)' },
-  { key: 'customer-groups', label: 'Total Value By Customer Groups' },
-]
-
-const tabs = [
-  { key: 'sales',      label: 'Sales',              icon: '💰' },
-  { key: 'expenses',   label: 'Expenses',           icon: '💸' },
-  { key: 'finance',    label: 'Expenses vs Income', icon: '📊' },
-  { key: 'leads',      label: 'Leads',              icon: '🔍' },
-  { key: 'timesheets', label: 'Timesheets',         icon: '⏱' },
-  { key: 'kb',         label: 'KB Articles',        icon: '📚' },
-  { key: 'team',       label: 'Team',               icon: '👥' },
-]
-
-const years = computed(() => {
-  const y = new Date().getFullYear()
-  return [y, y-1, y-2, y-3]
-})
-
-const maxSales       = computed(() => Math.max(...salesData.value.map(r => r.total), 1))
-const maxExpenses    = computed(() => Math.max(...expensesData.value.map(r => r.total), 1))
-const maxLeads       = computed(() => Math.max(...leadsData.value.map(r => r.count), 1))
-const maxTimesheets  = computed(() => Math.max(...timesheetsData.value.map(r => r.hours), 1))
-const maxTeam        = computed(() => Math.max(...teamData.value.map(m => m.task_count), 1))
-
-function barHeight(val, max) {
-  return Math.max(4, Math.round((val / max) * 300))
-}
+const fm = formatMoney
 
 function compPct(val, total) {
   if (!total) return 0
   return Math.min(100, Math.round((val / total) * 100))
 }
 
-function teamBarPct(count) {
-  return Math.round((count / maxTeam.value) * 100)
-}
-
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-function monthName(m) { return MONTHS[m - 1] || '' }
-
-function formatMoney(v) {
-  if (!v) return '0.00'
-  return Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
-const fm = formatMoney
-
 function statusClass(s) {
-  return s ? s.toLowerCase().replace(/\s+/g, '') : ''
+  if (!s) return 'bg-[#F8F7FA] text-[#82868B]'
+  const lower = s.toLowerCase().replace(/\s+/g, '')
+  if (['paid', 'accepted', 'active'].includes(lower)) return 'bg-[#28C76F]/10 text-[#28C76F]'
+  if (['unpaid', 'declined', 'overdue', 'lost'].includes(lower)) return 'bg-[#EA5455]/10 text-[#EA5455]'
+  if (['partiallypaid', 'revised', 'draft'].includes(lower)) return 'bg-[#FF9F43]/10 text-[#FF9F43]'
+  if (['open', 'sent', 'new'].includes(lower)) return 'bg-[#7367F0]/10 text-[#7367F0]'
+  return 'bg-[#00CFE8]/10 text-[#00CFE8]'
 }
 
 function trunc(s, n) {
@@ -843,7 +912,229 @@ function trunc(s, n) {
   return s.length > n ? s.slice(0, n) + '...' : s
 }
 
+const years = computed(() => {
+  const y = new Date().getFullYear()
+  return [y, y-1, y-2, y-3]
+})
+
+const tabs = [
+  { key: 'leads',      label: 'Leads',              icon: '🔍' },
+  { key: 'sales',      label: 'Sales',              icon: '💰' },
+  { key: 'expenses',   label: 'Expenses',           icon: '💸' },
+  { key: 'finance',    label: 'Expenses vs Income', icon: '📊' },
+  { key: 'timesheets', label: 'Timesheets',         icon: '⏱' },
+  { key: 'kb',         label: 'KB Articles',        icon: '📚' },
+  { key: 'team',       label: 'Team',               icon: '👥' },
+]
+
+const salesSubTabs = [
+  { key: 'invoices',      label: 'Invoices' },
+  { key: 'items',         label: 'Items' },
+  { key: 'payments',      label: 'Payments Received' },
+  { key: 'credit-notes',  label: 'Credit Notes' },
+  { key: 'proposals',     label: 'Proposals' },
+  { key: 'estimates',     label: 'Estimates' },
+  { key: 'customers',     label: 'Customers' },
+  { key: 'charts',        label: 'Sales Charts' },
+]
+
+// Filtered leads explorer list
+const filteredLeadsList = computed(() => {
+  return leadsList.value.filter(l => {
+    if (leadsFilters.value.search) {
+      const q = leadsFilters.value.search.toLowerCase()
+      const match = (l.name || '').toLowerCase().includes(q) ||
+                    (l.company || '').toLowerCase().includes(q) ||
+                    (l.email || '').toLowerCase().includes(q)
+      if (!match) return false
+    }
+    if (leadsFilters.value.status && l.status !== leadsFilters.value.status) return false
+    if (leadsFilters.value.source && l.source !== leadsFilters.value.source) return false
+    return true
+  })
+})
+
+// ApexCharts computed configs for Leads
+const leadsChartOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false }, stacked: false },
+  plotOptions: { bar: { columnWidth: '45%', borderRadius: 4 } },
+  xaxis: { categories: SHORT_MONTHS, labels: { style: { fontSize: '11px', fontWeight: 600, colors: '#82868B' } } },
+  yaxis: { labels: { style: { fontSize: '11px', colors: '#82868B' } } },
+  colors: ['#7367F0', '#28C76F'],
+  dataLabels: { enabled: false },
+  grid: { borderColor: '#EBE9F1', strokeDashArray: 4 },
+  legend: { show: false },
+  tooltip: { theme: 'light', y: { formatter: v => v + ' leads' } }
+}))
+
+const leadsChartSeries = computed(() => [
+  { name: 'Total Leads Created', data: leadsData.value.map(r => r.count) },
+  { name: 'Converted to Customer', data: leadsData.value.map(r => r.converted) }
+])
+
+const leadsSourceDonutOptions = computed(() => ({
+  chart: { type: 'donut' },
+  labels: leadsBySource.value.map(s => s.name),
+  colors: ['#7367F0', '#28C76F', '#00CFE8', '#FF9F43', '#EA5455', '#A8AAAE'],
+  legend: { show: false },
+  plotOptions: {
+    pie: {
+      donut: {
+        size: '72%',
+        labels: {
+          show: true,
+          total: {
+            show: true,
+            label: 'Total Leads',
+            fontSize: '11px',
+            color: '#82868B',
+            formatter: () => leadsTotals.value.total_leads
+          }
+        }
+      }
+    }
+  },
+  dataLabels: { enabled: false },
+  stroke: { width: 2, colors: ['#fff'] }
+}))
+
+const leadsSourceDonutSeries = computed(() => leadsBySource.value.map(s => s.count))
+
+// Finance chart
+const financeChartOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false } },
+  xaxis: { categories: ['Total Income', 'Total Expenses', 'Payments Received', 'Net Profit'], labels: { style: { fontSize: '12px', fontWeight: 600 } } },
+  colors: ['#28C76F', '#EA5455', '#7367F0', finance.value?.profit >= 0 ? '#28C76F' : '#EA5455'],
+  plotOptions: { bar: { distributed: true, columnWidth: '45%', borderRadius: 6 } },
+  dataLabels: { enabled: true, formatter: v => '$' + (v / 1000).toFixed(1) + 'k' },
+  legend: { show: false },
+  grid: { borderColor: '#EBE9F1' }
+}))
+
+const financeChartSeries = computed(() => [{
+  name: 'Amount ($)',
+  data: [
+    finance.value?.income || 0,
+    finance.value?.expenses || 0,
+    finance.value?.payments || 0,
+    finance.value?.profit || 0
+  ]
+}])
+
+// Timesheets chart
+const timesheetsChartOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false } },
+  xaxis: { categories: SHORT_MONTHS, labels: { style: { fontSize: '11px', fontWeight: 600 } } },
+  yaxis: { labels: { formatter: v => v + 'h' } },
+  colors: ['#7367F0'],
+  plotOptions: { bar: { columnWidth: '45%', borderRadius: 4 } },
+  grid: { borderColor: '#EBE9F1' }
+}))
+const timesheetsChartSeries = computed(() => [{ name: 'Hours Logged', data: timesheetsData.value.map(r => r.hours) }])
+
+// Team chart
+const teamChartOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false } },
+  xaxis: { categories: teamData.value.map(m => m.name), labels: { style: { fontSize: '11px', fontWeight: 600 } } },
+  colors: ['#7367F0'],
+  plotOptions: { bar: { columnWidth: '45%', borderRadius: 4 } },
+  grid: { borderColor: '#EBE9F1' }
+}))
+const teamChartSeries = computed(() => [{ name: 'Completed Tasks', data: teamData.value.map(m => m.task_count) }])
+
+// Expenses Chart options
+const expNotBillableBarOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false } },
+  xaxis: { categories: SHORT_MONTHS, labels: { style: { fontSize: '11px', fontWeight: 600 } } },
+  yaxis: { labels: { formatter: v => '$' + v.toLocaleString() } },
+  colors: ['#EA5455'],
+  plotOptions: { bar: { columnWidth: '45%', borderRadius: 4 } },
+  grid: { borderColor: '#EBE9F1' }
+}))
+const expNotBillableBarSeries = computed(() => {
+  const totalRow = expNotBillable.value.find(r => r.is_total)
+  return [{ name: 'Not Billable', data: totalRow?.monthly ?? Array(12).fill(0) }]
+})
+
+const expBillableBarOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false } },
+  xaxis: { categories: SHORT_MONTHS, labels: { style: { fontSize: '11px', fontWeight: 600 } } },
+  yaxis: { labels: { formatter: v => '$' + v.toLocaleString() } },
+  colors: ['#28C76F'],
+  plotOptions: { bar: { columnWidth: '45%', borderRadius: 4 } },
+  grid: { borderColor: '#EBE9F1' }
+}))
+const expBillableBarSeries = computed(() => {
+  const totalRow = expBillable.value.find(r => r.is_total)
+  return [{ name: 'Billable', data: totalRow?.monthly ?? Array(12).fill(0) }]
+})
+
+function kbDonutOptions(a) {
+  return {
+    chart: { type: 'donut' },
+    labels: ['Helpful', 'Not Helpful'],
+    colors: ['#28C76F', '#EA5455'],
+    legend: { show: false },
+    dataLabels: { enabled: false }
+  }
+}
+function kbDonutSeries(a) {
+  return [a.helpful || 0, a.not_helpful || 0]
+}
+
 const srChartMax = computed(() => Math.max(...srCharts.value.map(r => r.invoice_total), 1))
+
+// API Loaders
+async function loadFinance() {
+  try {
+    const res = await axios.get(`${BASE}/reports/finance`, { params: { year: selectedYear.value } })
+    finance.value = res.data
+  } catch {
+    finance.value = { income: 0, expenses: 0, payments: 0, profit: 0 }
+  }
+}
+
+async function loadLeads() {
+  leadsLoading.value = true
+  try {
+    const res = await axios.get(`${BASE}/reports/leads`, { params: { year: selectedYear.value } })
+    leadsData.value = res.data.monthly || []
+    leadsTotals.value = res.data.totals || { total_leads: 0, total_converted: 0, conversion_rate: 0, total_value: 0, sources_count: 0 }
+    leadsBySource.value = res.data.by_source || []
+    leadsByStatus.value = res.data.by_status || []
+    leadsByStaff.value = res.data.by_staff || []
+    leadsList.value = res.data.leads || []
+  } catch (err) {
+    console.error('Failed to load leads report:', err)
+  } finally {
+    leadsLoading.value = false
+  }
+}
+
+async function loadExpensesDetailed() {
+  expLoading.value = true
+  try {
+    const res = await axios.get(`${BASE}/reports/expenses-detailed`, {
+      params: { year: selectedYear.value, exclude_billable: excludeBillable.value ? 1 : 0 }
+    })
+    expNotBillable.value = res.data.not_billable ?? []
+    expBillable.value = res.data.billable ?? []
+  } catch {
+    expNotBillable.value = []
+    expBillable.value = []
+  } finally {
+    expLoading.value = false
+  }
+}
+
+async function loadAgents() {
+  try {
+    const res = await axios.get(`${BASE}/staff`)
+    agents.value = res.data.data ?? res.data ?? []
+  } catch {
+    agents.value = []
+  }
+}
 
 async function loadSalesReport() {
   srLoading.value = true
@@ -862,14 +1153,11 @@ async function loadSalesReport() {
     estimates: 'sales-report/estimates',
     customers: 'sales-report/customers',
     charts: 'sales-report/charts',
-    'total-income': 'sales-report/total-income',
-    'payment-modes': 'sales-report/payment-modes',
-    'customer-groups': 'sales-report/customer-groups',
   }
   try {
     const res = await axios.get(`${BASE}/${endpoints[tab]}`, { params })
     const d = res.data
-    let items
+    let items = []
     switch (tab) {
       case 'invoices': items = d.invoices?.data ?? d.invoices ?? []; break
       case 'items': items = d.items?.data ?? d.items ?? []; break
@@ -879,10 +1167,6 @@ async function loadSalesReport() {
       case 'estimates': items = d.estimates?.data ?? d.estimates ?? []; break
       case 'customers': items = d.customers?.data ?? d.customers ?? []; break
       case 'charts': items = d.monthly ?? []; break
-      case 'total-income': srIncome.value = d; return
-      case 'payment-modes': items = d.modes ?? []; break
-      case 'customer-groups': items = d.groups ?? []; break
-      default: items = []
     }
     switch (tab) {
       case 'invoices': srInvoices.value = items; break
@@ -893,89 +1177,20 @@ async function loadSalesReport() {
       case 'estimates': srEstimates.value = items; break
       case 'customers': srCustomers.value = items; break
       case 'charts': srCharts.value = items; break
-      case 'payment-modes': srModes.value = items; break
-      case 'customer-groups': srGroups.value = items; break
     }
   } catch {
-    if (tab === 'total-income') {
-      srIncome.value = { invoiced: 0, paid: 0, outstanding: 0 }
-    } else {
-      const arr = tab === 'charts'
-        ? Array.from({ length: 12 }, (_, i) => ({ month: i + 1, invoices: 0, invoice_total: 0, payments: 0, payment_total: 0 }))
-        : []
-      switch (tab) {
-        case 'invoices': srInvoices.value = arr; break
-        case 'items': srItems.value = arr; break
-        case 'payments': srPayments.value = arr; break
-        case 'credit-notes': srCreditNotes.value = arr; break
-        case 'proposals': srProposals.value = arr; break
-        case 'estimates': srEstimates.value = arr; break
-        case 'customers': srCustomers.value = arr; break
-        case 'charts': srCharts.value = arr; break
-        case 'payment-modes': srModes.value = arr; break
-        case 'customer-groups': srGroups.value = arr; break
-      }
-    }
-  } finally { srLoading.value = false }
-}
-
-async function loadAgents() {
-  try {
-    const res = await axios.get(`${BASE}/sales-report/agents`)
-    agents.value = res.data.data ?? res.data
-  } catch { agents.value = [] }
-}
-
-function sampleMonthly() {
-  return Array.from({ length: 12 }, (_, i) => ({
-    month: i + 1, total: Math.random() * 12000 + 1000, count: Math.floor(Math.random() * 15 + 1),
-  }))
-}
-
-async function loadSales() {
-  loadingSales.value = true
-  try {
-    const res = await axios.get(`${BASE}/reports/sales`, { params: { year: selectedYear.value } })
-    salesData.value = res.data.monthly
-  } catch {
-    salesData.value = sampleMonthly()
-  } finally { loadingSales.value = false }
-}
-
-async function loadExpenses() {
-  loadingExpenses.value = true
-  try {
-    const res = await axios.get(`${BASE}/reports/expenses`, { params: { year: selectedYear.value } })
-    expensesData.value = res.data.monthly
-  } catch {
-    expensesData.value = sampleMonthly().map(r => ({ ...r, total: r.total * 0.5 }))
-  } finally { loadingExpenses.value = false }
-}
-
-async function loadExpensesDetailed() {
-  expLoading.value = true
-  try {
-    const res = await axios.get(`${BASE}/reports/expenses-detailed`, {
-      params: { year: selectedYear.value, exclude_billable: excludeBillable.value }
-    })
-    const d = res.data
-    expNotBillable.value = d.not_billable ?? []
-    expBillable.value = excludeBillable.value ? [] : (d.billable ?? [])
-  } catch {
-    expNotBillable.value = []
-    expBillable.value = []
-  } finally { expLoading.value = false }
-}
-
-async function loadFinance() {
-  try {
-    const res = await axios.get(`${BASE}/reports/finance`, { params: { year: selectedYear.value } })
-    finance.value = res.data
-  } catch {
-    const income   = salesData.value.reduce((a, r) => a + r.total, 0)
-    const expenses = expensesData.value.reduce((a, r) => a + r.total, 0)
-    finance.value  = { income, expenses, payments: income * 0.85, profit: income - expenses }
+    // fallback
+  } finally {
+    srLoading.value = false
   }
+}
+
+async function loadTimesheets() {
+  timesheetsData.value = Array.from({ length: 12 }, (_, i) => ({
+    month: i + 1,
+    hours: Math.floor(Math.random() * 200 + 50),
+    tasks: Math.floor(Math.random() * 40 + 10),
+  }))
 }
 
 async function loadTeam() {
@@ -985,12 +1200,14 @@ async function loadTeam() {
     teamData.value = res.data.team
   } catch {
     teamData.value = [
-      { id: 1, name: 'Tom Kunze',   task_count: 24 },
+      { id: 1, name: 'Tom Kunze', task_count: 24 },
       { id: 2, name: 'Alice Brown', task_count: 18 },
-      { id: 3, name: 'Bob Smith',   task_count: 13 },
-      { id: 4, name: 'Carol Lee',   task_count: 7  },
+      { id: 3, name: 'Bob Smith', task_count: 13 },
+      { id: 4, name: 'Carol Lee', task_count: 7 },
     ]
-  } finally { loadingTeam.value = false }
+  } finally {
+    loadingTeam.value = false
+  }
 }
 
 async function loadKbReport() {
@@ -1002,38 +1219,29 @@ async function loadKbReport() {
   } catch {
     kbArticles.value = []
     kbCategories.value = []
-  } finally { kbLoading.value = false }
+  } finally {
+    kbLoading.value = false
+  }
 }
 
-function sampleLeads() {
-  return Array.from({ length: 12 }, (_, i) => ({
-    month: i + 1,
-    count: Math.floor(Math.random() * 30 + 5),
-    converted: Math.floor(Math.random() * 10 + 1),
-  }))
-}
-
-function sampleTimesheets() {
-  return Array.from({ length: 12 }, (_, i) => ({
-    month: i + 1,
-    hours: Math.floor(Math.random() * 200 + 50),
-    tasks: Math.floor(Math.random() * 40 + 10),
-  }))
-}
- 
 async function loadAll() {
-  await Promise.all([loadSales(), loadExpenses()])
-  await loadFinance()
-  leadsData.value = sampleLeads()
-  timesheetsData.value = sampleTimesheets()
-  await loadTeam()
-  await Promise.all([loadSalesReport(), loadAgents(), loadExpensesDetailed(), loadKbReport()])
+  await Promise.all([loadFinance(), loadLeads(), loadExpensesDetailed(), loadTimesheets(), loadTeam(), loadAgents()])
+  if (activeTab.value === 'sales') {
+    loadSalesReport()
+  } else if (activeTab.value === 'kb') {
+    loadKbReport()
+  }
 }
 
-watch(salesSubTab, () => { srFilters.value = { search: '', status: [], sale_agent: null, perPage: 10 }; loadSalesReport() })
+watch(salesSubTab, () => {
+  srFilters.value = { search: '', status: [], sale_agent: null, perPage: 10 }
+  loadSalesReport()
+})
 
 function exportReport() {
-  alert(`Exporting ${activeTab.value} report for ${selectedYear.value} as PDF...`)
+  const currentTabObj = tabs.find(t => t.key === activeTab.value)
+  const tabName = currentTabObj ? currentTabObj.label : activeTab.value
+  alert(`Exporting ${tabName} Report for fiscal year ${selectedYear.value}...`)
 }
 
 // Auto-set active tab from route
@@ -1043,150 +1251,20 @@ else if (route.path.includes('/leads')) activeTab.value = 'leads'
 else if (route.path.includes('/timesheets')) activeTab.value = 'timesheets'
 else if (route.path.includes('/kb-articles')) activeTab.value = 'kb'
 else if (route.path.includes('/team')) activeTab.value = 'team'
+else if (route.path.includes('/sales')) activeTab.value = 'sales'
 
 onMounted(loadAll)
 </script>
 
 <style scoped>
-.reports-page { padding: 24px; font-family: 'Inter', sans-serif; max-width: 1400px; margin: 0 auto; }
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-.page-header h1 { font-size: 22px; font-weight: 700; color: #1e293b; margin: 0; }
-.subtitle { font-size: 13px; color: #64748b; display: block; }
-.header-actions { display: flex; gap: 10px; align-items: center; }
-.year-select { padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none; cursor: pointer; }
-.btn-export { padding: 8px 16px; background: #f1f5f9; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 600; }
-.btn-export:hover { background: #e2e8f0; }
-
-/* Finance Cards */
-.finance-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
-.finance-card { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 20px 18px; transition: all 0.2s; }
-.finance-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.08); transform: translateY(-2px); }
-.finance-card.income   { border-top: 3px solid #10b981; }
-.finance-card.expenses { border-top: 3px solid #ef4444; }
-.finance-card.payments { border-top: 3px solid #3b82f6; }
-.finance-card.profit.positive { border-top: 3px solid #10b981; }
-.finance-card.profit.negative { border-top: 3px solid #ef4444; }
-.card-label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
-.card-value { font-size: 26px; font-weight: 800; color: #1e293b; }
-.card-sub   { font-size: 11px; color: #94a3b8; margin-top: 2px; }
-
-/* Tabs */
-.tabs { display: flex; gap: 4px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 4px; margin-bottom: 24px; }
-.tab-btn { flex: 1; padding: 9px 14px; border: none; background: transparent; border-radius: 7px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.2s; }
-.tab-btn:hover { background: #e2e8f0; }
-.tab-btn.active { background: #fff; color: #1e9aff; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
-
-/* Report section */
-.report-section { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 24px; }
-.section-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
-.section-header h2 { font-size: 17px; font-weight: 700; color: #1e293b; margin: 0; }
-.header-filters { display: flex; gap: 8px; align-items: center; }
-.sub-tabs { display: flex; flex-wrap: wrap; gap: 4px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 3px; margin-bottom: 16px; }
-.sub-tab-btn { padding: 6px 12px; border: none; background: transparent; border-radius: 6px; font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.15s; }
-.sub-tab-btn:hover { background: #e2e8f0; }
-.sub-tab-btn.active { background: #fff; color: #1e9aff; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
-.report-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-.toolbar-left { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.table-responsive { overflow-x: auto; }
-.status-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-.status-tag.unpaid { background: #fef2f2; color: #dc2626; }
-.status-tag.paid { background: #f0fdf4; color: #16a34a; }
-.status-tag.partiallypaid { background: #fffbeb; color: #d97706; }
-.status-tag.overdue { background: #fef2f2; color: #dc2626; }
-.status-tag.draft { background: #f1f5f9; color: #64748b; }
-.status-tag.open { background: #eff6ff; color: #2563eb; }
-.status-tag.sent { background: #f0fdf4; color: #16a34a; }
-.status-tag.revised { background: #fffbeb; color: #d97706; }
-.status-tag.declined { background: #fef2f2; color: #dc2626; }
-.status-tag.accepted { background: #f0fdf4; color: #16a34a; }
-.status-tag.closed { background: #f1f5f9; color: #64748b; }
-.status-tag.void { background: #f1f5f9; color: #64748b; }
-.empty-cell { text-align: center; color: #94a3b8; padding: 24px !important; }
-.checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #475569; cursor: pointer; }
-.checkbox-label input { width: 16px; height: 16px; cursor: pointer; }
-.expenses-detailed { display: flex; flex-direction: column; gap: 28px; }
-.exp-charts-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-@media (max-width: 768px) {
-  .exp-charts-row { grid-template-columns: 1fr; }
+:deep(.ant-select-selector),
+:deep(.ant-input),
+:deep(.ant-input-search) {
+  border-radius: 6px !important;
+  border-color: #DBDADE !important;
 }
-.exp-chart-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
-.exp-chart-box .chart-title { font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 10px; }
-.exp-chart-box :deep(.apexcharts-canvas) { margin: 0 auto; }
-.exp-section-group h3 { font-size: 14px; font-weight: 700; color: #1e293b; margin: 0 0 12px; }
-.exp-cat-table th, .exp-cat-table td { white-space: nowrap; font-size: 11px; padding: 6px 8px; }
-.exp-cat-table th:first-child, .exp-cat-table td:first-child { position: sticky; left: 0; background: #fff; z-index: 1; min-width: 140px; }
-.exp-cat-table thead th:first-child { background: #f8fafc; }
-.exp-cat-table .total-row td { background: #f8fafc; font-weight: 700; }
-.loading-wrap { text-align: center; padding: 40px; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.loader { width: 18px; height: 18px; border: 2px solid #e2e8f0; border-top-color: #1e9aff; border-radius: 50%; animation: spin 0.7s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.chart-and-table { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
-
-/* Bar Chart */
-.bar-chart { padding: 0; }
-.chart-title { font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 12px; }
-.bars { display: flex; align-items: flex-end; gap: 8px; height: 350px; padding-bottom: 24px; border-bottom: 2px solid #f1f5f9; }
-.bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 4px; height: 100%; justify-content: flex-end; position: relative; }
-.bar-label-top { font-size: 8px; color: #94a3b8; text-align: center; position: absolute; top: -4px; white-space: nowrap; }
-.bar-col { display: flex; align-items: flex-end; flex: 1; width: 100%; padding-top: 16px; }
-.bar { width: 100%; min-height: 4px; background: linear-gradient(180deg, #1e9aff, #0d7bd6); border-radius: 4px 4px 0 0; transition: height 0.5s ease; }
-.bar.active { background: linear-gradient(180deg, #f59e0b, #d97706); }
-.exp-bar { background: linear-gradient(180deg, #ef4444, #dc2626); }
-.bar-label { font-size: 9px; color: #94a3b8; margin-top: 4px; }
-
-/* Summary table */
-.summary-table { overflow-x: auto; }
-.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.data-table th { padding: 8px 10px; text-align: left; background: #f8fafc; color: #475569; font-weight: 600; border-bottom: 1.5px solid #e2e8f0; }
-.data-table td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; }
-.highlight-row td { background: #eff6ff; }
-.total-row td { background: #f8fafc; border-top: 1.5px solid #e2e8f0; }
-
-/* Finance chart */
-.finance-detail { display: flex; flex-direction: column; gap: 24px; }
-.finance-chart-wrap { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
-
-/* Leads chart */
-.leads-chart-area { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
-.leads-chart-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
-.leads-chart-box .chart-title { font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 10px; }
-.leads-chart-box :deep(.apexcharts-canvas) { margin: 0 auto; }
-
-.profit-summary { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-radius: 10px; }
-.profit-summary.profitable   { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1.5px solid #bbf7d0; }
-.profit-summary.unprofitable { background: linear-gradient(135deg, #fef2f2, #fee2e2); border: 1.5px solid #fecaca; }
-.profit-icon { font-size: 32px; }
-.profit-headline { font-weight: 700; font-size: 15px; color: #1e293b; }
-.profit-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
-
-/* Timesheets chart */
-.timesheets-chart-area { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
-.timesheets-chart-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
-.timesheets-chart-box .chart-title { font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 10px; }
-
-/* KB chart */
-.kb-chart-area { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-.kb-group-label { font-size: 14px; font-weight: 700; color: #1e293b; grid-column: 1 / -1; padding-bottom: 4px; border-bottom: 2px solid #e2e8f0; margin-bottom: 4px; }
-.kb-vote-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; }
-.kb-vote-title { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 4px; }
-.kb-total { font-weight: 400; color: #94a3b8; font-size: 12px; }
-.kb-no-votes { font-size: 12px; color: #94a3b8; font-style: italic; padding: 24px; text-align: center; }
-
-/* Team chart */
-.team-chart-area { }
-.team-chart-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
-
-.empty-state { text-align: center; padding: 40px; color: #94a3b8; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.empty-icon { font-size: 36px; }
-
-@media (max-width: 1024px) {
-  .finance-cards { grid-template-columns: repeat(2, 1fr); }
-  .chart-and-table { grid-template-columns: 1fr; }
-}
-@media (max-width: 640px) {
-  .finance-cards { grid-template-columns: 1fr 1fr; }
-  .tabs { overflow-x: auto; }
-  .tab-btn { white-space: nowrap; }
+:deep(.ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector) {
+  border-color: #7367F0 !important;
+  box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.2) !important;
 }
 </style>

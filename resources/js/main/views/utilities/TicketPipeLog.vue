@@ -39,6 +39,7 @@
         </div>
       </div>
 
+      <!-- Table -->
       <a-table
         :dataSource="logs"
         :columns="columns"
@@ -98,6 +99,35 @@
           </div>
         </template>
       </a-table>
+
+      <!-- Mobile Responsive Card View -->
+      <div class="mobile-cards-list" v-if="!loading">
+        <div 
+          v-for="record in logs" 
+          :key="'m-tpl-' + record.id"
+          class="mobile-row-card"
+        >
+          <div class="flex items-center justify-between">
+            <a-tag :color="statusColor(record.status)">{{ record.status }}</a-tag>
+            <span class="text-[11px] text-slate-400">📅 {{ formatDateTime(record.created_at) }}</span>
+          </div>
+
+          <div class="font-bold text-xs text-slate-800 pt-1">
+            {{ record.subject || 'No Subject' }}
+          </div>
+          <div class="text-xs text-slate-500">
+            From: {{ record.from_name }} ({{ record.from_email }})
+          </div>
+
+          <div class="text-xs text-slate-600 line-clamp-2 pt-1">
+            {{ truncateMessage(record.message) }}
+          </div>
+        </div>
+
+        <div v-if="!logs.length" class="text-center p-6 text-slate-400 text-xs font-semibold">
+          No entries found
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -283,5 +313,35 @@ export default defineComponent({
   gap: 8px;
   color: #94a3b8;
   font-size: 13px;
+}
+
+/* Mobile Cards List Hidden by Default on Desktop */
+.mobile-cards-list {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .table-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .toolbar-left, .toolbar-right {
+    width: 100% !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+  }
+  .toolbar-left .ant-picker, .toolbar-left .ant-input-search {
+    width: 100% !important;
+  }
+  :deep(.ant-table-wrapper) {
+    display: none !important;
+  }
+  .mobile-cards-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
 }
 </style>

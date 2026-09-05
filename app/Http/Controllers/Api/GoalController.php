@@ -18,7 +18,7 @@ class GoalController extends Controller
             $query->where('subject', 'like', "%{$search}%");
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $goals = $query->orderBy('end_date', 'asc')->paginate($perPage);
 
         return response()->json([

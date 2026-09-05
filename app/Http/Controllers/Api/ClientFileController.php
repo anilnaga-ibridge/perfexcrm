@@ -44,7 +44,7 @@ class ClientFileController extends Controller
         }
 
         $request->validate([
-            'file' => 'required|file|max:20480', // 20MB limit
+            'file' => 'required|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,jpg,jpeg,png,gif,webp,zip,rar', // 20MB limit
         ]);
 
         $file = $request->file('file');

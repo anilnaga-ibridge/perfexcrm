@@ -1,369 +1,782 @@
 <template>
-  <div class="pj-page">
-    <div class="pj-header">
+  <div class="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto min-h-screen bg-[#F8F7FA]">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <h1 class="pj-title">Projects</h1>
-        <p class="pj-subtitle">Manage your active and archived projects</p>
-      </div>
-      <div class="pj-header-actions">
-        <button class="pj-btn-ghost" @click="exportPDF">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Bulk PDF
-        </button>
-        <button class="pj-btn-primary" @click="openCreate">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          New Project
-        </button>
-      </div>
-    </div>
-
-    <!-- Summary Cards -->
-    <div class="pj-stats-row">
-      <div v-for="card in summaryCards" :key="card.label"
-           class="pj-stat-card" :style="{ borderLeftColor: card.color }"
-           @click="filterByStatus(card.filter)">
-        <div class="pj-stat-icon" :style="{ background: card.bg }" v-html="card.icon"></div>
-        <div class="pj-stat-info">
-          <div class="pj-stat-val" :style="{ color: card.color }">{{ card.value }}</div>
-          <div class="pj-stat-label">{{ card.label }}</div>
+        <div class="flex items-center space-x-2">
+          <div class="w-2.5 h-6 rounded-full bg-gradient-to-b from-[#7367F0] to-[#9F8ED6]"></div>
+          <h1 class="text-xl md:text-2xl font-bold text-[#4B465C] tracking-tight m-0">Projects</h1>
         </div>
+        <p class="text-xs text-[#A8AAAE] mt-1 pl-4.5 mb-0">Manage your active, scheduled, and completed projects</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Export Button -->
+        <button
+          @click="exportPDF"
+          class="btn-outline px-4 py-2 text-xs font-bold flex items-center gap-2 cursor-pointer shadow-sm"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Export CSV</span>
+        </button>
+
+        <!-- New Project Button -->
+        <button
+          v-if="canCreateProject"
+          @click="openCreate"
+          class="btn-primary px-4 py-2 text-xs font-bold flex items-center gap-2 shadow-md cursor-pointer"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>New Project</span>
+        </button>
       </div>
     </div>
 
-    <!-- Filters + View Toggle -->
-    <div class="pj-filters">
-      <div class="pj-filters-left">
-        <select class="pj-filter-select" v-model="perPage" @change="load">
-          <option :value="10">10</option>
-          <option :value="25">25</option>
-          <option :value="50">50</option>
-        </select>
-        <div class="pj-status-pills">
-          <button v-for="s in statusFilters" :key="s.value"
-                  class="pj-pill" :class="{ active: statusFilter === s.value }"
-                  @click="filterByStatus(s.value)">
+    <!-- Summary KPI Stat Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+      <div
+        v-for="card in summaryCards"
+        :key="card.label"
+        @click="filterByStatus(card.filter)"
+        class="bg-white border border-[#EBE9F1] rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center justify-between group"
+        :class="{ 'ring-2 ring-[#7367F0] border-transparent': statusFilter === card.filter }"
+      >
+        <div class="space-y-1">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-[#A8AAAE] block">{{ card.label }}</span>
+          <div class="text-xl font-extrabold" :style="{ color: card.textColor }">
+            {{ card.value }}
+          </div>
+          <span class="text-[10px] text-[#A8AAAE] block font-medium">Projects</span>
+        </div>
+        <div
+          class="w-11 h-11 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110 flex-shrink-0"
+          :style="{ backgroundColor: card.bgLight, color: card.color }"
+          v-html="card.icon"
+        ></div>
+      </div>
+    </div>
+
+    <!-- Filters + Search + View Controls -->
+    <div class="bg-white border border-[#EBE9F1] rounded-lg p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+        <!-- Per page dropdown -->
+        <div class="flex items-center space-x-2">
+          <span class="text-xs text-[#A8AAAE] font-medium">Show</span>
+          <div class="relative">
+            <select
+              v-model="perPage"
+              @change="load"
+              class="form-ctrl text-xs h-[36px] pl-3 pr-7 bg-white border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer"
+            >
+              <option :value="10">10</option>
+              <option :value="25">25</option>
+              <option :value="50">50</option>
+              <option :value="100">100</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-[#A8AAAE]">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status Filter Pills -->
+        <div class="flex items-center space-x-1 overflow-x-auto py-1 max-w-full">
+          <button
+            v-for="s in statusFilters"
+            :key="s.value"
+            @click="filterByStatus(s.value)"
+            class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer whitespace-nowrap"
+            :class="statusFilter === s.value
+              ? 'bg-[#7367F0] text-white shadow-sm'
+              : 'bg-white text-[#6F6B7D] hover:bg-[#F8F7FA] border border-[#DBDADE]'"
+          >
             {{ s.label }}
           </button>
         </div>
       </div>
-      <div class="pj-filters-right">
-        <div class="pj-search-wrap">
-          <svg class="pj-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input v-model="search" placeholder="Search projects..." class="pj-search-input" @input="onSearch" />
+
+      <!-- Search + View Toggle -->
+      <div class="flex items-center gap-2.5 w-full md:w-auto justify-between md:justify-end">
+        <div class="relative w-full md:w-64">
+          <input
+            v-model="search"
+            @input="onSearch"
+            type="text"
+            placeholder="Search projects..."
+            class="form-ctrl text-xs h-[36px] pl-9 pr-3.5 bg-white border-[#DBDADE] rounded-md transition-all w-full"
+          />
+          <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-[#A8AAAE]">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
         </div>
-        <div class="pj-view-toggle">
-          <button class="pj-view-btn" :class="{ active: view === 'table' }" @click="view = 'table'" title="Table View">
+
+        <!-- View Switcher -->
+        <div class="flex items-center bg-[#F8F7FA] p-0.5 border border-[#DBDADE] rounded-md flex-shrink-0">
+          <button
+            @click="view = 'table'"
+            class="p-1.5 rounded transition-all cursor-pointer"
+            :class="view === 'table' ? 'bg-white text-[#7367F0] shadow-xs' : 'text-[#A8AAAE] hover:text-[#6F6B7D]'"
+            title="Table View"
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
           </button>
-          <button class="pj-view-btn" :class="{ active: view === 'kanban' }" @click="view = 'kanban'" title="Kanban View">
+          <button
+            @click="view = 'kanban'"
+            class="p-1.5 rounded transition-all cursor-pointer"
+            :class="view === 'kanban' ? 'bg-white text-[#7367F0] shadow-xs' : 'text-[#A8AAAE] hover:text-[#6F6B7D]'"
+            title="Kanban View"
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
           </button>
-          <button class="pj-view-btn" :class="{ active: view === 'gantt' }" @click="view = 'gantt'" title="Gantt View">
+          <button
+            @click="view = 'gantt'"
+            class="p-1.5 rounded transition-all cursor-pointer"
+            :class="view === 'gantt' ? 'bg-white text-[#7367F0] shadow-xs' : 'text-[#A8AAAE] hover:text-[#6F6B7D]'"
+            title="Gantt View"
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="3" y1="4" x2="21" y2="4"/><line x1="7" y1="8" x2="21" y2="8"/><line x1="4" y1="12" x2="21" y2="12"/><line x1="9" y1="16" x2="21" y2="16"/><line x1="6" y1="20" x2="21" y2="20"/></svg>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Table View -->
-    <div class="pj-table-wrap" v-if="view === 'table'">
-      <table class="pj-table">
-        <thead>
-          <tr>
-            <th style="width:44px;">#</th>
-            <th>Project Name</th>
-            <th>Customer</th>
-            <th>Tags</th>
-            <th style="width:100px;">Start Date</th>
-            <th style="width:95px;">Deadline</th>
-            <th style="width:100px;">Members</th>
-            <th>Status</th>
-            <th style="width:100px;"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-if="loading">
-            <td colspan="9" class="pj-empty-cell">
-              <svg class="animate-spin" fill="none" viewBox="0 0 24 24" width="18" height="18"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-            </td>
-          </tr>
-          <tr v-for="(proj, idx) in projects" :key="proj.id" class="pj-row">
-            <td class="pj-cell-muted">{{ idx + 1 + (page - 1) * (+perPage) }}</td>
-            <td>
-              <div class="pj-name-cell">
-                <span class="pj-name">{{ proj.name }}</span>
-                <span v-if="proj.description" class="pj-desc">{{ truncate(proj.description, 50) }}</span>
-              </div>
-            </td>
-            <td><span class="pj-customer">{{ proj.client?.company || '—' }}</span></td>
-            <td>
-              <div class="pj-tags">
-                <span v-if="!proj.tags" class="text-slate-300">—</span>
-                <span v-for="tag in parseTags(proj.tags)" :key="tag" class="pj-tag">{{ tag }}</span>
-              </div>
-            </td>
-            <td class="pj-cell-muted">{{ fmtDate(proj.start_date) }}</td>
-            <td>
-              <span :class="isOverdue(proj.deadline) ? 'pj-overdue' : 'pj-cell-muted'">
-                {{ fmtDate(proj.deadline) || '—' }}
-              </span>
-            </td>
-            <td>
-              <div class="pj-avatars">
-                <div v-for="m in (proj.members || []).slice(0,3)" :key="m.id" class="pj-avatar" :title="m.name">
-                  {{ m.name?.charAt(0)?.toUpperCase() }}
+    <!-- TABLE VIEW -->
+    <div v-if="view === 'table'" class="bg-white border border-[#EBE9F1] rounded-lg shadow-sm overflow-hidden">
+      <div class="overflow-x-auto min-h-[300px]">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-[#F8F7FA] border-b border-[#EBE9F1] text-[11px] font-bold uppercase tracking-wider text-[#6F6B7D]">
+              <th class="py-3 px-3.5 text-center w-12">#</th>
+              <th class="py-3 px-3.5 min-w-[220px]">Project Name</th>
+              <th class="py-3 px-3.5 min-w-[160px]">Customer</th>
+              <th class="py-3 px-3.5 min-w-[120px]">Tags</th>
+              <th class="py-3 px-3.5">Start Date</th>
+              <th class="py-3 px-3.5">Deadline</th>
+              <th class="py-3 px-3.5 min-w-[110px]">Members</th>
+              <th class="py-3 px-3.5">Status</th>
+              <th class="py-3 px-3.5 text-center w-28">Options</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#F1F0F2] text-xs text-[#6F6B7D]">
+            <tr v-if="loading">
+              <td colspan="9" class="text-center py-16 text-[#A8AAAE]">
+                <div class="flex flex-col items-center justify-center space-y-2">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24" class="animate-spin text-[#7367F0]"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                  <span class="text-xs font-semibold">Loading projects...</span>
                 </div>
-                <div v-if="(proj.members || []).length > 3" class="pj-avatar-more">+{{ proj.members.length - 3 }}</div>
-              </div>
-            </td>
-            <td><span class="pj-status-badge" :class="statusClass(proj.status)">{{ proj.status }}</span></td>
-            <td>
-              <div class="pj-actions">
-                <button @click="viewProject(proj)" class="pj-action-link" title="View">View</button>
-                <button @click="copyProject(proj)" class="pj-action-link" title="Copy Project">Copy</button>
-                <button @click="editProject(proj)" class="pj-action-link" title="Edit">Edit</button>
-                <button @click="deleteProject(proj)" class="pj-action-link text-red-500" title="Delete">Delete</button>
-              </div>
-            </td>
-          </tr>
-          <tr v-if="!loading && !projects.length">
-            <td colspan="9" class="pj-empty-cell">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" width="32" height="32"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-              <p class="text-slate-400 text-sm mt-2">No projects found</p>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              </td>
+            </tr>
 
-      <div class="pj-pagination" v-if="totalPages > 1">
-        <span class="pj-pg-info">Showing {{ projects.length }} of {{ totalPages * (+perPage) }} entries</span>
-        <div class="pj-pg-btns">
-          <button class="pj-pg-btn" :disabled="page <= 1" @click="page--; load()">Previous</button>
-          <button class="pj-pg-btn" :disabled="page >= totalPages" @click="page++; load()">Next</button>
+            <tr
+              v-for="(proj, idx) in projects"
+              :key="proj.id"
+              class="hover:bg-[#F8F7FA]/70 transition-colors group"
+            >
+              <!-- Number -->
+              <td class="py-3.5 px-3.5 text-center text-[#A8AAAE] font-mono text-[11px]">
+                {{ idx + 1 + (page - 1) * (+perPage) }}
+              </td>
+
+              <!-- Project Name & Description -->
+              <td class="py-3.5 px-3.5">
+                <div class="flex flex-col">
+                  <span class="font-bold text-[#4B465C] hover:text-[#7367F0] transition-colors cursor-pointer" @click="viewProject(proj)">
+                    {{ proj.name }}
+                  </span>
+                  <span v-if="proj.description" class="text-[11px] text-[#A8AAAE] line-clamp-1 mt-0.5">
+                    {{ truncate(proj.description, 55) }}
+                  </span>
+                </div>
+              </td>
+
+              <!-- Customer -->
+              <td class="py-3.5 px-3.5">
+                <div class="flex items-center space-x-2">
+                  <div class="w-6 h-6 rounded-full bg-[#7367F0]/10 text-[#7367F0] flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                    {{ proj.client?.company ? proj.client.company.charAt(0).toUpperCase() : '—' }}
+                  </div>
+                  <span class="font-semibold text-[#4B465C] truncate max-w-[150px]">
+                    {{ proj.client?.company || '—' }}
+                  </span>
+                </div>
+              </td>
+
+              <!-- Tags -->
+              <td class="py-3.5 px-3.5">
+                <div class="flex items-center gap-1 flex-wrap">
+                  <span v-if="!proj.tags || !parseTags(proj.tags).length" class="text-[#A8AAAE]">—</span>
+                  <span
+                    v-for="tag in parseTags(proj.tags)"
+                    :key="tag"
+                    class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#7367F0]/10 text-[#7367F0] border border-[#7367F0]/20"
+                  >
+                    {{ tag }}
+                  </span>
+                </div>
+              </td>
+
+              <!-- Start Date -->
+              <td class="py-3.5 px-3.5 whitespace-nowrap text-[#6F6B7D]">
+                {{ fmtDate(proj.start_date) }}
+              </td>
+
+              <!-- Deadline -->
+              <td class="py-3.5 px-3.5 whitespace-nowrap">
+                <span
+                  class="font-semibold"
+                  :class="isOverdue(proj.deadline) ? 'text-rose-600 bg-rose-50 px-2 py-0.5 rounded text-[11px]' : 'text-[#6F6B7D]'"
+                >
+                  {{ fmtDate(proj.deadline) }}
+                </span>
+              </td>
+
+              <!-- Members Avatar Stack -->
+              <td class="py-3.5 px-3.5">
+                <div class="flex items-center -space-x-1.5 overflow-hidden">
+                  <div
+                    v-for="m in (proj.members || []).slice(0, 3)"
+                    :key="m.id"
+                    class="w-6 h-6 rounded-full bg-gradient-to-tr from-[#7367F0] to-[#9F8ED6] text-white flex items-center justify-center text-[10px] font-bold border-2 border-white shadow-xs flex-shrink-0"
+                    :title="m.name"
+                  >
+                    {{ m.name?.charAt(0)?.toUpperCase() }}
+                  </div>
+                  <div
+                    v-if="(proj.members || []).length > 3"
+                    class="w-6 h-6 rounded-full bg-[#EBE9F1] text-[#6F6B7D] flex items-center justify-center text-[9px] font-bold border-2 border-white flex-shrink-0"
+                  >
+                    +{{ proj.members.length - 3 }}
+                  </div>
+                  <span v-if="!(proj.members || []).length" class="text-[#A8AAAE] text-xs">—</span>
+                </div>
+              </td>
+
+              <!-- Status -->
+              <td class="py-3.5 px-3.5 whitespace-nowrap">
+                <span
+                  class="px-2.5 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 shadow-2xs"
+                  :class="statusBadgeClass(proj.status)"
+                >
+                  <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClass(proj.status)"></span>
+                  {{ proj.status }}
+                </span>
+              </td>
+
+              <!-- Options -->
+              <td class="py-3.5 px-3.5 text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <button
+                    @click="viewProject(proj)"
+                    class="w-7 h-7 rounded border border-transparent hover:border-[#DBDADE] hover:bg-[#F8F7FA] text-[#A8AAAE] hover:text-[#7367F0] flex items-center justify-center transition-all cursor-pointer bg-transparent"
+                    title="View Project"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button
+                    v-if="canCreateProject"
+                    @click="copyProject(proj)"
+                    class="w-7 h-7 rounded border border-transparent hover:border-[#DBDADE] hover:bg-[#F8F7FA] text-[#A8AAAE] hover:text-[#7367F0] flex items-center justify-center transition-all cursor-pointer bg-transparent"
+                    title="Copy Project"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  </button>
+                  <button
+                    v-if="canEditProject"
+                    @click="editProject(proj)"
+                    class="w-7 h-7 rounded border border-transparent hover:border-[#DBDADE] hover:bg-[#F8F7FA] text-[#A8AAAE] hover:text-[#7367F0] flex items-center justify-center transition-all cursor-pointer bg-transparent"
+                    title="Edit Project"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
+                  </button>
+                  <button
+                    v-if="canDeleteProject"
+                    @click="deleteProject(proj)"
+                    class="w-7 h-7 rounded border border-transparent hover:border-rose-200 hover:bg-rose-50 text-[#A8AAAE] hover:text-rose-600 flex items-center justify-center transition-all cursor-pointer bg-transparent"
+                    title="Delete Project"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <tr v-if="!loading && !projects.length">
+              <td colspan="9" class="text-center py-12 text-[#A8AAAE]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36" class="mx-auto mb-2 opacity-50"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                <p class="text-xs font-semibold m-0">No projects found</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="flex items-center justify-between px-5 py-3 border-t border-[#F1F0F2] text-xs text-[#6F6B7D]" v-if="totalPages > 1">
+        <span class="text-[#A8AAAE]">Showing {{ projects.length }} of {{ totalPages * (+perPage) }} entries</span>
+        <div class="flex items-center space-x-2">
+          <button class="btn-outline px-3 py-1.5 text-xs font-semibold cursor-pointer" :disabled="page <= 1" @click="page--; load()">Previous</button>
+          <button class="btn-outline px-3 py-1.5 text-xs font-semibold cursor-pointer" :disabled="page >= totalPages" @click="page++; load()">Next</button>
         </div>
       </div>
     </div>
 
-    <!-- Gantt View -->
-    <div class="pj-gantt-wrap" v-if="view === 'gantt'">
-      <div class="pj-gantt-controls">
-        <button class="pj-gantt-nav" @click="ganttMonth--">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <span class="pj-gantt-month-label">{{ ganttMonthLabel }}</span>
-        <button class="pj-gantt-nav" @click="ganttMonth++">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-      </div>
-      <div class="pj-gantt-months">
-        <div v-for="(m, i) in ganttMonths" :key="m.key"
-             class="pj-gantt-month"
-             :class="{ active: ganttMonthOffset === i }"
-             @click="ganttMonthOffset = i">
-          {{ m.label }}
+    <!-- GANTT VIEW -->
+    <div v-if="view === 'gantt'" class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm space-y-4">
+      <div class="flex items-center justify-between border-b border-[#F1F0F2] pb-3">
+        <div class="flex items-center space-x-2">
+          <button class="w-8 h-8 rounded bg-[#F8F7FA] border border-[#DBDADE] hover:bg-[#EBE9F1] flex items-center justify-center text-[#6F6B7D] cursor-pointer" @click="ganttMonth--">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="text-sm font-bold text-[#4B465C] min-w-[140px] text-center">{{ ganttMonthLabel }}</span>
+          <button class="w-8 h-8 rounded bg-[#F8F7FA] border border-[#DBDADE] hover:bg-[#EBE9F1] flex items-center justify-center text-[#6F6B7D] cursor-pointer" @click="ganttMonth++">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+        <!-- Month fast picker pills -->
+        <div class="flex items-center gap-1 overflow-x-auto max-w-[60%] py-1">
+          <button
+            v-for="(m, i) in ganttMonths"
+            :key="m.key"
+            class="px-2.5 py-1 text-[11px] font-semibold rounded transition-all cursor-pointer whitespace-nowrap"
+            :class="ganttMonthOffset === i ? 'bg-[#7367F0] text-white shadow-xs' : 'bg-[#F8F7FA] text-[#6F6B7D] hover:bg-[#EBE9F1]'"
+            @click="ganttMonthOffset = i"
+          >
+            {{ m.label.split(' ')[0] }}
+          </button>
         </div>
       </div>
-      <div class="pj-gantt-chart">
-        <div v-for="proj in projects" :key="proj.id" class="pj-gantt-row">
-          <div class="pj-gantt-row-label">{{ proj.name }}</div>
-          <div class="pj-gantt-row-track">
-            <div class="pj-gantt-bar"
-                 :style="ganttBarStyle(proj)"
-                 :class="statusClass(proj.status)"
-                 :title="proj.name + ': ' + fmtDate(proj.start_date) + ' - ' + fmtDate(proj.deadline)">
-              <span v-if="ganttBarWidth(proj) > 15" class="pj-gantt-bar-text">{{ proj.name }}</span>
+
+      <!-- Gantt Rows Chart -->
+      <div class="space-y-2.5 pt-2">
+        <div
+          v-for="proj in projects"
+          :key="proj.id"
+          class="flex items-center gap-3 h-9 hover:bg-[#F8F7FA] p-1 rounded-md transition-colors"
+        >
+          <div class="w-44 text-xs font-bold text-[#4B465C] truncate flex-shrink-0" :title="proj.name">
+            {{ proj.name }}
+          </div>
+          <div class="flex-1 h-6 bg-[#F8F7FA] border border-[#EBE9F1] rounded-md relative overflow-hidden">
+            <div
+              class="absolute top-0.5 bottom-0.5 rounded-sm flex items-center px-2 text-[10px] font-bold text-white shadow-xs transition-all"
+              :style="ganttBarStyle(proj)"
+              :class="ganttBarColorClass(proj.status)"
+              :title="`${proj.name}: ${fmtDate(proj.start_date)} - ${fmtDate(proj.deadline)}`"
+            >
+              <span v-if="ganttBarWidth(proj) > 12" class="truncate">{{ proj.name }}</span>
             </div>
           </div>
         </div>
-        <div v-if="!projects.length" class="pj-gantt-empty">No projects to display</div>
+
+        <div v-if="!projects.length" class="text-center py-10 text-[#A8AAAE] text-xs font-semibold">
+          No projects to display on schedule
+        </div>
       </div>
     </div>
 
-    <!-- Kanban View -->
-    <div class="pj-kanban" v-if="view === 'kanban'">
-      <div class="pj-kanban-col" v-for="col in kanbanCols" :key="col.status">
-        <div class="pj-kanban-hd" :style="{ borderTopColor: col.color }">
-          <span class="pj-kanban-icon" v-html="col.icon"></span>
-          <span class="pj-kanban-title">{{ col.status }}</span>
-          <span class="pj-kanban-count">{{ projectsByStatus(col.status).length }}</span>
+    <!-- KANBAN VIEW -->
+    <div v-if="view === 'kanban'" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div
+        v-for="col in kanbanCols"
+        :key="col.status"
+        class="bg-white border border-[#EBE9F1] rounded-lg p-3.5 shadow-sm flex flex-col space-y-3"
+      >
+        <!-- Column Header -->
+        <div class="flex items-center justify-between pb-2 border-b border-[#F1F0F2]">
+          <div class="flex items-center space-x-2">
+            <div class="w-2.5 h-2.5 rounded-full" :style="{ backgroundColor: col.color }"></div>
+            <span class="text-xs font-bold text-[#4B465C]">{{ col.status }}</span>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#F8F7FA] text-[#6F6B7D] border border-[#DBDADE]">
+            {{ projectsByStatus(col.status).length }}
+          </span>
         </div>
-        <div class="pj-kanban-cards">
-          <div v-if="!projectsByStatus(col.status).length" class="pj-kanban-empty">Empty</div>
-          <div v-for="proj in projectsByStatus(col.status)" :key="proj.id" class="pj-kanban-card">
-            <div class="pj-kc-name">{{ proj.name }}</div>
-            <div class="pj-kc-client">{{ proj.client?.company || 'No client' }}</div>
-            <div class="pj-kc-meta">
-              <span class="pj-billing-tag">{{ proj.billing_type }}</span>
-              <span v-if="proj.deadline" class="pj-kc-date" :class="isOverdue(proj.deadline) ? 'pj-overdue' : ''">
+
+        <!-- Column Cards Container -->
+        <div class="space-y-2.5 flex-1 min-h-[220px]">
+          <div
+            v-if="!projectsByStatus(col.status).length"
+            class="h-28 border-2 border-dashed border-[#DBDADE]/60 rounded-lg flex items-center justify-center text-[11px] text-[#A8AAAE] font-semibold"
+          >
+            No Projects
+          </div>
+
+          <div
+            v-for="proj in projectsByStatus(col.status)"
+            :key="proj.id"
+            class="bg-[#F8F7FA] border border-[#EBE9F1] hover:border-[#7367F0]/40 rounded-lg p-3 shadow-2xs hover:shadow-sm transition-all space-y-2 group"
+          >
+            <div class="flex items-start justify-between gap-1">
+              <h4 class="text-xs font-bold text-[#4B465C] group-hover:text-[#7367F0] transition-colors m-0 line-clamp-2">
+                {{ proj.name }}
+              </h4>
+              <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button @click="editProject(proj)" class="text-[#A8AAAE] hover:text-[#7367F0] cursor-pointer" title="Edit">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
+                </button>
+                <button @click="deleteProject(proj)" class="text-[#A8AAAE] hover:text-rose-500 cursor-pointer" title="Delete">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="text-[11px] text-[#A8AAAE] flex items-center gap-1 truncate">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span class="truncate">{{ proj.client?.company || 'No customer' }}</span>
+            </div>
+
+            <div class="flex items-center justify-between pt-1 border-t border-[#DBDADE]/50 text-[10px]">
+              <span class="px-1.5 py-0.5 rounded bg-white text-[#6F6B7D] font-bold border border-[#DBDADE]/60">
+                {{ proj.billing_type || 'Fixed' }}
+              </span>
+              <span v-if="proj.deadline" :class="isOverdue(proj.deadline) ? 'text-rose-600 font-bold' : 'text-[#A8AAAE]'">
                 {{ fmtDate(proj.deadline) }}
               </span>
             </div>
-            <div class="pj-kc-actions">
-              <button class="pj-kc-btn" @click="editProject(proj)" title="Edit">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
-              </button>
-              <button class="pj-kc-btn" @click="deleteProject(proj)" title="Delete">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-              </button>
-            </div>
           </div>
         </div>
-        <button class="pj-kanban-add" @click="openCreateForStatus(col.status)">
+
+        <!-- Add Project Button -->
+        <button
+          v-if="canCreateProject"
+          @click="openCreateForStatus(col.status)"
+          class="w-full py-2 rounded-md border border-dashed border-[#DBDADE] hover:border-[#7367F0] hover:bg-[#7367F0]/5 text-[#6F6B7D] hover:text-[#7367F0] text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+        >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Project
+          <span>Add Project</span>
         </button>
       </div>
     </div>
 
-    <!-- Project Insights -->
-    <div class="pj-insights-section">
-      <div class="pj-insights-header">
-        <h3 class="pj-insights-title">Project Insights</h3>
+    <!-- Project Insights ApexCharts Section -->
+    <div class="space-y-3">
+      <div class="flex items-center space-x-2">
+        <div class="w-2.5 h-5 rounded-full bg-gradient-to-b from-[#7367F0] to-[#9F8ED6]"></div>
+        <h3 class="text-sm font-bold text-[#4B465C] m-0">Project Insights</h3>
       </div>
-      <div class="pj-insights-grid">
-        <div class="pj-insight-card">
-          <h4 class="pj-insight-label">Status Distribution</h4>
-          <VueApexCharts type="donut" height="260" :options="pjStatusDonutOptions" :series="pjStatusDonutSeries"></VueApexCharts>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-[#6F6B7D] mb-3">Status Distribution</h4>
+          <VueApexCharts type="donut" height="240" :options="pjStatusDonutOptions" :series="pjStatusDonutSeries"></VueApexCharts>
         </div>
-        <div class="pj-insight-card">
-          <h4 class="pj-insight-label">Budget vs Estimated Hours</h4>
-          <VueApexCharts type="bar" height="260" :options="pjBudgetOptions" :series="pjBudgetSeries"></VueApexCharts>
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-[#6F6B7D] mb-3">Budget vs Hours ($/h)</h4>
+          <VueApexCharts type="bar" height="240" :options="pjBudgetOptions" :series="pjBudgetSeries"></VueApexCharts>
         </div>
-        <div class="pj-insight-card">
-          <h4 class="pj-insight-label">Billing Type Breakdown</h4>
-          <VueApexCharts type="donut" height="260" :options="pjBillingDonutOptions" :series="pjBillingDonutSeries"></VueApexCharts>
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-[#6F6B7D] mb-3">Billing Type Breakdown</h4>
+          <VueApexCharts type="donut" height="240" :options="pjBillingDonutOptions" :series="pjBillingDonutSeries"></VueApexCharts>
         </div>
-        <div class="pj-insight-card">
-          <h4 class="pj-insight-label">Monthly Project Starts</h4>
-          <VueApexCharts type="bar" height="260" :options="pjMonthlyOptions" :series="pjMonthlySeries"></VueApexCharts>
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-[#6F6B7D] mb-3">Monthly Project Starts</h4>
+          <VueApexCharts type="bar" height="240" :options="pjMonthlyOptions" :series="pjMonthlySeries"></VueApexCharts>
         </div>
       </div>
     </div>
 
-    <!-- Modal -->
-    <Teleport to="body">
-      <div v-if="showModal" class="pj-modal-overlay" @click.self="closeModal">
-        <div class="pj-modal-box">
-          <div class="pj-modal-hd">
-            <div class="pj-modal-hd-left">
-              <div class="pj-modal-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-              </div>
-              <div>
-                <h3 class="pj-modal-title">{{ editing ? 'Edit Project' : 'Add New Project' }}</h3>
-                <p class="pj-modal-subtitle">Project Settings</p>
-              </div>
-            </div>
-            <button class="pj-modal-close" @click="closeModal">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
+    <!-- CREATE / EDIT PROJECT RIGHT-SIDE DRAWER -->
+    <a-drawer
+      v-model:open="showDrawer"
+      placement="right"
+      :width="640"
+      :destroyOnClose="true"
+      class="vuexy-project-drawer"
+    >
+      <template #title>
+        <div class="flex items-center space-x-3 py-1">
+          <div class="w-2.5 h-6 rounded-full bg-gradient-to-b from-[#7367F0] to-[#9F8ED6]"></div>
+          <div>
+            <h2 class="text-base font-bold text-[#4B465C] m-0">
+              {{ editing ? 'Edit Project' : 'Add New Project' }}
+            </h2>
+            <p class="text-xs text-[#A8AAAE] m-0 mt-0.5">
+              {{ editing ? 'Update project scope, budget, and members' : 'Configure project settings and assign team members' }}
+            </p>
           </div>
-          <div class="pj-modal-body">
-            <div class="pj-form-grid">
-              <div class="pj-fg-row span-2">
-                <label class="pj-fg-label">Project Name <span class="text-red-500">*</span></label>
-                <input v-model="form.name" placeholder="Enter project name" class="pj-fg-input" />
-              </div>
-              <div class="pj-fg-row span-2">
-                <label class="pj-fg-label">Customer <span class="text-red-500">*</span></label>
-                <select v-model="form.client_id" class="pj-fg-input">
+        </div>
+      </template>
+
+      <div class="p-1 space-y-6">
+        <!-- 1. Primary Information Card -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 space-y-4 shadow-sm">
+          <div class="flex items-center space-x-2 pb-2 border-b border-[#F1F0F2]">
+            <span class="w-2 h-2 rounded-full bg-[#7367F0]"></span>
+            <span class="text-xs font-bold text-[#4B465C] uppercase tracking-wider">General Information</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Project Name -->
+            <div class="md:col-span-2">
+              <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">
+                Project Name <span class="text-rose-500">*</span>
+              </label>
+              <input
+                v-model="form.name"
+                type="text"
+                placeholder="e.g. Website Redesign & SEO"
+                class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all w-full"
+              />
+            </div>
+
+            <!-- Customer -->
+            <div class="md:col-span-2">
+              <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">
+                Customer <span class="text-rose-500">*</span>
+              </label>
+              <div class="relative">
+                <select
+                  v-model="form.client_id"
+                  class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer pr-10 w-full"
+                >
                   <option value="">Select customer...</option>
                   <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.company }}</option>
                 </select>
-              </div>
-              <div class="pj-fg-row span-2">
-                <label class="pj-check-label">
-                  <input type="checkbox" v-model="form.progress_from_tasks" />
-                  <span>Calculate progress through tasks</span>
-                </label>
-              </div>
-              <div class="pj-fg-row">
-                <label class="pj-fg-label">Progress</label>
-                <div class="pj-progress-input">
-                  <div class="pj-progress-bar-bg">
-                    <div class="pj-progress-bar-fill" :style="{ width: (form.progress || 0) + '%' }"></div>
-                  </div>
-                  <span class="pj-progress-text">{{ form.progress || 0 }}%</span>
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#A8AAAE]">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
               </div>
-              <div class="pj-fg-row">
-                <label class="pj-fg-label">Billing Type</label>
-                <select v-model="form.billing_type" class="pj-fg-input">
+            </div>
+
+            <!-- Billing Type -->
+            <div>
+              <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Billing Type</label>
+              <div class="relative">
+                <select
+                  v-model="form.billing_type"
+                  class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer pr-10 w-full"
+                >
                   <option value="Fixed Rate">Fixed Rate</option>
                   <option value="Project Hours">Project Hours</option>
                   <option value="Task Hours">Task Hours</option>
                 </select>
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#A8AAAE]">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
               </div>
-              <div class="pj-fg-row">
-                <label class="pj-fg-label">Status</label>
-                <select v-model="form.status" class="pj-fg-input">
+            </div>
+
+            <!-- Status -->
+            <div>
+              <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Status</label>
+              <div class="relative">
+                <select
+                  v-model="form.status"
+                  class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer pr-10 w-full"
+                >
                   <option value="Not Started">Not Started</option>
                   <option value="In Progress">In Progress</option>
                   <option value="On Hold">On Hold</option>
                   <option value="Cancelled">Cancelled</option>
                   <option value="Finished">Finished</option>
                 </select>
-              </div>
-              <div class="pj-fg-row">
-                <label class="pj-fg-label">Total Rate</label>
-                <input v-model="form.budget" type="number" min="0" step="0.01" placeholder="0.00" class="pj-fg-input" />
-              </div>
-              <div class="pj-fg-row">
-                <label class="pj-fg-label">Estimated Hours</label>
-                <input v-model="form.estimated_hours" type="number" min="0" step="0.5" placeholder="0" class="pj-fg-input" />
-              </div>
-              <div class="pj-fg-row span-2">
-                <label class="pj-fg-label">Members</label>
-                <div class="pj-members-grid">
-                  <label v-for="user in staff" :key="user.id" class="pj-member-check">
-                    <input type="checkbox" :value="user.id" v-model="form.member_ids" />
-                    <span>{{ user.name }}</span>
-                  </label>
-                  <div v-if="!staff.length" class="text-slate-400 text-xs">No staff members available</div>
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#A8AAAE]">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
               </div>
-              <div class="pj-fg-row">
-                <label class="pj-fg-label">Start Date <span class="text-red-500">*</span></label>
-                <input v-model="form.start_date" type="date" class="pj-fg-input" />
+            </div>
+
+            <!-- Total Rate / Budget -->
+            <div>
+              <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Total Rate ($)</label>
+              <input
+                v-model="form.budget"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all w-full"
+              />
+            </div>
+
+            <!-- Estimated Hours -->
+            <div>
+              <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Estimated Hours</label>
+              <input
+                v-model="form.estimated_hours"
+                type="number"
+                min="0"
+                step="0.5"
+                placeholder="0"
+                class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all w-full"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Timeline & Progress Card -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 space-y-4 shadow-sm">
+          <div class="flex items-center space-x-2 pb-2 border-b border-[#F1F0F2]">
+            <span class="w-2 h-2 rounded-full bg-[#28C76F]"></span>
+            <span class="text-xs font-bold text-[#4B465C] uppercase tracking-wider">Timeline & Progress</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Start Date -->
+            <div>
+              <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">
+                Start Date <span class="text-rose-500">*</span>
+              </label>
+              <input
+                v-model="form.start_date"
+                type="date"
+                class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all w-full"
+              />
+            </div>
+
+            <!-- Deadline -->
+            <div>
+              <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Deadline</label>
+              <input
+                v-model="form.deadline"
+                type="date"
+                class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all w-full"
+              />
+            </div>
+
+            <!-- Progress calculation checkbox -->
+            <div class="md:col-span-2">
+              <label class="flex items-center space-x-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  v-model="form.progress_from_tasks"
+                  class="rounded border-[#DBDADE] text-[#7367F0] focus:ring-[#7367F0] w-4 h-4 cursor-pointer"
+                />
+                <span class="text-xs font-medium text-[#4B465C]">Calculate progress automatically through tasks</span>
+              </label>
+            </div>
+
+            <!-- Manual Progress Input & Visual Bar -->
+            <div class="md:col-span-2 space-y-1.5" v-if="!form.progress_from_tasks">
+              <div class="flex items-center justify-between text-xs">
+                <label class="font-semibold text-[#4B465C]">Progress</label>
+                <span class="font-bold text-[#7367F0]">{{ form.progress || 0 }}%</span>
               </div>
-              <div class="pj-fg-row">
-                <label class="pj-fg-label">Deadline</label>
-                <input v-model="form.deadline" type="date" class="pj-fg-input" />
-              </div>
-              <div class="pj-fg-row span-2">
-                <label class="pj-fg-label">Tags</label>
-                <div class="pj-tag-input-wrap">
-                  <div class="pj-tag-chips">
-                    <span v-for="(tag, i) in form.tagList" :key="i" class="pj-tag-chip">
-                      {{ tag }}
-                      <button @click="removeTag(i)" class="pj-tag-chip-remove">&times;</button>
-                    </span>
-                  </div>
-                  <input v-model="tagInput" placeholder="Type tag and press Enter" class="pj-tag-field" @keydown.enter.prevent="addTag" @keydown.,.prevent="addTag" />
-                </div>
-              </div>
-              <div class="pj-fg-row span-2">
-                <label class="pj-fg-label">Description</label>
-                <textarea v-model="form.description" rows="4" placeholder="Project description..." class="pj-fg-input pj-fg-textarea"></textarea>
-              </div>
-              <div class="pj-fg-row span-2">
-                <label class="pj-check-label">
-                  <input type="checkbox" v-model="form.send_created_email" />
-                  <span>Send project created email</span>
-                </label>
+              <div class="flex items-center space-x-3">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  v-model.number="form.progress"
+                  class="w-full accent-[#7367F0] cursor-pointer"
+                />
               </div>
             </div>
           </div>
-          <div class="pj-modal-ft">
-            <button class="pj-btn-cancel" @click="closeModal">Cancel</button>
-            <button class="pj-btn-save" @click="save" :disabled="saving">
-              <svg v-if="saving" class="animate-spin" fill="none" viewBox="0 0 24 24" width="14" height="14"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-              {{ saving ? 'Saving...' : (editing ? 'Save Changes' : 'Create Project') }}
-            </button>
+        </div>
+
+        <!-- 3. Members Assignment Card -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 space-y-4 shadow-sm">
+          <div class="flex items-center space-x-2 pb-2 border-b border-[#F1F0F2]">
+            <span class="w-2 h-2 rounded-full bg-[#00CFE8]"></span>
+            <span class="text-xs font-bold text-[#4B465C] uppercase tracking-wider">Assign Members</span>
+          </div>
+
+          <div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto p-2 bg-[#F8F7FA] border border-[#EBE9F1] rounded-md">
+              <label
+                v-for="user in staff"
+                :key="user.id"
+                class="flex items-center space-x-2.5 p-2 bg-white rounded border border-[#EBE9F1] hover:border-[#7367F0] cursor-pointer transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  :value="user.id"
+                  v-model="form.member_ids"
+                  class="rounded border-[#DBDADE] text-[#7367F0] focus:ring-[#7367F0] w-4 h-4 cursor-pointer"
+                />
+                <div class="w-5 h-5 rounded-full bg-[#7367F0]/10 text-[#7367F0] flex items-center justify-center text-[10px] font-bold">
+                  {{ user.name?.charAt(0)?.toUpperCase() }}
+                </div>
+                <span class="text-xs font-medium text-[#4B465C] truncate">{{ user.name }}</span>
+              </label>
+              <div v-if="!staff.length" class="text-center py-4 text-xs text-[#A8AAAE] col-span-2">
+                No staff members available
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Tags & Additional Details Card -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 space-y-4 shadow-sm">
+          <div class="flex items-center space-x-2 pb-2 border-b border-[#F1F0F2]">
+            <span class="w-2 h-2 rounded-full bg-[#FF9F43]"></span>
+            <span class="text-xs font-bold text-[#4B465C] uppercase tracking-wider">Tags & Description</span>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Tags Input with Chips -->
+            <div>
+              <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Tags</label>
+              <div class="p-2 bg-white border border-[#DBDADE] rounded-md flex flex-wrap items-center gap-1.5 min-h-[38px] focus-within:border-[#7367F0]">
+                <span
+                  v-for="(tag, i) in form.tagList"
+                  :key="i"
+                  class="px-2 py-0.5 rounded-full text-xs font-bold bg-[#7367F0]/10 text-[#7367F0] flex items-center gap-1"
+                >
+                  {{ tag }}
+                  <button type="button" @click="removeTag(i)" class="text-[#7367F0] hover:text-rose-600 cursor-pointer font-bold">&times;</button>
+                </span>
+                <input
+                  v-model="tagInput"
+                  @keydown.enter.prevent="addTag"
+                  @keydown.,.prevent="addTag"
+                  placeholder="Type tag and hit Enter..."
+                  class="text-xs border-none outline-none flex-1 min-w-[140px] bg-transparent py-0.5"
+                />
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+              <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Project Description</label>
+              <textarea
+                v-model="form.description"
+                rows="4"
+                placeholder="Key deliverables, milestones, tech requirements..."
+                class="form-ctrl text-xs p-3 bg-white border-[#DBDADE] rounded-md transition-all min-h-[90px] w-full resize-none"
+              ></textarea>
+            </div>
+
+            <!-- Send created email -->
+            <div>
+              <label class="flex items-center space-x-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  v-model="form.send_created_email"
+                  class="rounded border-[#DBDADE] text-[#7367F0] focus:ring-[#7367F0] w-4 h-4 cursor-pointer"
+                />
+                <span class="text-xs font-medium text-[#4B465C]">Send project created notification email</span>
+              </label>
+            </div>
           </div>
         </div>
       </div>
-    </Teleport>
+
+      <!-- Drawer Footer -->
+      <template #footer>
+        <div class="flex items-center justify-end space-x-3 py-2 px-1">
+          <button
+            type="button"
+            class="btn-outline px-5 py-2.5 text-xs font-semibold cursor-pointer"
+            @click="closeDrawer"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="btn-primary px-6 py-2.5 text-xs font-bold flex items-center gap-2 cursor-pointer"
+            :disabled="saving"
+            @click="save"
+          >
+            <svg v-if="saving" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" class="animate-spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            {{ saving ? 'Saving...' : (editing ? 'Save Changes' : 'Create Project') }}
+          </button>
+        </div>
+      </template>
+    </a-drawer>
   </div>
 </template>
 
@@ -372,6 +785,12 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { message } from 'ant-design-vue'
 import VueApexCharts from 'vue3-apexcharts'
+import { useAuthStore } from '../store/authStore'
+
+const authStore = useAuthStore()
+const canCreateProject = computed(() => authStore.hasPermission('Projects', 'create'))
+const canEditProject   = computed(() => authStore.hasPermission('Projects', 'edit'))
+const canDeleteProject = computed(() => authStore.hasPermission('Projects', 'delete'))
 
 const BASE = '/api'
 const projects   = ref([])
@@ -385,7 +804,7 @@ const statusFilter = ref('')
 const perPage    = ref('25')
 const page       = ref(1)
 const totalPages = ref(1)
-const showModal  = ref(false)
+const showDrawer = ref(false)
 const editing    = ref(null)
 const view       = ref('table')
 const tagInput   = ref('')
@@ -411,24 +830,59 @@ const statusFilters = [
 ]
 
 const kanbanCols = [
-  { status: 'Not Started', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/></svg>', color: '#94a3b8' },
-  { status: 'In Progress', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', color: '#3b82f6' },
-  { status: 'On Hold', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" width="14" height="14"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>', color: '#f59e0b' },
-  { status: 'Cancelled', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>', color: '#dc2626' },
-  { status: 'Finished', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>', color: '#10b981' },
+  { status: 'Not Started', color: '#A8AAAE' },
+  { status: 'In Progress', color: '#7367F0' },
+  { status: 'On Hold', color: '#FF9F43' },
+  { status: 'Cancelled', color: '#EA5455' },
+  { status: 'Finished', color: '#28C76F' },
 ]
 
 const summaryCards = computed(() => [
-  { label: 'Not Started', value: stats.value.not_started || 0, color: '#94a3b8', bg: '#f8fafc', filter: 'Not Started',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/></svg>' },
-  { label: 'In Progress', value: stats.value.in_progress || 0, color: '#3b82f6', bg: '#eff6ff', filter: 'In Progress',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' },
-  { label: 'On Hold', value: stats.value.on_hold || 0, color: '#f59e0b', bg: '#fffbeb', filter: 'On Hold',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>' },
-  { label: 'Cancelled', value: stats.value.cancelled || 0, color: '#dc2626', bg: '#fef2f2', filter: 'Cancelled',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' },
-  { label: 'Finished', value: stats.value.finished || 0, color: '#10b981', bg: '#f0fdf4', filter: 'Finished',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>' },
+  {
+    label: 'Not Started',
+    value: stats.value.not_started || 0,
+    color: '#A8AAAE',
+    textColor: '#4B465C',
+    bgLight: 'rgba(168, 170, 174, 0.12)',
+    filter: 'Not Started',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/></svg>',
+  },
+  {
+    label: 'In Progress',
+    value: stats.value.in_progress || 0,
+    color: '#7367F0',
+    textColor: '#7367F0',
+    bgLight: 'rgba(115, 103, 240, 0.12)',
+    filter: 'In Progress',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  },
+  {
+    label: 'On Hold',
+    value: stats.value.on_hold || 0,
+    color: '#FF9F43',
+    textColor: '#FF9F43',
+    bgLight: 'rgba(255, 159, 67, 0.12)',
+    filter: 'On Hold',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>',
+  },
+  {
+    label: 'Cancelled',
+    value: stats.value.cancelled || 0,
+    color: '#EA5455',
+    textColor: '#EA5455',
+    bgLight: 'rgba(234, 84, 85, 0.12)',
+    filter: 'Cancelled',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  },
+  {
+    label: 'Finished',
+    value: stats.value.finished || 0,
+    color: '#28C76F',
+    textColor: '#28C76F',
+    bgLight: 'rgba(40, 199, 111, 0.12)',
+    filter: 'Finished',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="20 6 9 17 4 12"/></svg>',
+  },
 ])
 
 const ganttMonths = computed(() => {
@@ -452,39 +906,97 @@ const ganttMonthLabel = computed(() => {
 
 function parseTags(tagsStr) {
   if (!tagsStr) return []
-  try { return JSON.parse(tagsStr) } catch { return tagsStr.split(',').map(t => t.trim()).filter(Boolean) }
+  try {
+    const parsed = JSON.parse(tagsStr)
+    return Array.isArray(parsed) ? parsed : [parsed]
+  } catch {
+    return tagsStr.split(',').map(t => t.trim()).filter(Boolean)
+  }
 }
 
-function projectsByStatus(s) { return projects.value.filter(p => p.status === s) }
-function statusClass(s) {
-  return { 'Not Started': 'default', 'In Progress': 'progress', 'On Hold': 'hold', 'Cancelled': 'cancelled', 'Finished': 'finished' }[s] || ''
+function projectsByStatus(s) {
+  return projects.value.filter(p => p.status === s)
 }
-function isOverdue(d) { return d && new Date(d) < new Date() }
-function fmt(v) { return Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }
-function fmtDate(d) { if (!d) return '—'; return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) }
-function truncate(s, n) { return s?.length > n ? s.slice(0, n) + '...' : s }
+
+function statusBadgeClass(s) {
+  return {
+    'Not Started': 'bg-[#A8AAAE]/10 text-[#6F6B7D] border border-[#A8AAAE]/20',
+    'In Progress': 'bg-[#7367F0]/10 text-[#7367F0] border border-[#7367F0]/20',
+    'On Hold': 'bg-[#FF9F43]/10 text-[#FF9F43] border border-[#FF9F43]/20',
+    'Cancelled': 'bg-[#EA5455]/10 text-[#EA5455] border border-[#EA5455]/20',
+    'Finished': 'bg-[#28C76F]/10 text-[#28C76F] border border-[#28C76F]/20',
+  }[s] || 'bg-[#F8F7FA] text-[#6F6B7D] border border-[#DBDADE]'
+}
+
+function statusDotClass(s) {
+  return {
+    'Not Started': 'bg-[#A8AAAE]',
+    'In Progress': 'bg-[#7367F0]',
+    'On Hold': 'bg-[#FF9F43]',
+    'Cancelled': 'bg-[#EA5455]',
+    'Finished': 'bg-[#28C76F]',
+  }[s] || 'bg-[#6F6B7D]'
+}
+
+function ganttBarColorClass(s) {
+  return {
+    'Not Started': 'bg-[#A8AAAE]',
+    'In Progress': 'bg-[#7367F0]',
+    'On Hold': 'bg-[#FF9F43]',
+    'Cancelled': 'bg-[#EA5455]',
+    'Finished': 'bg-[#28C76F]',
+  }[s] || 'bg-[#7367F0]'
+}
+
+function isOverdue(d) {
+  return d && new Date(d) < new Date()
+}
+
+function fmtDate(d) {
+  if (!d) return '—'
+  return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+function truncate(s, n) {
+  return s?.length > n ? s.slice(0, n) + '...' : s
+}
 
 function addTag() {
   const val = tagInput.value.replace(/,/g, '').trim()
-  if (val && !form.tagList.includes(val)) { form.tagList.push(val); form.tags = JSON.stringify(form.tagList) }
+  if (val && !form.tagList.includes(val)) {
+    form.tagList.push(val)
+    form.tags = JSON.stringify(form.tagList)
+  }
   tagInput.value = ''
 }
-function removeTag(i) { form.tagList.splice(i, 1); form.tags = JSON.stringify(form.tagList) }
 
-function filterByStatus(s) { statusFilter.value = s; page.value = 1; load() }
+function removeTag(i) {
+  form.tagList.splice(i, 1)
+  form.tags = JSON.stringify(form.tagList)
+}
+
+function filterByStatus(s) {
+  statusFilter.value = s
+  page.value = 1
+  load()
+}
 
 async function loadStaff() {
   try {
     const res = await axios.get(`${BASE}/staff?per_page=500`)
     staff.value = res.data.staff?.data || []
-  } catch { staff.value = [] }
+  } catch {
+    staff.value = []
+  }
 }
 
 async function loadClients() {
   try {
     const res = await axios.get(`${BASE}/clients?per_page=1000`)
     clients.value = res.data.clients?.data || []
-  } catch { clients.value = [] }
+  } catch {
+    clients.value = []
+  }
 }
 
 async function load() {
@@ -499,7 +1011,9 @@ async function load() {
   } catch {
     projects.value = []
     stats.value = { total: 0, not_started: 0, in_progress: 0, on_hold: 0, cancelled: 0, finished: 0 }
-  } finally { loading.value = false }
+  } finally {
+    loading.value = false
+  }
 }
 
 let searchTimer = null
@@ -509,6 +1023,7 @@ function onSearch() {
 }
 
 function openCreate() {
+  if (!canCreateProject.value) return
   editing.value = null
   Object.assign(form, {
     name: '', client_id: '', description: '', billing_type: 'Fixed Rate',
@@ -517,16 +1032,22 @@ function openCreate() {
     estimated_hours: '', send_created_email: false, tags: '', member_ids: [], tagList: [],
   })
   tagInput.value = ''
-  showModal.value = true
+  showDrawer.value = true
 }
 
-function openCreateForStatus(status) { openCreate(); form.status = status }
+function openCreateForStatus(status) {
+  if (!canCreateProject.value) return
+  openCreate()
+  form.status = status
+}
 
 function editProject(proj) {
+  if (!canEditProject.value) return
   editing.value = proj
   const tagList = parseTags(proj.tags)
   Object.assign(form, {
-    name: proj.name, client_id: proj.client_id || '',
+    name: proj.name,
+    client_id: proj.client_id || '',
     description: proj.description || '',
     billing_type: proj.billing_type || 'Fixed Rate',
     status: proj.status || 'In Progress',
@@ -542,57 +1063,66 @@ function editProject(proj) {
     tagList,
   })
   tagInput.value = ''
-  showModal.value = true
+  showDrawer.value = true
 }
 
 function viewProject(proj) {
-  alert(`View project: ${proj.name}`)
+  message.info(`Viewing Project: ${proj.name}`)
 }
 
 function copyProject(proj) {
+  if (!canCreateProject.value) return
   editing.value = null
   Object.assign(form, {
-    name: proj.name + ' (Copy)', client_id: proj.client_id || '',
+    name: proj.name + ' (Copy)',
+    client_id: proj.client_id || '',
     description: proj.description || '',
     billing_type: proj.billing_type || 'Fixed Rate',
     status: 'Not Started',
     start_date: new Date().toISOString().slice(0, 10),
-    deadline: '', budget: proj.budget || '',
-    progress_from_tasks: false, progress: 0,
+    deadline: '',
+    budget: proj.budget || '',
+    progress_from_tasks: false,
+    progress: 0,
     estimated_hours: proj.estimated_hours || '',
-    send_created_email: false, tags: proj.tags || '',
+    send_created_email: false,
+    tags: proj.tags || '',
     member_ids: (proj.members || []).map(m => m.id),
     tagList: parseTags(proj.tags),
   })
   tagInput.value = ''
-  showModal.value = true
+  showDrawer.value = true
 }
 
 async function save() {
-  if (!form.name) return alert('Project name is required')
-  if (!form.client_id) return alert('Customer is required')
-  if (!form.start_date) return alert('Start date is required')
+  if (!form.name) return message.error('Project name is required')
+  if (!form.client_id) return message.error('Customer is required')
+  if (!form.start_date) return message.error('Start date is required')
   saving.value = true
   try {
     const payload = { ...form, tags: form.tags || '' }
     if (editing.value) {
       await axios.put(`${BASE}/projects/${editing.value.id}`, payload)
-      message.success('Project updated')
+      message.success('Project updated successfully')
     } else {
       await axios.post(`${BASE}/projects`, payload)
-      message.success('Project created')
+      message.success('Project created successfully')
     }
-    closeModal(); load()
+    closeDrawer()
+    load()
   } catch {
-    alert('Failed to save project')
-  } finally { saving.value = false }
+    message.error('Failed to save project')
+  } finally {
+    saving.value = false
+  }
 }
 
 async function deleteProject(proj) {
+  if (!canDeleteProject.value) return
   if (!confirm(`Delete "${proj.name}"?`)) return
   try {
     await axios.delete(`${BASE}/projects/${proj.id}`)
-    message.success('Project deleted')
+    message.success('Project deleted successfully')
     load()
   } catch {
     projects.value = projects.value.filter(p => p.id !== proj.id)
@@ -600,7 +1130,7 @@ async function deleteProject(proj) {
 }
 
 function exportPDF() {
-  if (!projects.value.length) return alert('No projects to export')
+  if (!projects.value.length) return message.warning('No projects to export')
   const headers = ['#', 'Project Name', 'Customer', 'Tags', 'Start Date', 'Deadline', 'Status']
   const rows = projects.value.map((p, i) => [
     i + 1, p.name, p.client?.company || '', p.tags || '',
@@ -616,7 +1146,10 @@ function exportPDF() {
   document.body.removeChild(link)
 }
 
-function closeModal() { showModal.value = false; editing.value = null }
+function closeDrawer() {
+  showDrawer.value = false
+  editing.value = null
+}
 
 function ganttBarStyle(proj) {
   if (!proj.start_date) return { display: 'none' }
@@ -630,13 +1163,16 @@ function ganttBarStyle(proj) {
   const width = ((barEnd - barStart) / totalDays) * 100
   const left = (barStart / totalDays) * 100
   if (width <= 0) return { display: 'none' }
-    return { left: left + '%', width: width + '%' }
+  return { left: left + '%', width: width + '%' }
 }
 
 // ── ApexCharts options ─────────────────────────────────────
 const STATUS_COLORS_PJ = {
-  'Not Started': '#94a3b8', 'In Progress': '#3b82f6',
-  'On Hold': '#f59e0b', 'Cancelled': '#dc2626', 'Finished': '#10b981',
+  'Not Started': '#A8AAAE',
+  'In Progress': '#7367F0',
+  'On Hold': '#FF9F43',
+  'Cancelled': '#EA5455',
+  'Finished': '#28C76F',
 }
 
 const pjStatusDistribution = computed(() => {
@@ -648,27 +1184,48 @@ const pjStatusDistribution = computed(() => {
 const pjStatusDonutOptions = computed(() => ({
   chart: { type: 'donut', toolbar: { show: false } },
   labels: pjStatusDistribution.value.map(s => s.status),
-  colors: pjStatusDistribution.value.map(s => STATUS_COLORS_PJ[s.status]),
-  plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', fontSize: '14px', fontWeight: 700, color: '#1e293b', formatter: () => String(pjStatusDistribution.value.reduce((a, b) => a + b.count, 0)) } } } } },
-  dataLabels: { enabled: true, style: { fontSize: '12px', fontWeight: 700, colors: ['#fff'] } },
-  legend: { position: 'bottom', fontSize: '12px', fontWeight: 600, labels: { colors: '#475569' }, itemMargin: { horizontal: 12 } },
-  responsive: [{ breakpoint: 480, options: { legend: { position: 'bottom' } } }],
+  colors: pjStatusDistribution.value.map(s => STATUS_COLORS_PJ[s.status] || '#7367F0'),
+  plotOptions: {
+    pie: {
+      donut: {
+        size: '68%',
+        labels: {
+          show: true,
+          total: {
+            show: true,
+            label: 'Total',
+            fontSize: '13px',
+            fontWeight: 700,
+            color: '#4B465C',
+            formatter: () => String(pjStatusDistribution.value.reduce((a, b) => a + b.count, 0)),
+          },
+        },
+      },
+    },
+  },
+  dataLabels: { enabled: false },
+  legend: { position: 'bottom', fontSize: '11px', fontWeight: 600, labels: { colors: '#6F6B7D' } },
+  stroke: { width: 0 },
 }))
 const pjStatusDonutSeries = computed(() => pjStatusDistribution.value.map(s => s.count))
 
 const pjBudgetOptions = computed(() => ({
   chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
-  xaxis: { categories: projects.value.slice(0, 8).map(p => p.name.length > 18 ? p.name.slice(0, 18) + '...' : p.name), labels: { style: { fontSize: '11px', fontWeight: 600 }, rotate: -20 } },
-  yaxis: { labels: { formatter: v => '$' + v.toLocaleString(), style: { fontSize: '11px' } } },
-  colors: ['#6366f1', '#f59e0b'],
-  plotOptions: { bar: { columnWidth: '55%', borderRadius: 4, dataLabels: { position: 'top' } } },
-  dataLabels: { enabled: true, formatter: v => '$' + (v / 1000).toFixed(0) + 'k', style: { fontSize: '10px', fontWeight: 700, colors: ['#1e293b'] }, offsetY: -16 },
-  grid: { borderColor: '#f1f5f9' },
+  xaxis: {
+    categories: projects.value.slice(0, 6).map(p => p.name.length > 14 ? p.name.slice(0, 14) + '...' : p.name),
+    labels: { style: { fontSize: '10px', fontWeight: 600, colors: '#6F6B7D' } },
+  },
+  yaxis: { labels: { formatter: v => '$' + v.toLocaleString(), style: { fontSize: '10px', colors: '#6F6B7D' } } },
+  colors: ['#7367F0', '#FF9F43'],
+  plotOptions: { bar: { columnWidth: '45%', borderRadius: 4 } },
+  dataLabels: { enabled: false },
+  grid: { borderColor: '#F1F0F2', strokeDashArray: 4 },
   tooltip: { y: { formatter: v => '$' + v.toLocaleString() } },
+  legend: { position: 'top', horizontalAlign: 'right', fontSize: '11px', fontWeight: 600, labels: { colors: '#6F6B7D' } },
 }))
 const pjBudgetSeries = computed(() => [
-  { name: 'Budget ($)', data: projects.value.slice(0, 8).map(p => Number(p.budget || 0)) },
-  { name: 'Est. Hours', data: projects.value.slice(0, 8).map(p => Number(p.estimated_hours || 0) * 50) },
+  { name: 'Budget ($)', data: projects.value.slice(0, 6).map(p => Number(p.budget || 0)) },
+  { name: 'Est. Hours ($)', data: projects.value.slice(0, 6).map(p => Number(p.estimated_hours || 0) * 50) },
 ])
 
 const pjBillingDistribution = computed(() => {
@@ -680,22 +1237,40 @@ const pjBillingDistribution = computed(() => {
 const pjBillingDonutOptions = computed(() => ({
   chart: { type: 'donut', toolbar: { show: false } },
   labels: pjBillingDistribution.value.map(b => b.type),
-  colors: ['#6366f1', '#10b981', '#f59e0b'],
-  plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', fontSize: '14px', fontWeight: 700, color: '#1e293b', formatter: () => String(pjBillingDistribution.value.reduce((a, b) => a + b.count, 0)) } } } } },
-  dataLabels: { enabled: true, style: { fontSize: '12px', fontWeight: 700, colors: ['#fff'] } },
-  legend: { position: 'bottom', fontSize: '12px', fontWeight: 600, labels: { colors: '#475569' }, itemMargin: { horizontal: 12 } },
+  colors: ['#7367F0', '#28C76F', '#FF9F43'],
+  plotOptions: {
+    pie: {
+      donut: {
+        size: '68%',
+        labels: {
+          show: true,
+          total: {
+            show: true,
+            label: 'Total',
+            fontSize: '13px',
+            fontWeight: 700,
+            color: '#4B465C',
+            formatter: () => String(pjBillingDistribution.value.reduce((a, b) => a + b.count, 0)),
+          },
+        },
+      },
+    },
+  },
+  dataLabels: { enabled: false },
+  legend: { position: 'bottom', fontSize: '11px', fontWeight: 600, labels: { colors: '#6F6B7D' } },
+  stroke: { width: 0 },
 }))
 const pjBillingDonutSeries = computed(() => pjBillingDistribution.value.map(b => b.count))
 
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const pjMonthlyOptions = computed(() => ({
   chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
-  xaxis: { categories: MONTHS_SHORT, labels: { style: { fontSize: '11px', fontWeight: 600 } } },
-  yaxis: { labels: { style: { fontSize: '11px' } } },
-  colors: ['#8b5cf6'],
-  plotOptions: { bar: { columnWidth: '60%', borderRadius: 4, dataLabels: { position: 'top' } } },
-  dataLabels: { enabled: true, style: { fontSize: '11px', fontWeight: 700, colors: ['#8b5cf6'] }, offsetY: -16 },
-  grid: { borderColor: '#f1f5f9' },
+  xaxis: { categories: MONTHS_SHORT, labels: { style: { fontSize: '10px', fontWeight: 600, colors: '#6F6B7D' } } },
+  yaxis: { labels: { style: { fontSize: '10px', colors: '#6F6B7D' } } },
+  colors: ['#7367F0'],
+  plotOptions: { bar: { columnWidth: '50%', borderRadius: 4 } },
+  dataLabels: { enabled: false },
+  grid: { borderColor: '#F1F0F2', strokeDashArray: 4 },
 }))
 const pjMonthlySeries = computed(() => [
   { name: 'Projects Started', data: [3, 5, 2, 7, 4, 6, 8, 5, 3, 9, 4, 6] },
@@ -713,304 +1288,73 @@ function ganttBarWidth(proj) {
   return ((barEnd - barStart) / totalDays) * 100
 }
 
-onMounted(() => { load(); loadClients(); loadStaff() })
+onMounted(() => {
+  load()
+  loadClients()
+  loadStaff()
+})
 </script>
 
 <style scoped>
-.pj-page { font-family: Inter, -apple-system, sans-serif; background: #f8fafc; padding: 24px; }
-
-/* Header */
-.pj-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.pj-title { font-size: 20px; font-weight: 700; color: #0f172a; margin: 0; }
-.pj-subtitle { font-size: 12.5px; color: #94a3b8; margin: 2px 0 0; }
-.pj-header-actions { display: flex; gap: 8px; }
-
-.pj-btn-primary {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #fff; border: none; border-radius: 8px; padding: 9px 16px;
-  font-size: 12.5px; font-weight: 600; cursor: pointer;
-  transition: all .2s; box-shadow: 0 4px 12px rgba(99,102,241,.25);
+/* Vuexy Form & Button Tokens */
+.form-ctrl {
+  border: 1px solid #DBDADE;
+  border-radius: 6px !important;
+  color: #4B465C;
   font-family: inherit;
+  outline: none;
 }
-.pj-btn-primary:hover {
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  transform: translateY(-1px); box-shadow: 0 6px 16px rgba(99,102,241,.35);
-}
-.pj-btn-ghost {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: #fff; border: 1.5px solid #e2e8f0; border-radius: 8px;
-  padding: 8px 13px; font-size: 12px; font-weight: 500; color: #475569;
-  cursor: pointer; transition: all .12s; font-family: inherit;
-}
-.pj-btn-ghost:hover { background: #f8fafc; border-color: #cbd5e1; }
-
-/* Stats */
-.pj-stats-row {
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 18px;
-}
-@media (max-width: 900px) { .pj-stats-row { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 600px) { .pj-stats-row { grid-template-columns: repeat(2, 1fr); } }
-.pj-stat-card {
-  background: #fff; border: 1px solid #f1f5f9; border-left: 3px solid #e2e8f0;
-  border-radius: 10px; padding: 14px; display: flex; align-items: center; gap: 10px;
-  cursor: pointer; transition: all .2s; box-shadow: 0 1px 3px rgba(0,0,0,.02);
-}
-.pj-stat-card:hover { border-color: #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,.04); transform: translateY(-1px); }
-.pj-stat-icon {
-  width: 36px; height: 36px; border-radius: 10px; display: flex;
-  align-items: center; justify-content: center; flex-shrink: 0;
-}
-.pj-stat-val { font-size: 16px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
-.pj-stat-label { font-size: 10px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .04em; margin-top: 2px; }
-
-/* Filters */
-.pj-filters { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
-.pj-filters-left, .pj-filters-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.pj-filter-select {
-  border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 7px 10px;
-  font-size: 12px; color: #1e293b; background: #fff; cursor: pointer;
-  outline: none; font-family: inherit;
-}
-.pj-filter-select:focus { border-color: #6366f1; }
-.pj-status-pills { display: flex; gap: 4px; flex-wrap: wrap; }
-.pj-pill {
-  background: #fff; border: 1.5px solid #e2e8f0; border-radius: 20px;
-  padding: 4px 11px; font-size: 11px; font-weight: 600; color: #64748b;
-  cursor: pointer; transition: all .12s; font-family: inherit;
-}
-.pj-pill:hover { border-color: #cbd5e1; color: #334155; }
-.pj-pill.active { background: #6366f1; border-color: #6366f1; color: #fff; }
-
-.pj-search-wrap { position: relative; }
-.pj-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px; color: #94a3b8; pointer-events: none; }
-.pj-search-input {
-  border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 7px 12px 7px 30px;
-  font-size: 12px; color: #1e293b; background: #fff; width: 180px;
-  outline: none; font-family: inherit;
-}
-.pj-search-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.08); }
-
-.pj-view-toggle { display: flex; gap: 3px; background: #f1f5f9; padding: 3px; border-radius: 8px; }
-.pj-view-btn {
-  background: transparent; border: none; border-radius: 6px; width: 30px; height: 28px;
-  display: inline-flex; align-items: center; justify-content: center;
-  color: #94a3b8; cursor: pointer; transition: all .12s;
-}
-.pj-view-btn:hover { color: #64748b; }
-.pj-view-btn.active { background: #fff; color: #6366f1; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-
-/* Table */
-.pj-table-wrap { background: #fff; border: 1px solid #f1f5f9; border-radius: 12px; overflow: hidden; }
-.pj-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.pj-table thead th {
-  background: #f8fafc; padding: 10px 12px; text-align: left;
-  font-size: 10px; font-weight: 700; color: #64748b;
-  text-transform: uppercase; letter-spacing: .05em; white-space: nowrap;
-  border-bottom: 1.5px solid #e2e8f0;
-}
-.pj-table tbody td { padding: 11px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-.pj-row:last-child td { border-bottom: none; }
-.pj-row:hover { background: #fafbff; }
-.pj-cell-muted { color: #64748b; }
-.pj-name-cell { display: flex; flex-direction: column; gap: 1px; }
-.pj-name { font-weight: 600; color: #0f172a; }
-.pj-desc { font-size: 10.5px; color: #94a3b8; }
-.pj-customer { color: #475569; font-weight: 500; }
-
-.pj-tags { display: flex; gap: 3px; flex-wrap: wrap; }
-.pj-tag { background: #eef2ff; color: #6366f1; padding: 1px 7px; border-radius: 12px; font-size: 10px; font-weight: 600; }
-
-.pj-avatars { display: flex; }
-.pj-avatar {
-  width: 26px; height: 26px; border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700; color: #fff;
-  margin-left: -6px; border: 2px solid #fff; flex-shrink: 0;
-}
-.pj-avatar:first-child { margin-left: 0; }
-.pj-avatar-more {
-  width: 26px; height: 26px; border-radius: 50%;
-  background: #e2e8f0; color: #64748b; font-size: 10px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  margin-left: -6px; border: 2px solid #fff; flex-shrink: 0;
+.form-ctrl:focus {
+  border-color: #7367F0 !important;
+  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.12) !important;
 }
 
-.pj-overdue { color: #dc2626; font-weight: 600; }
-.pj-status-badge { padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; white-space: nowrap; }
-.pj-status-badge.default { background: #f8fafc; color: #64748b; }
-.pj-status-badge.progress { background: #eff6ff; color: #3b82f6; }
-.pj-status-badge.hold { background: #fffbeb; color: #d97706; }
-.pj-status-badge.cancelled { background: #fef2f2; color: #dc2626; }
-.pj-status-badge.finished { background: #f0fdf4; color: #16a34a; }
-
-.pj-actions { display: flex; gap: 2px; flex-wrap: wrap; }
-.pj-action-link {
-  background: none; border: none; font-size: 11px; font-weight: 600;
-  color: #6366f1; cursor: pointer; padding: 3px 6px;
-  border-radius: 4px; transition: all .12s; font-family: inherit;
+.btn-primary {
+  background-color: #7367F0;
+  color: #FFFFFF;
+  border-radius: 6px !important;
+  border: none;
+  transition: all 0.2s ease-in-out;
 }
-.pj-action-link:hover { background: #eef2ff; }
-.text-red-500 { color: #dc2626; }
-.text-red-500:hover { background: #fef2f2; }
-
-/* Pagination */
-.pj-pagination {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 14px; border-top: 1px solid #f1f5f9; font-size: 11.5px; color: #64748b;
+.btn-primary:hover:not(:disabled) {
+  background-color: #685DD8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(115, 103, 240, 0.35);
 }
-.pj-pg-info { color: #94a3b8; }
-.pj-pg-btns { display: flex; gap: 6px; }
-.pj-pg-btn {
-  background: #fff; border: 1px solid #e2e8f0; border-radius: 6px;
-  padding: 5px 11px; font-size: 11.5px; color: #475569; cursor: pointer;
-  transition: all .12s; font-family: inherit;
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
-.pj-pg-btn:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
-.pj-pg-btn:disabled { opacity: .4; cursor: not-allowed; }
-.pj-empty-cell { text-align: center; padding: 40px 20px; color: #94a3b8; }
 
-/* Insights */
-.pj-insights-section { margin-top: 18px; }
-.pj-insights-header { margin-bottom: 12px; }
-.pj-insights-title { font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; }
-.pj-insights-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-@media (max-width: 1200px) { .pj-insights-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 600px) { .pj-insights-grid { grid-template-columns: 1fr; } }
-.pj-insight-card { background: #fff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px; }
-.pj-insight-label { font-size: 12px; font-weight: 700; color: #475569; margin: 0 0 8px; }
-
-/* Gantt */
-.pj-gantt-wrap { background: #fff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 18px; }
-.pj-gantt-controls { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 12px; }
-.pj-gantt-nav {
-  background: #f1f5f9; border: none; border-radius: 6px; width: 30px; height: 28px;
-  display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b;
+.btn-outline {
+  background-color: #FFFFFF;
+  color: #6F6B7D;
+  border: 1px solid #DBDADE;
+  border-radius: 6px !important;
+  transition: all 0.15s ease-in-out;
 }
-.pj-gantt-nav:hover { background: #e2e8f0; }
-.pj-gantt-month-label { font-size: 14px; font-weight: 700; color: #0f172a; min-width: 160px; text-align: center; }
-.pj-gantt-months { display: flex; gap: 4px; margin-bottom: 14px; flex-wrap: wrap; }
-.pj-gantt-month {
-  background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 6px;
-  padding: 4px 10px; font-size: 11px; font-weight: 600; color: #94a3b8;
-  cursor: pointer; transition: all .12s;
+.btn-outline:hover:not(:disabled) {
+  background-color: #F8F7FA;
+  border-color: #C4C2C7;
+  color: #4B465C;
 }
-.pj-gantt-month:hover { border-color: #e2e8f0; color: #64748b; }
-.pj-gantt-month.active { background: #eef2ff; border-color: #6366f1; color: #6366f1; }
-.pj-gantt-chart { display: flex; flex-direction: column; gap: 4px; }
-.pj-gantt-row { display: flex; align-items: center; gap: 8px; height: 32px; }
-.pj-gantt-row-label { width: 160px; font-size: 11.5px; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
-.pj-gantt-row-track { flex: 1; height: 22px; background: #f8fafc; border-radius: 6px; position: relative; }
-.pj-gantt-bar {
-  position: absolute; top: 2px; height: 18px; border-radius: 6px;
-  display: flex; align-items: center; padding: 0 6px;
-  font-size: 10px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden;
-  transition: left .3s ease, width .3s ease;
+.btn-outline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
-.pj-gantt-bar.default { background: #94a3b8; }
-.pj-gantt-bar.progress { background: #3b82f6; }
-.pj-gantt-bar.hold { background: #f59e0b; }
-.pj-gantt-bar.cancelled { background: #dc2626; }
-.pj-gantt-bar.finished { background: #10b981; }
-.pj-gantt-bar-text { overflow: hidden; text-overflow: ellipsis; }
-.pj-gantt-empty { text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; }
 
-/* Kanban */
-.pj-kanban { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
-@media (max-width: 1200px) { .pj-kanban { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 768px) { .pj-kanban { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 500px) { .pj-kanban { grid-template-columns: 1fr; } }
-.pj-kanban-col { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-.pj-kanban-hd { display: flex; align-items: center; gap: 6px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; border-top: 3px solid transparent; margin-top: -12px; padding-top: 12px; border-radius: 12px 12px 0 0; }
-.pj-kanban-icon { display: flex; }
-.pj-kanban-title { font-weight: 700; font-size: 12px; color: #1e293b; flex: 1; }
-.pj-kanban-count { background: #e2e8f0; color: #64748b; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px; }
-.pj-kanban-cards { display: flex; flex-direction: column; gap: 6px; flex: 1; }
-.pj-kanban-empty { text-align: center; color: #cbd5e1; font-size: 11px; padding: 16px; }
-.pj-kanban-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; transition: all .2s; }
-.pj-kanban-card:hover { border-color: #6366f1; box-shadow: 0 2px 8px rgba(99,102,241,.08); }
-.pj-kc-name { font-weight: 700; font-size: 12.5px; color: #0f172a; margin-bottom: 3px; }
-.pj-kc-client { font-size: 10.5px; color: #64748b; margin-bottom: 6px; }
-.pj-kc-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
-.pj-billing-tag { background: #f1f5f9; color: #475569; padding: 1px 7px; border-radius: 20px; font-size: 10px; font-weight: 600; }
-.pj-kc-date { font-size: 10.5px; color: #64748b; }
-.pj-kc-actions { display: flex; gap: 4px; }
-.pj-kc-btn { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 5px; width: 26px; height: 24px; display: flex; align-items: center; justify-content: center; color: #94a3b8; cursor: pointer; }
-.pj-kc-btn:hover { border-color: #6366f1; color: #6366f1; }
-.pj-kanban-add {
-  display: flex; align-items: center; justify-content: center; gap: 4px;
-  background: none; border: 1.5px dashed #e2e8f0; border-radius: 8px;
-  padding: 7px; color: #94a3b8; font-size: 11.5px; font-weight: 600;
-  cursor: pointer; transition: all .12s; font-family: inherit;
+:deep(.vuexy-project-drawer .ant-drawer-header) {
+  padding: 16px 24px;
+  border-bottom: 1px solid #F1F0F2;
+  background-color: #FFFFFF;
 }
-.pj-kanban-add:hover { border-color: #6366f1; color: #6366f1; }
-
-/* Modal */
-.pj-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-.pj-modal-box { background: #fff; border-radius: 16px; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,.25); }
-.pj-modal-hd { display: flex; justify-content: space-between; align-items: flex-start; padding: 20px 24px 16px; border-bottom: 1.5px solid #f1f5f9; }
-.pj-modal-hd-left { display: flex; gap: 12px; align-items: flex-start; }
-.pj-modal-icon { width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #eef2ff, #e0e7ff); color: #6366f1; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.pj-modal-title { font-size: 16px; font-weight: 700; margin: 0; color: #0f172a; }
-.pj-modal-subtitle { font-size: 11.5px; color: #94a3b8; margin: 2px 0 0; font-weight: 500; }
-.pj-modal-close { background: none; border: none; cursor: pointer; color: #94a3b8; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all .12s; }
-.pj-modal-close:hover { background: #f1f5f9; color: #475569; }
-.pj-modal-body { padding: 18px 24px; }
-.pj-modal-ft { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px 20px; border-top: 1.5px solid #f1f5f9; }
-
-.pj-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.pj-fg-row { display: flex; flex-direction: column; gap: 4px; }
-.pj-fg-row.span-2 { grid-column: span 2; }
-.pj-fg-label { font-size: 11.5px; font-weight: 600; color: #334155; }
-
-.pj-check-label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; font-weight: 500; color: #475569; }
-.pj-check-label input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; }
-
-.pj-fg-input {
-  padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px;
-  font-size: 12.5px; outline: none; width: 100%; box-sizing: border-box;
-  font-family: inherit; transition: border-color .12s;
+:deep(.vuexy-project-drawer .ant-drawer-body) {
+  padding: 24px;
+  background-color: #F8F7FA;
 }
-.pj-fg-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.08); }
-.pj-fg-textarea { resize: vertical; min-height: 80px; }
-
-.pj-progress-input { display: flex; align-items: center; gap: 8px; }
-.pj-progress-bar-bg { flex: 1; height: 8px; background: #f1f5f9; border-radius: 20px; overflow: hidden; }
-.pj-progress-bar-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: 20px; transition: width .3s ease; }
-.pj-progress-text { font-size: 12px; font-weight: 700; color: #6366f1; min-width: 35px; text-align: right; }
-
-.pj-members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 4px; max-height: 200px; overflow-y: auto; border: 1px solid #f1f5f9; border-radius: 8px; padding: 8px 10px; }
-.pj-member-check { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: #475569; cursor: pointer; }
-.pj-member-check input { width: 14px; height: 14px; cursor: pointer; }
-
-.pj-tag-input-wrap { display: flex; flex-direction: column; gap: 4px; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 6px 10px; min-height: 36px; }
-.pj-tag-input-wrap:focus-within { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.08); }
-.pj-tag-chips { display: flex; gap: 4px; flex-wrap: wrap; }
-.pj-tag-chip { display: inline-flex; align-items: center; gap: 3px; background: #eef2ff; color: #6366f1; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-.pj-tag-chip-remove { background: none; border: none; color: #6366f1; font-size: 14px; cursor: pointer; padding: 0; line-height: 1; opacity: .6; }
-.pj-tag-chip-remove:hover { opacity: 1; }
-.pj-tag-field { border: none; outline: none; font-size: 12px; font-family: inherit; flex: 1; min-width: 120px; padding: 2px 0; }
-
-.pj-btn-cancel {
-  padding: 8px 18px; border: 1.5px solid #e2e8f0; border-radius: 10px;
-  background: #fff; color: #64748b; font-size: 12.5px; font-weight: 600;
-  cursor: pointer; transition: all .12s; font-family: inherit;
+:deep(.vuexy-project-drawer .ant-drawer-footer) {
+  padding: 12px 24px;
+  border-top: 1px solid #F1F0F2;
+  background-color: #FFFFFF;
 }
-.pj-btn-cancel:hover { border-color: #cbd5e1; color: #334155; }
-.pj-btn-save {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 8px 20px; background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #fff; border: none; border-radius: 10px; font-size: 12.5px;
-  font-weight: 600; cursor: pointer; transition: all .2s;
-  box-shadow: 0 4px 12px rgba(99,102,241,.3); font-family: inherit;
-}
-.pj-btn-save:hover {
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  transform: translateY(-1px); box-shadow: 0 6px 16px rgba(99,102,241,.4);
-}
-.pj-btn-save:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-
-@media (max-width: 1024px) { .pj-page { padding: 16px; } .pj-table-wrap { overflow-x: auto; } }
-@media (max-width: 640px) { .pj-filters { flex-direction: column; align-items: stretch; } .pj-filters-right { flex-direction: column; } .pj-search-input { width: 100%; } .pj-form-grid { grid-template-columns: 1fr; } .pj-fg-row.span-2 { grid-column: span 1; } .pj-gantt-row-label { width: 100px; } }
 </style>

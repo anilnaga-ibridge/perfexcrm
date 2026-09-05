@@ -11,6 +11,10 @@ class PaymentController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Payments.view')) {
+            abort(403, 'Unauthorized. Missing required permission: Payments.view');
+        }
+
         $query = Payment::with('invoice:id,number,client_id', 'invoice.client:id,company');
 
         if ($request->filled('search')) {
@@ -27,7 +31,7 @@ class PaymentController extends Controller
             $query->where('paymentmode', $request->input('paymentmode'));
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $payments = $query->orderBy('date', 'desc')->paginate($perPage);
 
         // Summary stats
@@ -48,6 +52,10 @@ class PaymentController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Payments.create')) {
+            abort(403, 'Unauthorized. Missing required permission: Payments.create');
+        }
+
         $validated = $request->validate([
             'invoice_id'    => 'required|exists:invoices,id',
             'amount'        => 'required|numeric|min:0.01',
@@ -59,15 +67,17 @@ class PaymentController extends Controller
 
         $payment = Payment::create($validated);
 
-        // Update invoice status if amount paid equals/exceeds total
+        // Update invoice status atomically to prevent race conditions
         $invoice = Invoice::find($validated['invoice_id']);
         if ($invoice) {
-            $paidSum = Payment::where('invoice_id', $invoice->id)->sum('amount');
-            if ($paidSum >= $invoice->total) {
-                $invoice->update(['status' => 'paid']);
-            } elseif ($paidSum > 0) {
-                $invoice->update(['status' => 'partially_paid']);
-            }
+            \DB::transaction(function () use ($invoice) {
+                $paidSum = Payment::where('invoice_id', $invoice->id)->lockForUpdate()->sum('amount');
+                if ($paidSum >= $invoice->total) {
+                    $invoice->update(['status' => 'paid']);
+                } elseif ($paidSum > 0) {
+                    $invoice->update(['status' => 'partially_paid']);
+                }
+            });
         }
 
         return response()->json($payment->load('invoice.client'), 201);
@@ -82,6 +92,10 @@ class PaymentController extends Controller
 
     public function update(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Payments.edit')) {
+            abort(403, 'Unauthorized. Missing required permission: Payments.edit');
+        }
+
         $payment = Payment::find($id);
         if (!$payment) return response()->json(['message' => 'Payment not found'], 404);
 
@@ -111,8 +125,12 @@ class PaymentController extends Controller
         return response()->json($payment->load('invoice.client'));
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Payments.delete')) {
+            abort(403, 'Unauthorized. Missing required permission: Payments.delete');
+        }
+
         $payment = Payment::find($id);
         if (!$payment) return response()->json(['message' => 'Payment not found'], 404);
         $invoiceId = $payment->invoice_id;

@@ -3,7 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
+        "build": "vite build && node -e \"import fs from 'fs'; if (fs.existsSync('public/build/manifest.json')) { fs.mkdirSync('public/build/.vite', { recursive: true }); fs.copyFileSync('public/build/manifest.json', 'public/build/.vite/manifest.json'); } else if (fs.existsSync('public/build/.vite/manifest.json')) { fs.copyFileSync('public/build/.vite/manifest.json', 'public/build/manifest.json'); }\"",
         "dev": "vite"
     },
     "devDependencies": {
@@ -20,8 +20,10 @@
         "ant-design-vue": "^4.2.6",
         "apexcharts": "^5.15.0",
         "axios": "^1.17.0",
+        "gsap": "^3.15.0",
         "pinia": "^3.0.4",
         "vue": "^3.5.38",
+        "vue-draggable-plus": "^0.6.1",
         "vue-router": "^4.6.4",
         "vue3-apexcharts": "^1.11.1"
     }

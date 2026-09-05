@@ -20,7 +20,7 @@ class ActivityLogController extends Controller
             });
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $logs = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return response()->json([

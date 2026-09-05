@@ -20,6 +20,7 @@
         </a-input>
       </div>
 
+      <!-- Table -->
       <a-table
         :dataSource="filteredSurveys"
         :columns="columns"
@@ -47,6 +48,47 @@
           </template>
         </template>
       </a-table>
+
+      <!-- Mobile Responsive Card View -->
+      <div class="mobile-cards-list" v-if="!loading">
+        <div 
+          v-for="s in filteredSurveys" 
+          :key="'m-sur-' + s.id"
+          class="mobile-row-card"
+          @click="openEditDrawer(s)"
+        >
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full">
+              ID: #{{ s.id }}
+            </span>
+            <div class="flex items-center gap-2">
+              <button @click.stop="openEditDrawer(s)" class="text-xs font-semibold text-slate-600">Edit</button>
+            </div>
+          </div>
+
+          <div class="font-bold text-sm text-slate-800 pt-1">
+            {{ s.subject }}
+          </div>
+          <div v-if="s.view_description" class="text-xs text-slate-500 line-clamp-2">
+            {{ s.view_description }}
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100 text-slate-500">
+            <div>
+              <span>Questions: </span>
+              <span class="font-bold text-slate-700">{{ s.total_questions || 0 }}</span>
+            </div>
+            <div class="text-right">
+              <span>Participants: </span>
+              <span class="font-bold text-slate-700">{{ s.total_participants || 0 }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="!filteredSurveys.length" class="text-center p-6 text-slate-400 text-xs font-semibold">
+          No surveys found
+        </div>
+      </div>
     </div>
 
     <a-drawer
@@ -248,4 +290,33 @@ export default defineComponent({
   margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0;
 }
 :deep(.ant-table-cell) { font-size: 13px; }
+
+/* Mobile Cards List Hidden by Default on Desktop */
+.mobile-cards-list {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .header-actions {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+  .table-toolbar .ant-input {
+    width: 100% !important;
+  }
+  :deep(.ant-table-wrapper) {
+    display: none !important;
+  }
+  .mobile-cards-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+}
 </style>

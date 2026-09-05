@@ -56,26 +56,95 @@
     <!-- Add/Edit Drawer -->
     <a-drawer
       v-model:open="openDrawer"
-      :title="editingId ? 'Edit Category' : 'New Category'"
       placement="right"
-      :width="400"
+      :width="500"
+      :footer-style="{ padding: '16px 24px', background: '#fafafa', borderTop: '1px solid #f1f5f9' }"
+      :header-style="{ padding: '20px 24px', background: '#ffffff', borderBottom: '1px solid #f1f5f9' }"
       @close="resetForm"
     >
-      <a-form layout="vertical" :model="form" @finish="saveCategory">
-        <a-form-item label="* Category Name" name="name" :rules="[{ required: true, message: 'Category name required' }]">
-          <a-input v-model:value="form.name" placeholder="Enter category name" />
-        </a-form-item>
-        <a-form-item label="Category Description" name="description">
-          <a-textarea v-model:value="form.description" :rows="4" placeholder="Enter category description" />
-        </a-form-item>
-
-        <div class="drawer-footer">
-          <a-button @click="openDrawer = false">Cancel</a-button>
-          <a-button type="primary" html-type="submit" :loading="saving">
-            {{ editingId ? 'Update Category' : 'Add Category' }}
-          </a-button>
+      <template #title>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl text-white flex items-center justify-center shadow-md shrink-0 theme-primary-grad">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M7 7h10M7 12h10M7 17h10M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-base font-extrabold text-slate-800 m-0 leading-snug">{{ editingId ? 'Edit Category' : 'New Category' }}</h3>
+            <p class="text-xs text-slate-400 font-medium m-0 mt-0.5 leading-normal">Configure expense category details & description</p>
+          </div>
         </div>
-      </a-form>
+      </template>
+
+      <form @submit.prevent="saveCategory" class="space-y-5 p-1">
+        <!-- Category Name -->
+        <div>
+          <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1.5">
+            Category Name <span class="text-rose-500">*</span>
+          </label>
+          <input
+            v-model="form.name"
+            placeholder="Enter category name..."
+            class="w-full h-11 px-4 text-xs font-semibold theme-input-ctrl text-slate-800"
+            required
+          />
+        </div>
+
+        <!-- Category Description Input Box -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+              Category Description
+            </label>
+            <!-- Preset Helper Chips -->
+            <div class="flex items-center gap-1.5">
+              <button
+                type="button"
+                class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all cursor-pointer"
+                @click="insertStandardDesc"
+                title="Insert Standard Expenses Description"
+              >
+                + Standard
+              </button>
+              <button
+                type="button"
+                class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-purple-50 text-purple-600 hover:bg-purple-100 transition-all cursor-pointer"
+                @click="insertOperatingDesc"
+                title="Insert Operating Expenses Description"
+              >
+                + Operating
+              </button>
+            </div>
+          </div>
+
+          <textarea
+            v-model="form.description"
+            rows="6"
+            placeholder="Enter detailed category description, accounting notes, or expense guidelines..."
+            class="w-full p-4 text-xs font-semibold theme-input-ctrl text-slate-800 placeholder-slate-400 resize-y leading-relaxed"
+          ></textarea>
+        </div>
+      </form>
+
+      <template #footer>
+        <div class="flex items-center justify-end gap-3">
+          <button
+            type="button"
+            class="px-5 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer border border-slate-200/80"
+            @click="openDrawer = false"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="px-7 py-2.5 text-xs font-bold text-white rounded-xl cursor-pointer shadow-md transition-all flex items-center gap-2 theme-primary-grad"
+            @click="saveCategory"
+            :disabled="saving"
+          >
+            <svg v-if="saving" class="animate-spin" fill="none" viewBox="0 0 24 24" width="14" height="14"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            {{ saving ? 'Saving...' : (editingId ? 'Update Category' : 'Add Category') }}
+          </button>
+        </div>
+      </template>
     </a-drawer>
   </div>
 </template>
@@ -179,6 +248,18 @@ export default defineComponent({
       form.description = '';
     };
 
+    const insertStandardDesc = () => {
+      const template = `Standard recurring business expenses including general operational costs, utility bills, and routine maintenance items.`;
+      form.description = form.description ? form.description + '\n\n' + template : template;
+      message.info('Standard description inserted');
+    };
+
+    const insertOperatingDesc = () => {
+      const template = `Core operating expenses related to daily workflow execution, software subscriptions, communication, and administrative overhead.`;
+      form.description = form.description ? form.description + '\n\n' + template : template;
+      message.info('Operating description inserted');
+    };
+
     return {
       search,
       pageSize,
@@ -193,7 +274,9 @@ export default defineComponent({
       editCategory,
       deleteCategory,
       saveCategory,
-      resetForm
+      resetForm,
+      insertStandardDesc,
+      insertOperatingDesc
     };
   }
 });
@@ -262,5 +345,30 @@ export default defineComponent({
   padding-top: 16px;
   border-top: 1px solid #f1f5f9;
   margin-top: 16px;
+}
+
+/* Dynamic Theme Utility Classes */
+.theme-primary-btn {
+  background: var(--theme-primary, #6366f1) !important;
+  color: #ffffff !important;
+}
+.theme-primary-btn:hover {
+  background: var(--theme-primary-hover, #4f46e5) !important;
+}
+.theme-primary-grad {
+  background: linear-gradient(135deg, var(--theme-primary, #6366f1) 0%, var(--theme-primary-hover, #4f46e5) 100%) !important;
+  color: #ffffff !important;
+}
+.theme-input-ctrl {
+  background-color: rgba(248, 250, 252, 0.8);
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+}
+.theme-input-ctrl:focus {
+  background-color: #ffffff;
+  border-color: var(--theme-primary, #6366f1) !important;
+  box-shadow: 0 0 0 4px var(--theme-primary-light, rgba(99, 102, 241, 0.15)) !important;
+  outline: none;
 }
 </style>

@@ -691,6 +691,7 @@ onMounted(fetchData);
     private function scaffoldVueCreate(string $modelName, array $modelInfo, string $pluralKebab, string $titleSingular): void
     {
         $filename = "resources/js/pages/{$pluralKebab}/create.vue";
+        $singularKebab = Str::kebab($modelName);
         $inputs = $this->getFormInputs($modelInfo);
 
         $formFields = "";

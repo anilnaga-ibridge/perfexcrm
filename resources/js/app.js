@@ -4,12 +4,14 @@ import Antd from 'ant-design-vue';
 import axios from 'axios';
 import 'ant-design-vue/dist/reset.css';
 import '../css/app.css';
+import './main/assets/vuexy-theme.css';
 
 import App from './main/views/App.vue';
 import router from './main/router';
 
 // Configure Axios
-axios.defaults.baseURL = window.config.path + '/api';
+const appRawPath = window.config?.path || '';
+axios.defaults.baseURL = appRawPath ? (appRawPath.endsWith('/') ? appRawPath.slice(0, -1) : appRawPath) + '/api' : '/api';
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 axios.interceptors.request.use(
@@ -38,7 +40,8 @@ axios.interceptors.response.use(
             delete axios.defaults.headers.common['Authorization'];
             // Only redirect if we're not already on the login page
             const currentPath = window.location.pathname;
-            const basePath = window.config.path.startsWith('http') ? new URL(window.config.path).pathname : window.config.path;
+            const rawConfigPath = window.config?.path || '/';
+            const basePath = rawConfigPath.startsWith('http') ? new URL(rawConfigPath).pathname : rawConfigPath;
             const cleanPath = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
             const loginPath = cleanPath + '/admin/login';
             if (currentPath !== loginPath) {

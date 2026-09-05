@@ -48,6 +48,7 @@
     </div>
 
     <div class="table-container">
+      <!-- Desktop Table View -->
       <table class="data-table">
         <thead>
           <tr>
@@ -83,60 +84,139 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Mobile Responsive Card View -->
+      <div class="mobile-cards-list" v-if="!loading">
+        <div 
+          v-for="a in articles" 
+          :key="'m-kb-' + a.id"
+          class="mobile-row-card"
+          @click="viewArticle(a)"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span v-if="a.category" class="group-badge" :style="{ background: a.category.color + '20', color: a.category.color }">{{ a.category.name }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button @click.stop="editArticle(a)" class="text-xs font-semibold text-slate-600 hover:text-slate-900">Edit</button>
+            </div>
+          </div>
+
+          <div class="font-bold text-sm text-slate-800 pt-1">
+            {{ a.title }}
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100">
+            <div class="flex items-center gap-1.5 text-slate-500">
+              <span class="text-slate-400">👁️ Views:</span>
+              <span>{{ a.views_count || 0 }}</span>
+            </div>
+            <div class="flex items-center justify-end gap-1.5 text-slate-500">
+              <span class="text-slate-400">📅</span>
+              <span>{{ formatDate(a.created_at) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="!articles.length" class="text-center p-6 text-slate-400 text-xs font-semibold">
+          No articles found
+        </div>
+      </div>
     </div>
 
-    <Teleport to="body">
-      <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
-        <div class="modal-box">
-          <div class="modal-header">
-            <h2>{{ editingArticle ? 'Edit Article' : 'Add New Article' }}</h2>
-            <button class="close-btn" @click="showModal = false">&times;</button>
+    <!-- Create/Edit Drawer -->
+    <a-drawer
+      v-model:open="showModal"
+      placement="right"
+      :width="640"
+      :footer-style="{ padding: '16px 24px', background: '#fafafa', borderTop: '1px solid #f1f5f9' }"
+      :header-style="{ padding: '20px 24px', background: '#ffffff', borderBottom: '1px solid #f1f5f9' }"
+      @close="showModal = false"
+    >
+      <template #title>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl text-white flex items-center justify-center shadow-md shrink-0 theme-primary-grad">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
           </div>
-          <div class="modal-body">
-            <div class="form-section">
-              <div class="field-group">
-                <label class="field-label">Subject <span class="req">*</span></label>
-                <input v-model="form.title" placeholder="Article subject" class="field-input" />
-              </div>
-              <div class="field-group">
-                <label class="field-label">Group <span class="req">*</span></label>
-                <div class="select-wrap">
-                  <select v-model="form.category_id" class="field-input field-select">
-                    <option :value="null">— Select Group —</option>
-                    <option v-for="g in groups" :key="g.id" :value="g.id" :style="{ borderLeft: '3px solid ' + (g.color || '#6b7280') }">{{ g.name }}</option>
-                  </select>
-                  <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-              </div>
-            </div>
-            <div class="form-section form-section-toggles">
-              <div class="toggle-items">
-                <label class="toggle-item">
-                  <input type="checkbox" v-model="form.internal" class="toggle-input" />
-                  <span class="toggle-track"></span>
-                  <span class="toggle-label-text">Internal Article</span>
-                </label>
-                <label class="toggle-item">
-                  <input type="checkbox" v-model="form.disabled" class="toggle-input" />
-                  <span class="toggle-track"></span>
-                  <span class="toggle-label-text">Disabled</span>
-                </label>
-              </div>
-            </div>
-            <div class="form-section">
-              <div class="field-group">
-                <label class="field-label">Article description</label>
-                <textarea v-model="form.content" rows="10" placeholder="Write article content..." class="field-input field-textarea"></textarea>
-              </div>
-            </div>
+          <div class="min-w-0">
+            <h3 class="text-base font-extrabold text-slate-800 m-0 leading-snug whitespace-nowrap">{{ editingArticle ? 'Edit Article' : 'Add New Article' }}</h3>
+            <p class="text-xs text-slate-400 font-medium m-0 mt-0.5 whitespace-nowrap">Write and publish knowledge base documentation</p>
           </div>
-          <div class="modal-footer">
-            <button class="btn-cancel" @click="showModal = false">Cancel</button>
-            <button class="btn-save" @click="saveArticle">{{ editingArticle ? 'Save Changes' : 'Create Article' }}</button>
-          </div>
+        </div>
+      </template>
+
+      <div class="space-y-4 p-1">
+        <!-- Top Status Bar Toggles -->
+        <div class="p-3.5 bg-gradient-to-r from-slate-50 via-slate-100/40 to-slate-50 rounded-2xl border border-slate-200/80 flex items-center gap-4 shadow-2xs">
+          <label class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white border border-slate-200/80 hover:border-slate-300 cursor-pointer transition-all shadow-2xs text-xs font-bold text-slate-700 select-none">
+            <input type="checkbox" v-model="form.internal" class="w-4 h-4 rounded border-slate-300 cursor-pointer theme-accent-chk" />
+            <span>Internal Article</span>
+          </label>
+          <label class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white border border-slate-200/80 hover:border-slate-300 cursor-pointer transition-all shadow-2xs text-xs font-bold text-slate-700 select-none">
+            <input type="checkbox" v-model="form.disabled" class="w-4 h-4 rounded border-slate-300 cursor-pointer theme-accent-chk" />
+            <span>Disabled</span>
+          </label>
+        </div>
+
+        <!-- Subject -->
+        <div>
+          <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1.5">
+            Subject <span class="text-rose-500">*</span>
+          </label>
+          <input
+            v-model="form.title"
+            placeholder="Article subject..."
+            class="w-full h-11 px-4 text-xs font-semibold theme-input-ctrl"
+          />
+        </div>
+
+        <!-- Group Selector -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Group <span class="text-rose-500">*</span></label>
+          <select
+            v-model="form.category_id"
+            class="w-full h-10 px-3.5 text-xs font-semibold theme-input-ctrl cursor-pointer"
+          >
+            <option :value="null">— Select Group —</option>
+            <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
+          </select>
+        </div>
+
+        <!-- Article Description / Content -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Article Description</label>
+          <textarea
+            v-model="form.content"
+            rows="10"
+            placeholder="Write detailed article documentation, guide, or steps..."
+            class="w-full p-4 text-xs font-semibold theme-input-ctrl text-slate-800 placeholder-slate-400 resize-y leading-relaxed"
+          ></textarea>
         </div>
       </div>
 
+      <template #footer>
+        <div class="flex items-center justify-end gap-3">
+          <button
+            type="button"
+            class="px-5 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer border border-slate-200/80"
+            @click="showModal = false"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="px-7 py-2.5 text-xs font-bold text-white rounded-xl cursor-pointer shadow-md transition-all flex items-center gap-2 theme-primary-grad"
+            @click="saveArticle"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            {{ editingArticle ? 'Save Changes' : 'Create Article' }}
+          </button>
+        </div>
+      </template>
+    </a-drawer>
+
+    <!-- View Article Modal -->
+    <Teleport to="body">
       <div v-if="viewingArticle" class="modal-overlay" @click.self="viewingArticle = null">
         <div class="modal-box modal-wide">
           <div class="modal-header">
@@ -356,7 +436,80 @@ onMounted(load)
 .btn-save { padding: 10px 24px; background: linear-gradient(135deg,#1e9aff,#0b6eff); color: #fff; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
 .btn-save:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(30,154,255,.35); }
 
+/* Dynamic Theme Utility Classes */
+.theme-primary-btn {
+  background: var(--theme-primary, #6366f1) !important;
+  color: #ffffff !important;
+}
+.theme-primary-btn:hover {
+  background: var(--theme-primary-hover, #4f46e5) !important;
+}
+.theme-primary-grad {
+  background: linear-gradient(135deg, var(--theme-primary, #6366f1) 0%, var(--theme-primary-hover, #4f46e5) 100%) !important;
+  color: #ffffff !important;
+}
+.theme-input-ctrl {
+  background-color: rgba(248, 250, 252, 0.8);
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+}
+.theme-input-ctrl:focus {
+  background-color: #ffffff;
+  border-color: var(--theme-primary, #6366f1) !important;
+  box-shadow: 0 0 0 4px var(--theme-primary-light, rgba(99, 102, 241, 0.15)) !important;
+  outline: none;
+}
+.theme-accent-chk {
+  accent-color: var(--theme-primary, #6366f1) !important;
+}
+.theme-tag-chip {
+  background: var(--theme-primary-light, rgba(99, 102, 241, 0.12)) !important;
+  color: var(--theme-primary, #6366f1) !important;
+  border: 1px solid var(--theme-primary-light, rgba(99, 102, 241, 0.25)) !important;
+}
+
 .view-meta { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
-.meta-item { font-size: 12px; color: #64748b; }
-.view-content { font-size: 14px; color: #334155; line-height: 1.8; white-space: pre-wrap; background: #f8fafc; padding: 16px; border-radius: 8px; max-height: 400px; overflow-y: auto; }
+.meta-item { background: #f1f5f9; color: #475569; font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+.article-body-content { font-size: 14px; color: #334155; line-height: 1.7; white-space: pre-wrap; }
+
+/* Mobile Cards List Hidden by Default on Desktop */
+.mobile-cards-list {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .filters-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .search-wrap, .search-input, .filter-select {
+    width: 100% !important;
+  }
+  .data-table {
+    display: none !important;
+  }
+  .mobile-cards-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 560px) {
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
 </style>

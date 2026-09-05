@@ -39,12 +39,19 @@ use App\Http\Controllers\Api\SalesReportController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ModuleController;
 use App\Http\Controllers\Api\HrPayrollController;
+use App\Http\Controllers\Api\TodoController;
+use App\Http\Controllers\Api\EmailMailerConfigurationController;
 
-Route::prefix('auth')->group(function () {
+Route::prefix('auth')->middleware('throttle:10,1')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
     Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('reset-password', [AuthController::class, 'resetPassword']);
+    
+    // Social Authentication Routes
+    Route::get('social/{provider}/redirect', [\App\Http\Controllers\Api\Auth\SocialLoginController::class, 'redirect']);
+    Route::get('social/{provider}/callback', [\App\Http\Controllers\Api\Auth\SocialLoginController::class, 'callback']);
+    Route::post('social/exchange', [\App\Http\Controllers\Api\Auth\SocialLoginController::class, 'exchange']);
     
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
@@ -53,8 +60,32 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
+    // SMTP configuration is stored separately from email template/theme data.
+    // The API never returns the encrypted SMTP password.
+    Route::middleware('permission:Settings.view')->get('email-mailer-configuration', [EmailMailerConfigurationController::class, 'show']);
+    Route::middleware('permission:Settings.edit')->put('email-mailer-configuration', [EmailMailerConfigurationController::class, 'update']);
+
+    // Email Templates API
+    Route::get('email-templates', [\App\Http\Controllers\Api\EmailTemplateController::class, 'index']);
+    Route::post('email-templates', [\App\Http\Controllers\Api\EmailTemplateController::class, 'store']);
+    Route::post('email-templates/bulk', [\App\Http\Controllers\Api\EmailTemplateController::class, 'bulkStore']);
+    Route::post('email-templates/upload-logo', [\App\Http\Controllers\Api\EmailTemplateController::class, 'uploadLogo']);
+
     // Dashboard metrics
     Route::get('dashboard-metrics', [DashboardController::class, 'index']);
+
+    // Notifications API
+    Route::get('notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
+    Route::post('notifications', [\App\Http\Controllers\Api\NotificationController::class, 'store']);
+    Route::post('notifications/mark-all-read', [\App\Http\Controllers\Api\NotificationController::class, 'markAllRead']);
+    Route::post('notifications/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markRead']);
+
+    // To-Do Items CRUD
+    Route::get('todos', [TodoController::class, 'index']);
+    Route::post('todos', [TodoController::class, 'store']);
+    Route::put('todos/{id}', [TodoController::class, 'update']);
+    Route::delete('todos/{id}', [TodoController::class, 'destroy']);
+    Route::put('todos-reorder', [TodoController::class, 'reorder']);
 
     // Customers (Clients) CRUD API
     Route::apiResource('clients', ClientController::class);
@@ -88,14 +119,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('plugins/sso-url', [ModuleController::class, 'ssoUrl']);
     Route::get('plugins/active', [ModuleController::class, 'active']);
     Route::get('plugins/menus', [ModuleController::class, 'menus']);
-    Route::patch('plugins/{id}/toggle', [ModuleController::class, 'toggleStatus']);
-    Route::patch('plugins/{id}/deactivate', [ModuleController::class, 'deactivate']);
-    Route::patch('plugins/{id}/activate', [ModuleController::class, 'activate']);
+    Route::match(['patch', 'put'], 'plugins/{id}/toggle', [ModuleController::class, 'toggleStatus']);
+    Route::match(['patch', 'put'], 'plugins/{id}/toggle-status', [ModuleController::class, 'toggleStatus']);
+    Route::match(['patch', 'put'], 'plugins/{id}/deactivate', [ModuleController::class, 'deactivate']);
+    Route::match(['patch', 'put'], 'plugins/{id}/activate', [ModuleController::class, 'activate']);
     Route::get('plugins/{alias}/settings', [ModuleController::class, 'getSettings']);
-    Route::put('plugins/{alias}/settings', [ModuleController::class, 'saveSettings']);
-    Route::post('plugins/{alias}/settings/reset', [ModuleController::class, 'resetSettings']);
+    Route::match(['put', 'post'], 'plugins/{alias}/settings', [ModuleController::class, 'saveSettings']);
+    Route::delete('plugins/{alias}/settings', [ModuleController::class, 'resetSettings']);
+    Route::match(['delete', 'post'], 'plugins/{alias}/settings/reset', [ModuleController::class, 'resetSettings']);
     Route::post('plugins/{id}/repair', [ModuleController::class, 'repair']);
     Route::post('plugins/{id}/rollback', [ModuleController::class, 'rollback']);
+    Route::post('plugins/sync-filesystem', [ModuleController::class, 'syncFromFilesystem']);
     Route::get('plugins/{plugin}/metadata', function ($plugin) {
         $meta = app(\App\Plugin\Metadata\PluginMetadata::class)->get($plugin);
         if (!$meta) {
@@ -109,12 +143,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('modules/sso-url', [ModuleController::class, 'ssoUrl']);
     Route::get('modules/active', [ModuleController::class, 'active']);
     Route::get('modules/menus', [ModuleController::class, 'menus']);
-    Route::patch('modules/{id}/toggle', [ModuleController::class, 'toggleStatus']);
-    Route::patch('modules/{id}/deactivate', [ModuleController::class, 'deactivate']);
-    Route::patch('modules/{id}/activate', [ModuleController::class, 'activate']);
+    Route::match(['patch', 'put'], 'modules/{id}/toggle', [ModuleController::class, 'toggleStatus']);
+    Route::match(['patch', 'put'], 'modules/{id}/toggle-status', [ModuleController::class, 'toggleStatus']);
+    Route::match(['patch', 'put'], 'modules/{id}/deactivate', [ModuleController::class, 'deactivate']);
+    Route::match(['patch', 'put'], 'modules/{id}/activate', [ModuleController::class, 'activate']);
     Route::get('modules/{alias}/settings', [ModuleController::class, 'getSettings']);
-    Route::put('modules/{alias}/settings', [ModuleController::class, 'saveSettings']);
-    Route::post('modules/{alias}/settings/reset', [ModuleController::class, 'resetSettings']);
+    Route::match(['put', 'post'], 'modules/{alias}/settings', [ModuleController::class, 'saveSettings']);
+    Route::delete('modules/{alias}/settings', [ModuleController::class, 'resetSettings']);
+    Route::match(['delete', 'post'], 'modules/{alias}/settings/reset', [ModuleController::class, 'resetSettings']);
     Route::post('modules/{id}/repair', [ModuleController::class, 'repair']);
     Route::post('modules/{id}/rollback', [ModuleController::class, 'rollback']);
     Route::get('modules/{plugin}/metadata', function ($plugin) {
@@ -177,8 +213,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('contracts', ContractController::class);
 
     // Tickets + replies
-    Route::get('tickets/metadata', [TicketController::class, 'metadata']);
-    Route::get('tickets/weekly-stats', [TicketController::class, 'weeklyStats']);
+    Route::get('tickets/metadata', [TicketController::class, 'metadata'])->middleware('permission:Support.view');
+    Route::get('tickets/weekly-stats', [TicketController::class, 'weeklyStats'])->middleware('permission:Support.view');
     Route::apiResource('tickets', TicketController::class);
     Route::post('tickets/{id}/reply', [TicketController::class, 'addReply']);
 
@@ -187,16 +223,32 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('estimate-request-forms', EstimateRequestFormController::class);
 
     // Knowledge Base
-    Route::get('kb-articles/report', [KbController::class, 'report']);
+    Route::get('kb-articles/report', [KbController::class, 'report'])->middleware('permission:Knowledge Base.view');
     Route::apiResource('kb-articles', KbController::class);
     Route::apiResource('kb-categories', KbCategoryController::class);
 
     // Reports
-    Route::get('reports/sales',      [ReportController::class, 'sales']);
-    Route::get('reports/expenses',   [ReportController::class, 'expenses']);
-    Route::get('reports/expenses-detailed', [ReportController::class, 'expensesDetailed']);
-    Route::get('reports/finance',    [ReportController::class, 'finance']);
-    Route::get('reports/team',       [ReportController::class, 'team']);
+    Route::middleware('permission:Reports.view')->group(function () {
+        Route::get('reports/sales',      [ReportController::class, 'sales']);
+        Route::get('reports/leads',      [ReportController::class, 'leads']);
+        Route::get('reports/expenses',   [ReportController::class, 'expenses']);
+        Route::get('reports/expenses-detailed', [ReportController::class, 'expensesDetailed']);
+        Route::get('reports/finance',    [ReportController::class, 'finance']);
+        Route::get('reports/team',       [ReportController::class, 'team']);
+
+        // Sales Reports
+        Route::get('sales-report/invoices', [SalesReportController::class, 'invoices']);
+        Route::get('sales-report/items', [SalesReportController::class, 'items']);
+        Route::get('sales-report/payments', [SalesReportController::class, 'payments']);
+        Route::get('sales-report/credit-notes', [SalesReportController::class, 'creditNotes']);
+        Route::get('sales-report/proposals', [SalesReportController::class, 'proposals']);
+        Route::get('sales-report/estimates', [SalesReportController::class, 'estimates']);
+        Route::get('sales-report/customers', [SalesReportController::class, 'customers']);
+        Route::get('sales-report/charts', [SalesReportController::class, 'charts']);
+        Route::get('sales-report/total-income', [SalesReportController::class, 'totalIncome']);
+        Route::get('sales-report/payment-modes', [SalesReportController::class, 'paymentModes']);
+        Route::get('sales-report/customer-groups', [SalesReportController::class, 'customerGroups']);
+    });
 
     // Client Files
     Route::get('clients/{client_id}/files', [ClientFileController::class, 'index']);
@@ -217,29 +269,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('reminders/{id}', [ReminderController::class, 'destroy']);
 
     // Database Backups
-    Route::get('database-backups', [DatabaseBackupController::class, 'index']);
-    Route::post('database-backups', [DatabaseBackupController::class, 'store']);
-    Route::get('database-backups/{id}/download', [DatabaseBackupController::class, 'download']);
-    Route::delete('database-backups/{id}', [DatabaseBackupController::class, 'destroy']);
-    Route::post('database-backups/toggle-auto', [DatabaseBackupController::class, 'toggleAutoBackup']);
+    Route::middleware('permission:Settings.view')->group(function () {
+        Route::get('database-backups', [DatabaseBackupController::class, 'index']);
+        Route::post('database-backups', [DatabaseBackupController::class, 'store']);
+        Route::get('database-backups/{id}/download', [DatabaseBackupController::class, 'download']);
+        Route::delete('database-backups/{id}', [DatabaseBackupController::class, 'destroy']);
+        Route::post('database-backups/toggle-auto', [DatabaseBackupController::class, 'toggleAutoBackup']);
+    });
 
     // Ticket Pipe Logs
     Route::get('ticket-pipe-logs', [TicketPipeLogController::class, 'index']);
     Route::delete('ticket-pipe-logs/clear', [TicketPipeLogController::class, 'clear']);
     Route::delete('ticket-pipe-logs/{id}', [TicketPipeLogController::class, 'destroy']);
-
-    // Sales Reports
-    Route::get('sales-report/invoices', [SalesReportController::class, 'invoices']);
-    Route::get('sales-report/items', [SalesReportController::class, 'items']);
-    Route::get('sales-report/payments', [SalesReportController::class, 'payments']);
-    Route::get('sales-report/credit-notes', [SalesReportController::class, 'creditNotes']);
-    Route::get('sales-report/proposals', [SalesReportController::class, 'proposals']);
-    Route::get('sales-report/estimates', [SalesReportController::class, 'estimates']);
-    Route::get('sales-report/customers', [SalesReportController::class, 'customers']);
-    Route::get('sales-report/charts', [SalesReportController::class, 'charts']);
-    Route::get('sales-report/total-income', [SalesReportController::class, 'totalIncome']);
-    Route::get('sales-report/payment-modes', [SalesReportController::class, 'paymentModes']);
-    Route::get('sales-report/customer-groups', [SalesReportController::class, 'customerGroups']);
 
     // ─── HR Payroll (hr-payroll module CI compat) ────────────────────────────────
 

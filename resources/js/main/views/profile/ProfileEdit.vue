@@ -21,12 +21,13 @@
           <div class="pe-avatar-wrapper">
             <div class="pe-avatar-container">
               <img
-                v-if="getProfileImageUrl(form.profile_image)"
+                v-if="getProfileImageUrl(form.profile_image) && !headerImageError"
                 :src="getProfileImageUrl(form.profile_image)"
+                @error="headerImageError = true"
                 class="pe-avatar-img"
               />
-              <div v-else class="pe-avatar-fallback" :style="{ background: avatarColor(form.name) }">
-                {{ initials(form.name) }}
+              <div v-else class="w-20 h-20 rounded-2xl relative overflow-hidden flex items-center justify-center shadow-lg animated-avatar-wrap">
+                <img :src="clayAvatarUrl" alt="Avatar" class="w-16 h-16 object-contain animate-avatar-float drop-shadow-md" />
               </div>
               <button type="button" class="pe-avatar-edit-btn" @click="triggerUpload" :title="uploading ? 'Uploading...' : 'Change photo'">
                 <svg v-if="!uploading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -103,8 +104,8 @@
           </div>
           <div class="pe-grid-2">
             <a-form-item label="Skype" name="skype">
-              <a-input v-model:value="form.skype" placeholder="live:your.skype.id" size="large">
-                <template #prefix><svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 2a9.88 9.88 0 00-3.82.76A5.52 5.52 0 002.76 8.18 9.88 9.88 0 002 12a9.88 9.88 0 00.76 3.82 5.52 5.52 0 005.42 5.42A9.88 9.88 0 0012 22a9.88 9.88 0 003.82-.76 5.52 5.52 0 005.42-5.42A9.88 9.88 0 0022 12a9.88 9.88 0 00-.76-3.82 5.52 5.52 0 00-5.42-5.42A9.88 9.88 0 0012 2z"/></svg></template>
+              <a-input v-model:value="form.skype" placeholder="skype_username" size="large">
+                <template #prefix><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M8 12a4 4 0 018 0c0 2-2 3-4 3s-4 1-4 3a4 4 0 008 0"/></svg></template>
               </a-input>
             </a-form-item>
             <div></div>
@@ -154,12 +155,12 @@
         <div class="pe-card-body">
           <div class="pe-grid-2">
             <a-form-item label="New Password" name="password">
-              <a-input-password v-model:value="form.password" placeholder="Enter new password" size="large">
+              <a-input-password v-model:value="form.password" placeholder="Enter new password" size="large" autocomplete="new-password">
                 <template #prefix><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></template>
               </a-input-password>
             </a-form-item>
             <a-form-item label="Confirm New Password" name="password_confirmation">
-              <a-input-password v-model:value="form.password_confirmation" placeholder="Confirm new password" size="large">
+              <a-input-password v-model:value="form.password_confirmation" placeholder="Confirm new password" size="large" autocomplete="new-password">
                 <template #prefix><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></template>
               </a-input-password>
             </a-form-item>
@@ -185,6 +186,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../store/authStore';
 import { message } from 'ant-design-vue';
 import axios from 'axios';
+import clayAvatarUrl from '../../assets/clay_avatar.png';
 
 export default defineComponent({
   name: 'ProfileEdit',
@@ -195,6 +197,7 @@ export default defineComponent({
     const fileInput = ref(null);
     const saving = ref(false);
     const uploading = ref(false);
+    const headerImageError = ref(false);
 
     const user = computed(() => authStore.user || {});
 
@@ -322,7 +325,7 @@ export default defineComponent({
 
     return {
       form, formRef, fileInput, saving, uploading, user,
-      initials, avatarColor, getProfileImageUrl,
+      initials, avatarColor, getProfileImageUrl, clayAvatarUrl, headerImageError,
       triggerUpload, onFileChange, handleSubmit,
     };
   },

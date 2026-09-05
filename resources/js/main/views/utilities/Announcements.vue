@@ -96,6 +96,40 @@
           </div>
         </template>
       </a-table>
+
+      <!-- Mobile Responsive Card View -->
+      <div class="mobile-cards-list" v-if="!loading">
+        <div 
+          v-for="a in announcements" 
+          :key="'m-anc-' + a.id"
+          class="mobile-row-card"
+          @click="openEditDrawer(a)"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <a-tag :color="a.show_to_staff ? 'blue' : 'gray'">Staff: {{ a.show_to_staff ? 'Yes' : 'No' }}</a-tag>
+              <a-tag :color="a.show_to_clients ? 'purple' : 'gray'">Clients: {{ a.show_to_clients ? 'Yes' : 'No' }}</a-tag>
+            </div>
+            <button @click.stop="openEditDrawer(a)" class="text-xs font-semibold text-indigo-600">Edit</button>
+          </div>
+
+          <div class="font-bold text-sm text-slate-800 pt-1">
+            {{ a.subject }}
+          </div>
+          <div v-if="a.message" class="text-xs text-slate-500 line-clamp-2">
+            {{ a.message }}
+          </div>
+
+          <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-100 text-slate-400">
+            <span>📅 {{ formatDate(a.created_at) }}</span>
+            <span v-if="a.userid">Posted by Staff</span>
+          </div>
+        </div>
+
+        <div v-if="!announcements.length" class="text-center p-6 text-slate-400 text-xs font-semibold">
+          No announcements found
+        </div>
+      </div>
     </div>
 
     <!-- Announcement Drawer -->
@@ -377,5 +411,39 @@ export default defineComponent({
   margin-top: 24px;
   padding-top: 16px;
   border-top: 1px solid #e2e8f0;
+}
+
+/* Mobile Cards List Hidden by Default on Desktop */
+.mobile-cards-list {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .table-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .toolbar-left, .toolbar-right {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+  .toolbar-right .ant-input-search {
+    width: 100% !important;
+  }
+  :deep(.ant-table-wrapper) {
+    display: none !important;
+  }
+  .mobile-cards-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
 }
 </style>

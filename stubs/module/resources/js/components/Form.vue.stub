@@ -1,39 +1,32 @@
 <template>
-  <div class="form">
-    <div class="form-group">
-      <label class="form-label">Title <span class="required">*</span></label>
-      <input v-model="form.title" type="text" class="form-input" placeholder="Enter title" />
-      <p v-if="errors.title" class="form-error">{{ errors.title }}</p>
-    </div>
+  <a-form layout="vertical" class="premium-form-layout">
+    <a-form-item label="Title" required :validate-status="errors.title ? 'error' : ''" :help="errors.title">
+      <a-input v-model:value="form.title" placeholder="Enter title" class="form-input-premium" />
+    </a-form-item>
 
-    <div class="form-group">
-      <label class="form-label">Status <span class="required">*</span></label>
-      <select v-model="form.status" class="form-input">
-        <option value="draft">Draft</option>
-        <option value="published">Published</option>
-        <option value="archived">Archived</option>
-      </select>
-      <p v-if="errors.status" class="form-error">{{ errors.status }}</p>
-    </div>
+    <a-form-item label="Status" required :validate-status="errors.status ? 'error' : ''" :help="errors.status">
+      <a-select v-model:value="form.status" class="form-select-premium">
+        <a-select-option value="draft">Draft</a-select-option>
+        <a-select-option value="published">Published</a-select-option>
+        <a-select-option value="archived">Archived</a-select-option>
+      </a-select>
+    </a-form-item>
 
-    <div class="form-group">
-      <label class="form-label">Description</label>
-      <textarea v-model="form.description" class="form-input form-textarea" placeholder="Brief description" rows="3"></textarea>
-    </div>
+    <a-form-item label="Description" :validate-status="errors.description ? 'error' : ''" :help="errors.description">
+      <a-textarea v-model:value="form.description" placeholder="Brief description" :rows="3" />
+    </a-form-item>
 
-    <div class="form-group">
-      <label class="form-label">Content</label>
-      <textarea v-model="form.content" class="form-input form-textarea" placeholder="Full content..." rows="8"></textarea>
-    </div>
+    <a-form-item label="Content" :validate-status="errors.content ? 'error' : ''" :help="errors.content">
+      <a-textarea v-model:value="form.content" placeholder="Full content..." :rows="8" />
+    </a-form-item>
 
-    <div class="form-actions">
-      <button class="btn-cancel" @click="$emit('cancel')">Cancel</button>
-      <button class="btn-primary" @click="$emit('submit', form)" :disabled="busy">
-        <span v-if="busy">Saving...</span>
-        <span v-else>{{ submitLabel }}</span>
-      </button>
+    <div class="form-actions flex justify-end gap-2 pt-4 border-t border-slate-100">
+      <a-button @click="$emit('cancel')" class="btn-cancel-ant">Cancel</a-button>
+      <a-button type="primary" @click="$emit('submit', form)" :loading="busy" class="btn-primary-ant">
+        {{ submitLabel }}
+      </a-button>
     </div>
-  </div>
+  </a-form>
 </template>
 
 <script>
@@ -71,16 +64,19 @@ export default {
 </script>
 
 <style scoped>
-.form { max-width: 720px; }
-.form-group { margin-bottom: 20px; }
-.form-label { display: block; font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 6px; }
-.required { color: #e11d48; }
-.form-input { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; outline: none; box-sizing: border-box; }
-.form-input:focus { border-color: #4f46e5; }
-.form-textarea { resize: vertical; font-family: inherit; }
-.form-error { font-size: 12px; color: #e11d48; margin: 4px 0 0; }
-.form-actions { display: flex; gap: 8px; justify-content: flex-end; padding-top: 12px; border-top: 1px solid #e2e8f0; }
-.btn-primary { padding: 10px 20px; border: none; border-radius: 6px; background: #4f46e5; color: #fff; font-size: 14px; font-weight: 500; cursor: pointer; }
-.btn-primary:disabled { opacity: .6; }
-.btn-cancel { padding: 10px 20px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; font-size: 14px; cursor: pointer; }
+.premium-form-layout {
+  max-width: 100%;
+}
+.btn-primary-ant {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  border: none !important;
+  color: #fff !important;
+  font-weight: 500;
+  border-radius: 6px !important;
+  height: 38px;
+}
+.btn-cancel-ant {
+  border-radius: 6px !important;
+  height: 38px;
+}
 </style>

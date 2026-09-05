@@ -257,7 +257,7 @@ export default defineComponent({
     const payId = route.params.id;
 
     const companyInfo = {
-      name:    'Perfex INC',
+      name:    'Ibridge Digital',
       address: '172 Ivy Club Gottliebfurt',
       city:    'New Heaven',
       country: 'Canada [CA] 2364',

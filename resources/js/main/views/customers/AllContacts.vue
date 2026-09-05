@@ -112,8 +112,8 @@
 
           <template v-if="column.key === 'company'">
             <router-link 
-              v-if="record.client" 
-              :to="'/admin/customers/' + record.client_id" 
+              v-if="record.client && record.client_id" 
+              :to="{ name: 'admin.customers.view', params: { id: record.client_id } }" 
               class="font-semibold text-slate-800 hover:text-indigo-600 cursor-pointer link-blue"
             >
               {{ record.client.company }}
@@ -130,7 +130,7 @@
           </template>
 
           <template v-if="column.key === 'last_login'">
-            <span class="text-slate-500 text-xs">{{ formatDateTime(record.last_login) }}</span>
+            <span class="text-xs text-slate-500">{{ formatDateTime(record.last_login) }}</span>
           </template>
 
           <template v-if="column.key === 'active'">
@@ -145,6 +145,46 @@
           </template>
         </template>
       </a-table>
+
+      <!-- Mobile Responsive Card View -->
+      <div class="mobile-cards-list" v-if="!loading">
+        <div 
+          v-for="c in contacts" 
+          :key="'m-ct-' + c.id"
+          class="mobile-row-card"
+          @click="editContact(c)"
+        >
+          <div class="flex items-center justify-between">
+            <a-badge :status="c.active ? 'success' : 'default'" :text="c.active ? 'Active' : 'Inactive'" />
+            <a-tag color="blue" v-if="c.title">{{ c.title }}</a-tag>
+          </div>
+
+          <div class="flex items-center gap-2.5 pt-1">
+            <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
+              {{ (c.firstname ? c.firstname[0] : '') + (c.lastname ? c.lastname[0] : '') }}
+            </div>
+            <div>
+              <div class="font-bold text-sm text-slate-800">{{ c.firstname }} {{ c.lastname }}</div>
+              <div class="text-xs text-indigo-600">{{ c.email }}</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100 text-slate-500">
+            <div v-if="c.client">
+              <span class="text-slate-400">🏢 Company:</span>
+              <span class="font-semibold text-slate-700 block">{{ c.client.company }}</span>
+            </div>
+            <div v-if="c.phonenumber">
+              <span class="text-slate-400">📞 Phone:</span>
+              <span class="font-semibold text-slate-700 block">{{ c.phonenumber }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="!contacts.length" class="text-center p-6 text-slate-400 text-xs font-semibold">
+          No contacts found
+        </div>
+      </div>
     </div>
 
     <!-- Creation/Edit Drawer -->
@@ -479,5 +519,39 @@ export default defineComponent({
 
 .link-action {
   transition: color 0.1s;
+}
+
+/* Mobile Cards List Hidden by Default on Desktop */
+.mobile-cards-list {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .header-actions {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+  .table-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .table-toolbar .ant-input-search {
+    width: 100% !important;
+  }
+  :deep(.ant-table-wrapper) {
+    display: none !important;
+  }
+  .mobile-cards-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
 }
 </style>

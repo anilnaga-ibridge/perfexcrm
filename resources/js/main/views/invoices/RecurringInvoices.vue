@@ -196,7 +196,7 @@
     </div>
 
     <!-- ══════════════════════════════════════════════════
-         Premium Create / Edit Drawer
+         Vuexy Create / Edit Drawer
     ══════════════════════════════════════════════════ -->
     <a-drawer
       v-model:open="showDrawer"
@@ -204,81 +204,81 @@
       :width="1100"
       :destroyOnClose="true"
       :footer-style="{ display: 'none' }"
-      class="premium-drawer"
+      class="vuexy-recurring-drawer"
     >
       <template #title>
-        <div class="drawer-title-premium">
-          <div class="w-2 h-5 rounded-full bg-gradient-to-b from-[#d35400] via-[#7e1e8e] to-[#0b579f]"></div>
-          <span>{{ editingId ? 'Edit Recurring Invoice' : 'New Recurring Invoice' }}</span>
+        <div class="flex items-center space-x-3 py-1">
+          <div class="w-2.5 h-6 rounded-full bg-gradient-to-b from-[#7367F0] to-[#9F8ED6]"></div>
+          <h2 class="text-base font-bold text-[#4B465C] m-0">
+            {{ editingId ? 'Edit Recurring Invoice' : 'New Recurring Invoice' }}
+          </h2>
         </div>
       </template>
 
-      <a-form layout="vertical" :model="form" @finish="submitForm" class="premium-drawer-form">
+      <a-form layout="vertical" :model="form" @finish="submitForm" class="space-y-6">
 
         <!-- ─── Section 01: Customer & Configuration ─── -->
-        <div class="premium-section-card">
-          <div class="flex items-center space-x-2 pb-4 border-b border-slate-100 mb-6">
-            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">01</span>
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Customer &amp; Configuration</span>
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-6 space-y-6 shadow-sm">
+          <div class="flex items-center justify-between pb-3 border-b border-[#F1F0F2]">
+            <div class="flex items-center space-x-2">
+              <span class="text-[11px] font-bold text-[#7367F0] bg-[#7367F0]/10 px-2.5 py-0.5 rounded">01</span>
+              <span class="text-xs font-bold uppercase tracking-wider text-[#4B465C]">Customer &amp; Configuration</span>
+            </div>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Left Column -->
-            <div class="space-y-5">
+            <div class="space-y-4">
               <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">
                   <span class="text-rose-500">*</span> Client
                 </label>
                 <a-select
                   v-model:value="form.client_id"
                   placeholder="Select client..."
-                  style="width:100%"
+                  style="width: 100%"
                   show-search
-                  :filter-option="(input, option) => option.label.toLowerCase().includes(input.toLowerCase())"
-                  size="large"
-                  class="premium-client-select"
+                  :filter-option="(input, option) => (option.label || '').toLowerCase().includes(input.toLowerCase())"
+                  @change="handleClientChange"
+                  class="vuexy-select"
                 >
                   <a-select-option v-for="c in clients" :key="c.id" :value="c.id" :label="c.company">
-                    <div class="flex items-center gap-2">
-                      <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
-                        {{ c.company?.charAt(0) }}
-                      </div>
-                      <div class="text-xs font-semibold text-slate-800">{{ c.company }}</div>
-                    </div>
+                    {{ c.company }} <span v-if="c.city" class="text-slate-400 text-xs">({{ c.city }})</span>
                   </a-select-option>
                 </a-select>
               </div>
 
-              <div class="space-y-2">
+              <!-- Address Details Heading & Edit Trigger -->
+              <div class="space-y-2 pt-1">
                 <div class="flex items-center justify-between">
-                  <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Address Details</label>
+                  <label class="block text-xs font-semibold text-[#4B465C]">Address Details</label>
                   <button
                     type="button"
-                    class="text-indigo-600 hover:text-indigo-800 cursor-pointer flex items-center gap-1 text-[10.5px] font-bold transition-colors bg-transparent border-none"
+                    class="text-[#7367F0] hover:text-[#5E50EE] cursor-pointer flex items-center gap-1 text-xs font-semibold transition-colors bg-transparent border-none p-0"
                     @click="openAddressModal"
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                     Edit billing &amp; shipping
                   </button>
                 </div>
-                <div class="grid grid-cols-2 gap-4 text-xs text-slate-500 py-3 px-4 bg-slate-50/70 rounded-xl border border-slate-100 shadow-inner">
+                <div class="grid grid-cols-2 gap-4 text-xs text-[#5D596C] p-3.5 bg-[#F8F7FA] rounded-md border border-[#EBE9F1]">
                   <div>
-                    <div class="font-bold text-slate-700 mb-1 flex items-center gap-1">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="10" height="10" class="text-indigo-600"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    <div class="font-bold text-[#4B465C] mb-1 flex items-center gap-1.5">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" class="text-[#7367F0]"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                       Bill To
                     </div>
-                    <div class="font-medium text-slate-600 space-y-0.5 leading-relaxed">
+                    <div class="font-medium text-[#5D596C] space-y-0.5 leading-relaxed">
                       <div>{{ form.billing_street || '--' }}</div>
                       <div>{{ form.billing_city || '--' }}{{ form.billing_state ? ', ' + form.billing_state : '' }}</div>
                       <div>{{ form.billing_country || '--' }}{{ form.billing_zip ? ', ' + form.billing_zip : '' }}</div>
                     </div>
                   </div>
-                  <div class="border-l border-slate-200/60 pl-4">
-                    <div class="font-bold text-slate-700 mb-1 flex items-center gap-1">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="10" height="10" class="text-indigo-600"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                  <div class="border-l border-[#DBDADE] pl-4">
+                    <div class="font-bold text-[#4B465C] mb-1 flex items-center gap-1.5">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" class="text-[#7367F0]"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                       Ship to
                     </div>
-                    <div class="font-medium text-slate-600 space-y-0.5 leading-relaxed">
+                    <div class="font-medium text-[#5D596C] space-y-0.5 leading-relaxed">
                       <div>{{ form.shipping_street || '--' }}</div>
                       <div>{{ form.shipping_city || '--' }}{{ form.shipping_state ? ', ' + form.shipping_state : '' }}</div>
                       <div>{{ form.shipping_country || '--' }}{{ form.shipping_zip ? ', ' + form.shipping_zip : '' }}</div>
@@ -288,28 +288,27 @@
               </div>
 
               <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Project</label>
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Project</label>
                 <a-select
                   v-model:value="form.project_id"
                   placeholder="Select project..."
-                  style="width:100%"
+                  style="width: 100%"
                   allow-clear
-                  size="large"
-                  class="premium-client-select"
+                  class="vuexy-select"
                 >
                   <a-select-option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</a-select-option>
                 </a-select>
               </div>
 
               <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Allowed Payment Modes</label>
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Allowed Payment Modes</label>
                 <div class="flex flex-wrap gap-2">
                   <label v-for="mode in ['Bank','Stripe Checkout','PayPal','Cash']" :key="mode"
-                    class="payment-chip-premium"
-                    :class="{ 'payment-chip-active-premium': form.allowed_payment_modes_list.includes(mode) }">
+                    class="payment-chip-vuexy"
+                    :class="{ 'payment-chip-active-vuexy': form.allowed_payment_modes_list.includes(mode) }">
                     <input type="checkbox" v-model="form.allowed_payment_modes_list" :value="mode" style="display:none" />
-                    <svg v-if="form.allowed_payment_modes_list.includes(mode)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="10" height="10"><polyline points="20 6 9 17 4 12"/></svg>
-                    <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><circle cx="12" cy="12" r="10"/></svg>
+                    <svg v-if="form.allowed_payment_modes_list.includes(mode)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/></svg>
                     <span>{{ mode }}</span>
                   </label>
                 </div>
@@ -317,29 +316,29 @@
 
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Currency</label>
+                  <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Currency</label>
                   <div class="relative">
-                    <select class="premium-native-select" v-model="form.currency">
-                      <option value="USD">USD $</option>
-                      <option value="EUR">EUR €</option>
-                      <option value="GBP">GBP £</option>
-                      <option value="CAD">CAD $</option>
-                      <option value="INR">INR ₹</option>
-                      <option value="AUD">AUD $</option>
+                    <select class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer pr-10" v-model="form.currency">
+                      <option value="USD">USD ($)</option>
+                      <option value="EUR">EUR (€)</option>
+                      <option value="GBP">GBP (£)</option>
+                      <option value="CAD">CAD ($)</option>
+                      <option value="INR">INR (₹)</option>
+                      <option value="AUD">AUD ($)</option>
                     </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#A8AAAE]">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                   </div>
                 </div>
                 <div>
-                  <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Sale Agent</label>
+                  <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Sale Agent</label>
                   <div class="relative">
-                    <select class="premium-native-select" v-model="form.sale_agent">
+                    <select class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer pr-10" v-model="form.sale_agent">
                       <option :value="null">Select agent...</option>
                       <option v-for="s in staff" :key="s.id" :value="s.name">{{ s.name }}</option>
                     </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#A8AAAE]">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                   </div>
@@ -348,20 +347,20 @@
             </div>
 
             <!-- Right Column -->
-            <div class="space-y-5">
+            <div class="space-y-4">
               <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">
                   <span class="text-rose-500">*</span> Frequency
                 </label>
                 <div class="relative">
-                  <select class="premium-native-select" v-model="form.frequency">
+                  <select class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer pr-10 capitalize" v-model="form.frequency">
                     <option value="daily">Daily</option>
                     <option value="weekly">Weekly</option>
                     <option value="monthly">Monthly</option>
                     <option value="quarterly">Quarterly (every 3 months)</option>
                     <option value="yearly">Yearly</option>
                   </select>
-                  <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#A8AAAE]">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
                   </div>
                 </div>
@@ -369,28 +368,26 @@
 
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                  <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">
                     <span class="text-rose-500">*</span> Start Date
                   </label>
                   <a-date-picker
                     v-model:value="form.date_from"
-                    style="width:100%"
+                    style="width: 100%"
                     value-format="YYYY-MM-DD"
                     format="DD/MM/YYYY"
-                    size="large"
-                    class="premium-datepicker-ri"
+                    class="vuexy-datepicker"
                     placeholder="Select start date"
                   />
                 </div>
                 <div>
-                  <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">End Date (optional)</label>
+                  <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">End Date (optional)</label>
                   <a-date-picker
                     v-model:value="form.date_to"
-                    style="width:100%"
+                    style="width: 100%"
                     value-format="YYYY-MM-DD"
                     format="DD/MM/YYYY"
-                    size="large"
-                    class="premium-datepicker-ri"
+                    class="vuexy-datepicker"
                     placeholder="Select end date"
                   />
                 </div>
@@ -398,18 +395,18 @@
 
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Cycles (0 = unlimited)</label>
-                  <input type="number" class="premium-native-input" v-model.number="form.cycles" :min="0" placeholder="0" />
+                  <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Cycles (0 = unlimited)</label>
+                  <input type="number" class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md font-semibold" v-model.number="form.cycles" :min="0" placeholder="0" />
                 </div>
                 <div>
-                  <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Discount Type</label>
+                  <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Discount Type</label>
                   <div class="relative">
-                    <select class="premium-native-select" v-model="form.discount_type" @change="recalc">
+                    <select class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer pr-10" v-model="form.discount_type" @change="recalc">
                       <option value="no_discount">No Discount</option>
                       <option value="before_tax">Before Tax</option>
                       <option value="after_tax">After Tax</option>
                     </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#A8AAAE]">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                   </div>
@@ -417,23 +414,22 @@
               </div>
 
               <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Tags</label>
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Tags</label>
                 <a-select
                   v-model:value="form.tags"
                   mode="tags"
                   placeholder="Add tags..."
                   style="width: 100%"
-                  size="large"
-                  class="premium-tags-select-ri"
+                  class="vuexy-tags-select"
                 >
                 </a-select>
               </div>
 
               <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Admin Note</label>
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Admin Note</label>
                 <textarea
-                  class="premium-native-textarea"
-                  rows="3"
+                  class="form-ctrl text-xs p-3 bg-white border-[#DBDADE] rounded-md transition-all min-h-[64px]"
+                  rows="2"
                   v-model="form.admin_note"
                   placeholder="Admin notes (not visible to client)..."
                 ></textarea>
@@ -443,153 +439,164 @@
         </div>
 
         <!-- ─── Section 02: Invoice Items ─── -->
-        <div class="premium-section-card">
-          <div class="flex items-center space-x-2 pb-4 border-b border-slate-100 mb-6">
-            <span class="text-[10px] font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded">02</span>
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Invoice Items</span>
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-6 space-y-5 shadow-sm">
+          <div class="flex items-center justify-between pb-3 border-b border-[#F1F0F2]">
+            <div class="flex items-center space-x-2">
+              <span class="text-[11px] font-bold text-[#7367F0] bg-[#7367F0]/10 px-2.5 py-0.5 rounded">02</span>
+              <span class="text-xs font-bold uppercase tracking-wider text-[#4B465C]">Invoice Items</span>
+            </div>
           </div>
 
-          <div class="flex items-center justify-between flex-wrap gap-4 pb-4 border-b border-slate-100 mb-4">
-            <div class="flex items-center space-x-3 bg-slate-100/80 p-1 rounded-xl shadow-inner">
-              <span class="text-[10px] font-bold text-slate-400 px-2.5 uppercase tracking-wider">Show qty as:</span>
+          <div class="flex items-center justify-between flex-wrap gap-4 pb-2">
+            <div class="flex items-center space-x-2 bg-[#F8F7FA] p-1 rounded-md border border-[#DBDADE]">
+              <span class="text-[11px] font-bold text-[#A8AAAE] px-2.5 uppercase tracking-wider">Show qty as:</span>
               <div class="flex space-x-1">
                 <button type="button"
-                  class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
-                  :class="form.qty_display_mode === 'qty' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'"
+                  class="px-3 py-1 rounded text-xs font-bold transition-all cursor-pointer border-none"
+                  :class="form.qty_display_mode === 'qty' ? 'bg-[#7367F0] text-white shadow-sm' : 'bg-transparent text-[#6F6B7D] hover:text-[#4B465C]'"
                   @click="form.qty_display_mode = 'qty'">Qty</button>
                 <button type="button"
-                  class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
-                  :class="form.qty_display_mode === 'hours' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'"
+                  class="px-3 py-1 rounded text-xs font-bold transition-all cursor-pointer border-none"
+                  :class="form.qty_display_mode === 'hours' ? 'bg-[#7367F0] text-white shadow-sm' : 'bg-transparent text-[#6F6B7D] hover:text-[#4B465C]'"
                   @click="form.qty_display_mode = 'hours'">Hours</button>
                 <button type="button"
-                  class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
-                  :class="form.qty_display_mode === 'qty_hours' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'"
+                  class="px-3 py-1 rounded text-xs font-bold transition-all cursor-pointer border-none"
+                  :class="form.qty_display_mode === 'qty_hours' ? 'bg-[#7367F0] text-white shadow-sm' : 'bg-transparent text-[#6F6B7D] hover:text-[#4B465C]'"
                   @click="form.qty_display_mode = 'qty_hours'">Qty/Hours</button>
               </div>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Add catalog item:</span>
-              <a-select placeholder="Select item..." style="width:200px" @change="addCatalogItem" :value="null" show-search :filter-option="(input, option) => option.label.toLowerCase().includes(input.toLowerCase())"
-                size="large" class="premium-catalog-select">
+            <div class="flex items-center gap-2 max-w-sm w-full">
+              <span class="text-[11px] font-bold text-[#A8AAAE] uppercase tracking-wider whitespace-nowrap">Add predefined item:</span>
+              <a-select 
+                placeholder="Choose catalog item..." 
+                style="width: 100%" 
+                @change="addCatalogItem" 
+                :value="null" 
+                show-search 
+                :filter-option="(input, option) => (option.label || '').toLowerCase().includes(input.toLowerCase())"
+                class="vuexy-select"
+              >
                 <a-select-option v-for="item in catalogItems" :key="item.id" :value="item.id" :label="item.name">
                   <div class="flex items-center justify-between w-full">
-                    <span class="text-xs font-medium">{{ item.name }}</span>
-                    <span class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md ml-4">{{ formatCurrency(item.rate) }}</span>
+                    <span class="text-xs font-medium text-[#4B465C]">{{ item.name }}</span>
+                    <span class="text-[11px] font-bold text-[#7367F0] bg-[#7367F0]/10 px-2 py-0.5 rounded ml-4">{{ formatCurrency(item.rate) }}</span>
                   </div>
                 </a-select-option>
               </a-select>
             </div>
           </div>
 
-          <!-- Premium Items Table -->
-          <div class="overflow-x-auto rounded-xl border border-slate-100 shadow-sm">
-            <table class="items-table-ri text-xs">
+          <!-- Items Table -->
+          <div class="overflow-x-auto rounded-lg border border-[#EBE9F1] shadow-sm">
+            <table class="items-table-ri text-xs w-full">
               <thead>
-                <tr class="bg-gradient-to-r from-slate-50 to-white">
-                  <th class="w-56">Item</th>
-                  <th class="w-60">Description</th>
-                  <th class="w-20 text-center">{{ qtyLabel }}</th>
-                  <th class="w-16 text-center">Unit</th>
-                  <th class="w-28 text-right">Rate</th>
-                  <th class="w-28 text-center">Tax</th>
-                  <th class="w-32 text-right pr-5">Amount</th>
-                  <th class="w-12 text-center"></th>
+                <tr class="bg-[#F8F7FA] text-[#6F6B7D] border-b border-[#EBE9F1]">
+                  <th class="w-56 py-3 px-3 text-left font-semibold uppercase text-[11px] tracking-wider">Item</th>
+                  <th class="w-60 py-3 px-3 text-left font-semibold uppercase text-[11px] tracking-wider">Description</th>
+                  <th class="w-20 text-center py-3 px-2 font-semibold uppercase text-[11px] tracking-wider">{{ qtyLabel }}</th>
+                  <th class="w-20 text-center py-3 px-2 font-semibold uppercase text-[11px] tracking-wider">Unit</th>
+                  <th class="w-28 text-right py-3 px-3 font-semibold uppercase text-[11px] tracking-wider">Rate</th>
+                  <th class="w-28 text-center py-3 px-2 font-semibold uppercase text-[11px] tracking-wider">Tax</th>
+                  <th class="w-32 text-right pr-4 py-3 px-3 font-semibold uppercase text-[11px] tracking-wider">Amount</th>
+                  <th class="w-12 text-center py-3 px-2"></th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(item, index) in form.items" :key="index" class="item-row-ri group hover:bg-gradient-to-r hover:from-slate-50 hover:to-white transition-all duration-150">
+                <tr v-for="(item, index) in form.items" :key="index" class="item-row-ri group hover:bg-[#F8F7FA] border-b border-[#F1F0F2] transition-colors">
                   <td class="p-2.5">
-                    <input type="text" class="item-input-ri" v-model="item.description" placeholder="Item name..." />
+                    <input type="text" class="form-ctrl text-xs h-[34px] px-3 bg-white border-[#DBDADE] rounded-md font-semibold" v-model="item.description" placeholder="Item name..." />
                   </td>
                   <td class="p-2.5">
-                    <textarea class="item-input-ri min-h-[32px] py-1.5 resize-none" rows="1" v-model="item.long_description" placeholder="Long description..."></textarea>
+                    <textarea class="form-ctrl text-xs p-2 min-h-[34px] h-[34px] bg-white border-[#DBDADE] rounded-md resize-none" rows="1" v-model="item.long_description" placeholder="Long description..."></textarea>
                   </td>
                   <td class="p-2.5">
-                    <input type="number" class="item-input-ri text-center" v-model.number="item.qty" :min="0.01" @input="recalc" />
+                    <input type="number" class="form-ctrl text-xs text-center h-[34px] bg-white border-[#DBDADE] rounded-md" v-model.number="item.qty" :min="0.01" @input="recalc" />
                   </td>
                   <td class="p-2.5">
-                    <input type="text" class="item-input-ri text-center" v-model="item.unit" placeholder="Unit" />
+                    <input type="text" class="form-ctrl text-xs text-center h-[34px] bg-white border-[#DBDADE] rounded-md" v-model="item.unit" placeholder="Unit" />
                   </td>
                   <td class="p-2.5">
-                    <input type="number" class="item-input-ri text-right font-semibold" v-model.number="item.rate" :min="0" @input="recalc" placeholder="0.00" />
+                    <input type="number" class="form-ctrl text-xs text-right h-[34px] bg-white border-[#DBDADE] rounded-md font-semibold" v-model.number="item.rate" :min="0" @input="recalc" placeholder="0.00" />
                   </td>
                   <td class="p-2.5">
                     <div class="relative">
-                      <select class="item-input-ri appearance-none cursor-pointer pr-7 font-medium" v-model="item.tax_rate" @change="recalc">
+                      <select class="form-ctrl text-xs h-[34px] bg-white border-[#DBDADE] rounded-md appearance-none cursor-pointer pr-7 font-medium" v-model="item.tax_rate" @change="recalc">
                         <option :value="0">No Tax</option>
                         <option :value="5">5.00%</option>
                         <option :value="10">10.00%</option>
                         <option :value="18">18.00%</option>
                       </select>
-                      <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-slate-400">
+                      <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-[#A8AAAE]">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
                       </div>
                     </div>
                   </td>
-                  <td class="p-2.5 text-right font-bold text-slate-800 pr-4 text-sm">{{ formatCurrency((item.qty || 0) * (item.rate || 0)) }}</td>
+                  <td class="p-2.5 text-right font-bold text-[#4B465C] pr-4 text-sm">{{ formatCurrency((item.qty || 0) * (item.rate || 0)) }}</td>
                   <td class="p-2.5 text-center">
-                    <button type="button" class="text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg w-7 h-7 flex items-center justify-center border border-transparent hover:border-rose-100 cursor-pointer transition-all mx-auto opacity-0 group-hover:opacity-100" @click="removeItem(index)">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <button type="button" class="text-[#A8AAAE] hover:text-rose-500 hover:bg-rose-50 rounded w-7 h-7 flex items-center justify-center border border-transparent hover:border-rose-100 cursor-pointer transition-all mx-auto" @click="removeItem(index)" title="Remove item">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                   </td>
                 </tr>
                 <tr v-if="!form.items.length">
-                  <td colspan="8" class="text-slate-400 text-xs text-center italic py-8">
-                    No items added. Click "Add Item Row" or select a catalog item above.
+                  <td colspan="8" class="text-[#A8AAAE] text-xs text-center italic py-8">
+                    No items added. Click "Add Item Row" or select a predefined item above.
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <button type="button" class="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-dashed border-slate-200 rounded-xl text-xs font-bold text-slate-500 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50/30 cursor-pointer transition-all mt-3" @click="addItem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <button type="button" class="btn-outline text-xs font-semibold py-2 px-4 rounded-md flex items-center gap-1.5 cursor-pointer" @click="addItem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Item Row
           </button>
         </div>
 
         <!-- ─── Section 03: Totals & Notes ─── -->
-        <div class="premium-section-card">
-          <div class="flex items-center space-x-2 pb-4 border-b border-slate-100 mb-6">
-            <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">03</span>
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Totals &amp; Notes</span>
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-6 space-y-6 shadow-sm">
+          <div class="flex items-center justify-between pb-3 border-b border-[#F1F0F2]">
+            <div class="flex items-center space-x-2">
+              <span class="text-[11px] font-bold text-[#7367F0] bg-[#7367F0]/10 px-2.5 py-0.5 rounded">03</span>
+              <span class="text-xs font-bold uppercase tracking-wider text-[#4B465C]">Totals &amp; Notes</span>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Notes Column -->
             <div class="space-y-4">
-              <div class="p-5 bg-gradient-to-br from-slate-50/50 to-white border border-slate-100 rounded-xl space-y-2">
+              <div class="p-4 bg-[#FFFFFF] border border-[#EBE9F1] rounded-lg space-y-2">
                 <div class="flex items-center gap-2 pb-1">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" class="text-indigo-500"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                  <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Client Note</label>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" class="text-[#7367F0]"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <label class="text-xs font-bold uppercase tracking-wider text-[#4B465C]">Client Note</label>
                 </div>
-                <textarea class="premium-note-textarea" rows="3" v-model="form.client_note" placeholder="Visible to client..."></textarea>
+                <textarea class="form-ctrl text-xs p-3 bg-white border-[#DBDADE] rounded-md transition-all min-h-[80px] resize-none" rows="3" v-model="form.client_note" placeholder="Write a note visible to client..."></textarea>
               </div>
-              <div class="p-5 bg-gradient-to-br from-slate-50/50 to-white border border-slate-100 rounded-xl space-y-2">
+              <div class="p-4 bg-[#FFFFFF] border border-[#EBE9F1] rounded-lg space-y-2">
                 <div class="flex items-center gap-2 pb-1">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" class="text-indigo-500"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                  <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Terms &amp; Conditions</label>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" class="text-[#7367F0]"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  <label class="text-xs font-bold uppercase tracking-wider text-[#4B465C]">Terms &amp; Conditions</label>
                 </div>
-                <textarea class="premium-note-textarea" rows="4" v-model="form.terms_conditions" placeholder="Terms and conditions..."></textarea>
+                <textarea class="form-ctrl text-xs p-3 bg-white border-[#DBDADE] rounded-md transition-all min-h-[80px] resize-none text-[#5D596C]" rows="3" v-model="form.terms_conditions" placeholder="Terms and conditions..."></textarea>
               </div>
             </div>
 
             <!-- Totals Column -->
             <div>
-              <div class="bg-gradient-to-br from-slate-50 to-white border border-slate-100 rounded-2xl p-5 space-y-3.5 shadow-sm">
-                <div class="flex justify-between items-center text-xs pb-2.5 border-b border-slate-200/50">
-                  <span class="text-slate-500 font-semibold">Sub Total</span>
-                  <span class="font-bold text-slate-800 text-sm">{{ formatCurrency(form.subtotal) }}</span>
+              <div class="bg-[#FFFFFF] border border-[#EBE9F1] rounded-lg p-5 space-y-3.5 shadow-sm">
+                <div class="flex justify-between items-center text-xs pb-2.5 border-b border-[#F1F0F2]">
+                  <span class="text-[#6F6B7D] font-semibold">Sub Total</span>
+                  <span class="font-bold text-[#4B465C] text-sm">{{ formatCurrency(form.subtotal) }}</span>
                 </div>
 
-                <div v-if="form.discount_type !== 'no_discount'" class="flex justify-between items-center text-xs pb-2.5 border-b border-slate-200/50">
-                  <span class="text-slate-500 font-semibold">Discount</span>
+                <div v-if="form.discount_type !== 'no_discount'" class="flex justify-between items-center text-xs pb-2.5 border-b border-[#F1F0F2]">
+                  <span class="text-[#6F6B7D] font-semibold">Discount</span>
                   <div class="flex items-center space-x-1.5">
                     <input type="number" :min="0"
-                      class="border border-slate-200 rounded-md text-xs text-right w-14 h-7 pr-1 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                      class="border border-[#DBDADE] rounded text-xs text-right w-14 h-7 pr-1 focus:outline-none focus:border-[#7367F0]"
                       v-model.number="form.discount_value_input" @input="recalc" />
                     <select
-                      class="border border-slate-200 rounded-md text-xs h-7 w-14 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white appearance-none px-1 font-semibold text-slate-500"
+                      class="border border-[#DBDADE] rounded text-xs h-7 w-14 focus:outline-none focus:border-[#7367F0] bg-white appearance-none px-1 font-semibold text-[#6F6B7D]"
                       v-model="form.discount_symbol" @change="recalc">
                       <option value="%">%</option>
                       <option value="$">$</option>
@@ -598,51 +605,51 @@
                   <span class="font-bold text-rose-500">-{{ formatCurrency(form.discount_val) }}</span>
                 </div>
 
-                <div class="flex justify-between items-center text-xs pb-2.5 border-b border-slate-200/50">
-                  <span class="text-slate-500 font-semibold">Adjustment</span>
+                <div class="flex justify-between items-center text-xs pb-2.5 border-b border-[#F1F0F2]">
+                  <span class="text-[#6F6B7D] font-semibold">Adjustment</span>
                   <input type="number"
-                    class="border border-slate-200 rounded-md text-xs text-right w-20 h-7 pr-1 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    class="border border-[#DBDADE] rounded text-xs text-right w-20 h-7 pr-1 focus:outline-none focus:border-[#7367F0]"
                     v-model.number="form.adjustment" @input="recalc" />
-                  <span class="font-bold text-slate-800">{{ formatCurrency(form.adjustment) }}</span>
+                  <span class="font-bold text-[#4B465C]">{{ formatCurrency(form.adjustment) }}</span>
                 </div>
 
-                <div v-if="form.tax > 0" class="flex justify-between items-center text-xs pb-2.5 border-b border-slate-200/50">
-                  <span class="text-slate-500 font-semibold">Tax</span>
-                  <span class="font-bold text-amber-600">{{ formatCurrency(form.tax) }}</span>
+                <div v-if="form.tax > 0" class="flex justify-between items-center text-xs pb-2.5 border-b border-[#F1F0F2]">
+                  <span class="text-[#6F6B7D] font-semibold">Tax Total</span>
+                  <span class="font-bold text-[#4B465C]">{{ formatCurrency(form.tax) }}</span>
                 </div>
 
                 <div class="flex justify-between items-center pt-1.5">
-                  <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Total</span>
-                  <span class="text-xl text-slate-900 font-extrabold tracking-tight">{{ formatCurrency(form.total) }}</span>
+                  <span class="text-xs font-bold text-[#4B465C] uppercase tracking-wider">Total</span>
+                  <span class="text-xl text-[#7367F0] font-extrabold tracking-tight">{{ formatCurrency(form.total) }}</span>
                 </div>
 
-                <div class="text-right text-[11px] font-semibold text-slate-400 pt-1 border-t border-slate-100">
-                  Billed <span class="font-bold text-slate-600">{{ freqLabel(form.frequency) }}</span>
+                <div class="text-right text-[11px] font-semibold text-[#A8AAAE] pt-2 border-t border-[#F1F0F2]">
+                  Billed <span class="font-bold text-[#4B465C]">{{ freqLabel(form.frequency) }}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ─── Premium Footer ─── -->
-        <div class="premium-drawer-footer">
+        <!-- ─── Drawer Action Footer ─── -->
+        <div class="border-t border-[#F1F0F2] bg-[#F8F7FA] px-7 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs text-[#6F6B7D] rounded-b-[10px] -mx-6 -mb-6 mt-6">
           <div class="flex items-center space-x-2">
-            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-600">
+            <span class="flex items-center justify-center w-5 h-5 rounded-full bg-[#7367F0]/10 text-[#7367F0]">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14h-2v-4h2zm0-6h-2V7h2z"/></svg>
             </span>
-            <span class="text-slate-500 font-medium text-xs">{{ editingId ? 'Update recurring invoice details' : 'Create a new recurring invoice template' }}</span>
+            <span class="text-[#6F6B7D] font-medium">{{ editingId ? 'Update recurring invoice details' : 'Create a new recurring invoice template' }}</span>
           </div>
-          <div class="flex items-center space-x-3">
-            <button type="button" class="px-5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white text-slate-600 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-800 cursor-pointer transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-sm" @click="showDrawer = false">
-              <span class="flex items-center gap-2">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
+            <button type="button" class="btn-outline px-5 py-2 text-xs font-semibold" @click="showDrawer = false">
+              <span class="flex items-center gap-1.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 Cancel
               </span>
             </button>
-            <button type="submit" class="px-6 py-2.5 bg-gradient-to-br from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800 text-white rounded-xl text-xs font-bold cursor-pointer transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" :disabled="saving">
-              <span class="flex items-center gap-2">
+            <button type="submit" class="btn-primary px-6 py-2 text-xs font-bold" :disabled="saving">
+              <span class="flex items-center gap-1.5">
                 <svg v-if="saving" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" class="animate-spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                 {{ editingId ? 'Save Changes' : 'Create Recurring Invoice' }}
               </span>
             </button>
@@ -654,69 +661,69 @@
     <!-- ─── Address Edit Modal ─── -->
     <transition name="fade">
       <div v-if="showAddressModal" class="modal-overlay" @click.self="closeAddressModal">
-        <div class="modal-card border border-slate-100 rounded-2xl shadow-[0_20px_25px_-5px_rgba(0,0,0,0.08)]">
-          <div class="modal-head px-6 py-4.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+        <div class="modal-card border border-[#EBE9F1] rounded-xl shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)]">
+          <div class="modal-head px-6 py-4 border-b border-[#F1F0F2] flex items-center justify-between bg-[#FFFFFF]">
             <div class="flex items-center space-x-2">
-              <div class="w-1.5 h-4 rounded-full bg-indigo-600"></div>
-              <span class="modal-title font-bold text-slate-800 text-sm">Billing & Shipping Address</span>
+              <div class="w-1.5 h-4 rounded-full bg-[#7367F0]"></div>
+              <span class="modal-title font-bold text-[#4B465C] text-sm">Billing &amp; Shipping Address</span>
             </div>
-            <button class="modal-close text-slate-400 hover:text-slate-600 font-bold text-xl cursor-pointer" @click="closeAddressModal">×</button>
+            <button class="modal-close text-[#A8AAAE] hover:text-[#4B465C] font-bold text-xl cursor-pointer bg-transparent border-none" @click="closeAddressModal">×</button>
           </div>
           <div class="modal-body p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-xs overflow-y-auto">
-            <div class="space-y-4">
-              <div class="border-b border-slate-100 pb-2 flex items-center space-x-2">
-                <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">BILLING</span>
+            <div class="space-y-3.5">
+              <div class="border-b border-[#F1F0F2] pb-2 flex items-center space-x-2">
+                <span class="text-[10px] font-bold text-[#7367F0] bg-[#7367F0]/10 px-2 py-0.5 rounded">BILLING</span>
               </div>
               <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Street</label>
-                <textarea class="premium-modal-input" rows="2" v-model="addressForm.billing_street" placeholder="Street Address"></textarea>
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1">Street</label>
+                <textarea class="form-ctrl text-xs p-2.5 bg-white rounded-md border-[#DBDADE]" rows="2" v-model="addressForm.billing_street" placeholder="Street Address"></textarea>
               </div>
               <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">City</label>
-                <input type="text" class="premium-modal-input h-9" v-model="addressForm.billing_city" placeholder="City" />
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1">City</label>
+                <input type="text" class="form-ctrl text-xs h-[36px] px-3 bg-white rounded-md border-[#DBDADE]" v-model="addressForm.billing_city" placeholder="City" />
               </div>
               <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">State</label>
-                <input type="text" class="premium-modal-input h-9" v-model="addressForm.billing_state" placeholder="State" />
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1">State</label>
+                <input type="text" class="form-ctrl text-xs h-[36px] px-3 bg-white rounded-md border-[#DBDADE]" v-model="addressForm.billing_state" placeholder="State" />
               </div>
               <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Zip Code</label>
-                <input type="text" class="premium-modal-input h-9" v-model="addressForm.billing_zip" placeholder="Zip Code" />
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1">Zip Code</label>
+                <input type="text" class="form-ctrl text-xs h-[36px] px-3 bg-white rounded-md border-[#DBDADE]" v-model="addressForm.billing_zip" placeholder="Zip Code" />
               </div>
               <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Country</label>
-                <input type="text" class="premium-modal-input h-9" v-model="addressForm.billing_country" placeholder="Country" />
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1">Country</label>
+                <input type="text" class="form-ctrl text-xs h-[36px] px-3 bg-white rounded-md border-[#DBDADE]" v-model="addressForm.billing_country" placeholder="Country" />
               </div>
             </div>
-            <div class="space-y-4">
-              <div class="border-b border-slate-100 pb-1.5 flex items-center space-x-2">
-                <span class="text-[10px] font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded">SHIPPING</span>
+            <div class="space-y-3.5">
+              <div class="border-b border-[#F1F0F2] pb-2 flex items-center space-x-2">
+                <span class="text-[10px] font-bold text-[#7367F0] bg-[#7367F0]/10 px-2 py-0.5 rounded">SHIPPING</span>
               </div>
               <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Street</label>
-                <textarea class="premium-modal-input" rows="2" v-model="addressForm.shipping_street" placeholder="Street Address"></textarea>
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1">Street</label>
+                <textarea class="form-ctrl text-xs p-2.5 bg-white rounded-md border-[#DBDADE]" rows="2" v-model="addressForm.shipping_street" placeholder="Street Address"></textarea>
               </div>
               <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">City</label>
-                <input type="text" class="premium-modal-input h-9" v-model="addressForm.shipping_city" placeholder="City" />
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1">City</label>
+                <input type="text" class="form-ctrl text-xs h-[36px] px-3 bg-white rounded-md border-[#DBDADE]" v-model="addressForm.shipping_city" placeholder="City" />
               </div>
               <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">State</label>
-                <input type="text" class="premium-modal-input h-9" v-model="addressForm.shipping_state" placeholder="State" />
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1">State</label>
+                <input type="text" class="form-ctrl text-xs h-[36px] px-3 bg-white rounded-md border-[#DBDADE]" v-model="addressForm.shipping_state" placeholder="State" />
               </div>
               <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Zip Code</label>
-                <input type="text" class="premium-modal-input h-9" v-model="addressForm.shipping_zip" placeholder="Zip Code" />
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1">Zip Code</label>
+                <input type="text" class="form-ctrl text-xs h-[36px] px-3 bg-white rounded-md border-[#DBDADE]" v-model="addressForm.shipping_zip" placeholder="Zip Code" />
               </div>
               <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Country</label>
-                <input type="text" class="premium-modal-input h-9" v-model="addressForm.shipping_country" placeholder="Country" />
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1">Country</label>
+                <input type="text" class="form-ctrl text-xs h-[36px] px-3 bg-white rounded-md border-[#DBDADE]" v-model="addressForm.shipping_country" placeholder="Country" />
               </div>
             </div>
           </div>
-          <div class="modal-foot px-6 py-4.5 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/80">
-            <button type="button" class="premium-btn-outline" @click="closeAddressModal">Cancel</button>
-            <button type="button" class="premium-btn-primary" @click="saveAddresses">Apply Address</button>
+          <div class="modal-foot px-6 py-3.5 border-t border-[#F1F0F2] flex justify-end gap-2.5 bg-[#FFFFFF]">
+            <button type="button" class="btn-ghost px-4 py-2 text-xs font-semibold" @click="closeAddressModal">Cancel</button>
+            <button type="button" class="btn-primary px-5 py-2 text-xs font-bold" @click="saveAddresses">Apply Address</button>
           </div>
         </div>
       </div>
@@ -1088,9 +1095,21 @@ export default defineComponent({
       return '$' + parseFloat(val).toLocaleString('en-US', { minimumFractionDigits: 2 });
     };
 
-    const formatDate = (d) => {
-      if (!d) return '—';
-      return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const handleClientChange = (clientId) => {
+      const c = clients.value.find(cl => cl.id === clientId);
+      if (c) {
+        form.billing_street = c.address || '';
+        form.billing_city = c.city || '';
+        form.billing_state = c.state || '';
+        form.billing_zip = c.zip || '';
+        form.billing_country = c.country || '';
+        
+        form.shipping_street = c.address || '';
+        form.shipping_city = c.city || '';
+        form.shipping_state = c.state || '';
+        form.shipping_zip = c.zip || '';
+        form.shipping_country = c.country || '';
+      }
     };
 
     onMounted(() => { loadData(); loadDropdowns(); });
@@ -1102,6 +1121,7 @@ export default defineComponent({
       loadData, openCreateDrawer, editRI, submitForm, setStatus, deleteRI,
       freqLabel, formatCurrency, formatDate,
       addressForm, openAddressModal, closeAddressModal, saveAddresses,
+      handleClientChange
     };
   }
 });
@@ -1110,14 +1130,168 @@ export default defineComponent({
 <style scoped>
 /* ── Base ── */
 .ri-page {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #f8fafc;
+  font-family: 'Public Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #F8F7FA;
   min-height: 100vh;
   padding: 20px 24px;
   box-sizing: border-box;
 }
 
-/* ── Premium Page Header ── */
+/* ── Universal Form Field Styles ── */
+.form-ctrl {
+  border: 1px solid #DBDADE;
+  border-radius: 6px;
+  padding: 8px 12px;
+  width: 100%;
+  color: #4B465C;
+  outline: none;
+  font-family: inherit;
+  font-size: 13px;
+  background-color: #FFFFFF;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-ctrl:focus {
+  border-color: #7367F0;
+  background-color: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.16);
+}
+
+/* ── Ant-Design Select & Picker overrides ── */
+:deep(.ant-select-single:not(.ant-select-customize-input) .ant-select-selector) {
+  border-radius: 6px !important;
+  border: 1px solid #DBDADE !important;
+  min-height: 38px !important;
+  height: 38px !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 12px !important;
+  background-color: #FFFFFF !important;
+  box-shadow: none !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+:deep(.ant-select-multiple:not(.ant-select-customize-input) .ant-select-selector) {
+  border-radius: 6px !important;
+  border: 1px solid #DBDADE !important;
+  min-height: 38px !important;
+  height: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  padding: 3px 8px !important;
+  background-color: #FFFFFF !important;
+  box-shadow: none !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+:deep(.ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector),
+:deep(.ant-select:hover .ant-select-selector) {
+  border-color: #7367F0 !important;
+}
+
+:deep(.ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector) {
+  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.16) !important;
+}
+
+:deep(.ant-select-single .ant-select-selection-item) {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #4B465C !important;
+  line-height: 36px !important;
+}
+
+:deep(.ant-select-single .ant-select-selection-placeholder) {
+  font-size: 13px !important;
+  color: #A8AAAE !important;
+  line-height: 36px !important;
+}
+
+:deep(.ant-select-multiple .ant-select-selection-item) {
+  height: 26px !important;
+  line-height: 24px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  background: rgba(115, 103, 240, 0.1) !important;
+  color: #7367F0 !important;
+  border: 1px solid rgba(115, 103, 240, 0.2) !important;
+  border-radius: 4px !important;
+  padding: 0 8px !important;
+  margin: 2px 4px 2px 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+:deep(.ant-select-multiple .ant-select-selection-item-content) {
+  font-size: 12px !important;
+  line-height: 24px !important;
+  color: #7367F0 !important;
+  display: inline-block !important;
+}
+
+:deep(.ant-select-multiple .ant-select-selection-item-remove) {
+  display: inline-flex !important;
+  align-items: center !important;
+  color: #7367F0 !important;
+  font-size: 12px !important;
+  margin-left: 2px !important;
+  cursor: pointer !important;
+}
+
+:deep(.ant-select-multiple .ant-select-selection-placeholder) {
+  line-height: 30px !important;
+  padding: 0 4px !important;
+  font-size: 13px !important;
+  color: #A8AAAE !important;
+}
+
+/* ── Datepicker Overrides ── */
+:deep(.vuexy-datepicker.ant-picker),
+:deep(.ant-picker) {
+  height: 38px !important;
+  border-radius: 6px !important;
+  border: 1px solid #DBDADE !important;
+  background: #FFFFFF !important;
+  padding: 4px 12px !important;
+  box-shadow: none !important;
+  transition: all 0.2s !important;
+}
+
+:deep(.ant-picker-focused),
+:deep(.ant-picker:hover) {
+  border-color: #7367F0 !important;
+}
+
+:deep(.ant-picker-focused) {
+  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.16) !important;
+}
+
+:deep(.ant-picker input) {
+  font-size: 13px !important;
+  color: #4B465C !important;
+}
+
+/* ── Payment Mode Chips ── */
+.payment-chip-vuexy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #DBDADE;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+  color: #6F6B7D;
+  background: #FFFFFF;
+}
+.payment-chip-vuexy:hover { border-color: #7367F0; color: #7367F0; background: rgba(115, 103, 240, 0.04); }
+.payment-chip-active-vuexy { background: rgba(115, 103, 240, 0.1); border-color: #7367F0; color: #7367F0; }
+
+/* ── Page Header ── */
 .page-header {
   display: flex;
   align-items: center;
@@ -1129,33 +1303,32 @@ export default defineComponent({
 .header-left { display: flex; align-items: center; gap: 14px; }
 .header-brand { display: flex; align-items: center; gap: 12px; }
 .title-group { display: flex; flex-direction: column; gap: 1px; }
-.page-title { font-size: 20px; font-weight: 700; color: #1e293b; margin: 0 0 0; line-height: 1.3; }
-.page-subtitle { font-size: 12px; color: #94a3b8; }
+.page-title { font-size: 20px; font-weight: 700; color: #4B465C; margin: 0; line-height: 1.3; }
+.page-subtitle { font-size: 12px; color: #A8AAAE; }
 
 .back-btn-premium {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  background: #FFFFFF;
+  border: 1px solid #DBDADE;
+  border-radius: 6px;
   padding: 7px 14px;
   font-size: 12.5px;
   font-weight: 600;
-  color: #64748b;
+  color: #6F6B7D;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
   font-family: inherit;
   transition: all 0.15s;
-  white-space: nowrap;
 }
-.back-btn-premium:hover { background: #f8fafc; border-color: #cbd5e1; color: #334155; }
+.back-btn-premium:hover { background: #F8F7FA; border-color: #7367F0; color: #7367F0; }
 
 .btn-create-premium {
-  background: linear-gradient(135deg, #1e293b, #0f172a);
-  color: #fff;
+  background: #7367F0;
+  color: #FFFFFF;
   border: none;
-  border-radius: 10px;
-  padding: 10px 18px;
+  border-radius: 6px;
+  padding: 9px 18px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -1164,68 +1337,63 @@ export default defineComponent({
   gap: 7px;
   font-family: inherit;
   transition: all 0.2s;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
+  box-shadow: 0 2px 6px rgba(115, 103, 240, 0.4);
 }
 .btn-create-premium:hover {
-  background: linear-gradient(135deg, #0f172a, #000);
+  background: #685DD8;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
 }
 
-/* ── Premium Stats Cards ── */
+/* ── Stats Cards ── */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 16px;
+  margin-bottom: 20px;
 }
 .stat-card-premium {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
+  background: #FFFFFF;
+  border: 1px solid #EBE9F1;
+  border-radius: 8px;
   padding: 16px 18px;
   display: flex;
   align-items: center;
   gap: 14px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 9px rgba(47, 43, 61, 0.06);
   transition: all 0.2s;
 }
 .stat-card-premium:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 16px rgba(47, 43, 61, 0.09);
   transform: translateY(-1px);
 }
 .stat-icon-wrap {
   width: 42px; height: 42px;
-  border-radius: 12px;
+  border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.stat-total    { background: #f1f5f9; color: #64748b; }
-.stat-active-bg  { background: #dcfce7; color: #16a34a; }
-.stat-paused-bg  { background: #fef3c7; color: #d97706; }
-.stat-stopped-bg { background: #fee2e2; color: #dc2626; }
-.stat-body-premium {}
-.stat-num-premium { font-size: 24px; font-weight: 800; color: #1e293b; line-height: 1; }
-.stat-label-premium { font-size: 11.5px; color: #94a3b8; font-weight: 600; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.04em; }
+.stat-total    { background: rgba(115, 103, 240, 0.12); color: #7367F0; }
+.stat-active-bg  { background: rgba(40, 199, 111, 0.12); color: #28C76F; }
+.stat-paused-bg  { background: rgba(255, 159, 67, 0.12); color: #FF9F43; }
+.stat-stopped-bg { background: rgba(234, 84, 85, 0.12); color: #EA5455; }
+.stat-num-premium { font-size: 24px; font-weight: 800; color: #4B465C; line-height: 1; }
+.stat-label-premium { font-size: 11.5px; color: #A8AAAE; font-weight: 600; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.04em; }
 
-/* ── Premium Toolbar ── */
+/* ── Toolbar ── */
 .toolbar-premium {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   gap: 10px;
   flex-wrap: wrap;
 }
 .filter-tabs-premium {
   display: flex;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  background: #FFFFFF;
+  border: 1px solid #DBDADE;
+  border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
 }
 .filter-tab-premium {
   background: none;
@@ -1233,26 +1401,26 @@ export default defineComponent({
   padding: 8px 18px;
   font-size: 12.5px;
   font-weight: 600;
-  color: #64748b;
+  color: #6F6B7D;
   cursor: pointer;
   font-family: inherit;
   transition: all 0.15s;
-  border-right: 1px solid #e2e8f0;
+  border-right: 1px solid #DBDADE;
 }
 .filter-tab-premium:last-child { border-right: none; }
-.filter-tab-premium:hover  { background: #f8fafc; color: #334155; }
+.filter-tab-premium:hover  { background: #F8F7FA; color: #4B465C; }
 .filter-tab-premium.filter-tab-active {
-  background: #1e293b;
-  color: #fff;
+  background: #7367F0;
+  color: #FFFFFF;
 }
 
-/* ── Premium Table ── */
+/* ── Table ── */
 .table-card-premium {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
+  background: #FFFFFF;
+  border: 1px solid #EBE9F1;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 9px rgba(47, 43, 61, 0.06);
 }
 .ri-table-premium {
   width: 100%;
@@ -1260,50 +1428,47 @@ export default defineComponent({
   font-size: 13px;
 }
 .ri-table-premium th {
-  padding: 12px 16px;
+  padding: 12px 18px;
   text-align: left;
-  font-size: 11px;
-  font-weight: 700;
-  color: #64748b;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #6F6B7D;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.8px;
   white-space: nowrap;
-  border-bottom: 1px solid #e2e8f0;
+  background: #F8F7FA;
+  border-bottom: 1px solid #EBE9F1;
 }
-.table-header-premium {
-  background: linear-gradient(to right, #f8fafc, #fff);
-}
-.ri-table-premium td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-.ri-row-premium { cursor: default; transition: all 0.15s; }
-.ri-row-premium:hover { background: linear-gradient(to right, #f8fafc, #fff); }
+.ri-table-premium td { padding: 14px 18px; border-bottom: 1px solid #F1F0F2; vertical-align: middle; }
+.ri-row-premium:hover { background: #F8F7FA; }
 .ri-row-premium:last-child td { border-bottom: none; }
 
-.client-name-premium { font-weight: 600; color: #1e293b; font-size: 13px; }
-.amount-cell-premium { font-weight: 700; color: #1e293b; white-space: nowrap; font-size: 13px; }
-.next-due-premium { color: #3b82f6; font-weight: 600; font-size: 12.5px; }
+.client-name-premium { font-weight: 600; color: #4B465C; font-size: 13px; }
+.amount-cell-premium { font-weight: 700; color: #4B465C; white-space: nowrap; font-size: 13px; }
+.next-due-premium { color: #7367F0; font-weight: 600; font-size: 12.5px; }
 .action-td-premium { width: 40px; text-align: center; }
 
 .project-chip-premium {
   display: inline-block;
-  background: #eff6ff; color: #3b82f6;
-  border: 1px solid #bfdbfe;
-  border-radius: 6px; padding: 2px 8px;
+  background: rgba(115, 103, 240, 0.08);
+  color: #7367F0;
+  border: 1px solid rgba(115, 103, 240, 0.16);
+  border-radius: 4px; padding: 2px 8px;
   font-size: 11px; font-weight: 600; white-space: nowrap;
 }
 .freq-badge-premium {
   display: inline-block;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: 6px;
   font-size: 11px;
   font-weight: 700;
   text-transform: capitalize;
-  letter-spacing: 0.02em;
 }
-.freq-daily     { background: #fdf4ff; color: #9333ea; }
-.freq-weekly    { background: #eff6ff; color: #3b82f6; }
-.freq-monthly   { background: #f0fdf4; color: #16a34a; }
-.freq-quarterly { background: #fef3c7; color: #d97706; }
-.freq-yearly    { background: #ffedd5; color: #ea580c; }
+.freq-daily     { background: rgba(115, 103, 240, 0.12); color: #7367F0; }
+.freq-weekly    { background: rgba(0, 207, 232, 0.12); color: #00CFE8; }
+.freq-monthly   { background: rgba(40, 199, 111, 0.12); color: #28C76F; }
+.freq-quarterly { background: rgba(255, 159, 67, 0.12); color: #FF9F43; }
+.freq-yearly    { background: rgba(234, 84, 85, 0.12); color: #EA5455; }
 
 .status-badge-premium {
   display: inline-block;
@@ -1313,9 +1478,9 @@ export default defineComponent({
   font-weight: 700;
   text-transform: capitalize;
 }
-.status-active  { background: #dcfce7; color: #16a34a; }
-.status-paused  { background: #fef3c7; color: #d97706; }
-.status-stopped { background: #fee2e2; color: #dc2626; }
+.status-active  { background: rgba(40, 199, 111, 0.12); color: #28C76F; }
+.status-paused  { background: rgba(255, 159, 67, 0.12); color: #FF9F43; }
+.status-stopped { background: rgba(234, 84, 85, 0.12); color: #EA5455; }
 
 .dots-btn-premium {
   background: none;
@@ -1323,238 +1488,40 @@ export default defineComponent({
   border-radius: 6px;
   padding: 4px 6px;
   cursor: pointer;
-  color: #94a3b8;
+  color: #A8AAAE;
   display: flex; align-items: center;
   transition: all 0.12s;
 }
-.dots-btn-premium:hover { background: #f1f5f9; border-color: #e2e8f0; color: #475569; }
+.dots-btn-premium:hover { background: #F8F7FA; border-color: #DBDADE; color: #4B465C; }
 
 .empty-state-premium {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   padding: 60px 20px; gap: 8px;
-  color: #94a3b8; font-size: 13px;
+  color: #A8AAAE; font-size: 13px;
 }
 .empty-state-premium p { margin: 0; }
 .table-loading-premium {
   display: flex; align-items: center; justify-content: center;
-  gap: 10px; padding: 60px 0; color: #94a3b8; font-size: 13px;
+  gap: 10px; padding: 60px 0; color: #A8AAAE; font-size: 13px;
 }
 .table-footer-premium {
   display: flex; justify-content: flex-end;
-  padding: 12px 16px; border-top: 1px solid #f1f5f9;
+  padding: 12px 16px; border-top: 1px solid #F1F0F2;
 }
 
-/* ── Premium Drawer Styling ── */
-:deep(.premium-drawer .ant-drawer-header) {
+/* ── Drawer Styling ── */
+:deep(.vuexy-recurring-drawer .ant-drawer-header) {
   padding: 18px 24px !important;
-  border-bottom: 1px solid #f1f5f9 !important;
-  background: linear-gradient(to right, #f8fafc, #fff) !important;
+  border-bottom: 1px solid #F1F0F2 !important;
+  background: #FFFFFF !important;
 }
-:deep(.premium-drawer .ant-drawer-title) {
+:deep(.vuexy-recurring-drawer .ant-drawer-title) {
   font-size: 0 !important;
 }
-:deep(.premium-drawer .ant-drawer-body) {
+:deep(.vuexy-recurring-drawer .ant-drawer-body) {
   padding: 24px !important;
-  background: #f8fafc !important;
-}
-.drawer-title-premium {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 15px;
-  font-weight: 700;
-  color: #1e293b;
-}
-
-/* ── Premium Section Card ── */
-.premium-section-card {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
-}
-
-/* ── Premium Native Selects ── */
-.premium-native-select {
-  width: 100%;
-  height: 40px;
-  padding: 0 32px 0 14px;
-  font-size: 12.5px;
-  color: #334155;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  outline: none;
-  font-family: inherit;
-  transition: all 0.2s;
-  appearance: none;
-  cursor: pointer;
-  font-weight: 500;
-}
-.premium-native-select:hover { border-color: #cbd5e1; background: #f8fafc; }
-.premium-native-select:focus { border-color: #6366f1; background: #fff; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12); }
-
-.premium-native-input {
-  width: 100%;
-  height: 40px;
-  padding: 0 14px;
-  font-size: 12.5px;
-  color: #334155;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  outline: none;
-  font-family: inherit;
-  transition: all 0.2s;
-  box-sizing: border-box;
-  font-weight: 500;
-}
-.premium-native-input:hover { border-color: #cbd5e1; }
-.premium-native-input:focus { border-color: #6366f1; background: #fff; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12); }
-
-.premium-native-textarea {
-  width: 100%;
-  padding: 10px 14px;
-  font-size: 12.5px;
-  color: #334155;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  outline: none;
-  font-family: inherit;
-  transition: all 0.2s;
-  box-sizing: border-box;
-  resize: vertical;
-}
-.premium-native-textarea:hover { border-color: #cbd5e1; }
-.premium-native-textarea:focus { border-color: #6366f1; background: #fff; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12); }
-.premium-native-textarea::placeholder { color: #94a3b8; }
-
-/* ── Payment Mode Chips ── */
-.payment-chip-premium {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11.5px;
-  font-weight: 600;
-  padding: 5px 12px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.15s;
-  color: #64748b;
-  background: #fff;
-}
-.payment-chip-premium:hover { border-color: #cbd5e1; background: #f8fafc; }
-.payment-chip-active-premium { background: #eef2ff; border-color: #a5b4fc; color: #4f46e5; }
-
-/* ── Premium Client Select Overrides ── */
-:deep(.premium-client-select .ant-select-selector) {
-  height: 44px !important;
-  border-radius: 10px !important;
-  padding: 4px 12px !important;
-  border-color: #e2e8f0 !important;
-  background: #f8fafc !important;
-}
-:deep(.premium-client-select:hover .ant-select-selector) {
-  border-color: #cbd5e1 !important;
-  background: #f8fafc !important;
-}
-:deep(.premium-client-select.ant-select-focused .ant-select-selector) {
-  border-color: #6366f1 !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
-  background: #fff !important;
-}
-
-/* ── Premium Datepicker Overrides ── */
-:deep(.premium-datepicker-ri .ant-picker) {
-  height: 40px;
-  border-radius: 10px;
-  border-color: #e2e8f0;
-  background: #f8fafc;
-  padding: 4px 12px;
-  transition: all 0.2s;
-}
-:deep(.premium-datepicker-ri .ant-picker:hover) {
-  border-color: #cbd5e1;
-  background: #f8fafc;
-}
-:deep(.premium-datepicker-ri .ant-picker-focused) {
-  border-color: #6366f1 !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
-  background: #fff !important;
-}
-:deep(.premium-datepicker-ri .ant-picker input) {
-  font-size: 13px;
-  color: #334155;
-}
-
-/* ── Premium Tags Select Overrides ── */
-:deep(.premium-tags-select-ri .ant-select-selector) {
-  min-height: 40px !important;
-  border-radius: 10px !important;
-  border-color: #e2e8f0 !important;
-  background: #f8fafc !important;
-  padding: 2px 8px !important;
-}
-:deep(.premium-tags-select-ri.ant-select-focused .ant-select-selector) {
-  border-color: #6366f1 !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
-  background: #fff !important;
-}
-:deep(.premium-tags-select-ri .ant-select-selection-placeholder) {
-  font-size: 12px;
-  color: #94a3b8;
-}
-:deep(.premium-tags-select-ri .ant-tag) {
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: 6px;
-  padding: 1px 8px;
-  margin: 2px;
-}
-
-/* ── Premium Catalog Select Overrides ── */
-:deep(.premium-catalog-select .ant-select-selector) {
-  border-radius: 10px !important;
-  height: 40px !important;
-  padding: 0 12px !important;
-  border-color: #e2e8f0 !important;
-}
-:deep(.premium-catalog-select.ant-select-focused .ant-select-selector) {
-  border-color: #6366f1 !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
-}
-
-/* Ant-Design Select premium overrides (global within component) */
-:deep(.ant-select-selector) {
-  border-radius: 8px !important;
-  border-color: #e2e8f0 !important;
-  height: 40px !important;
-  display: flex !important;
-  align-items: center !important;
-  padding: 0 12px !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-:deep(.ant-select:hover .ant-select-selector) {
-  border-color: #cbd5e1 !important;
-}
-:deep(.ant-select-focused .ant-select-selector) {
-  border-color: #6366f1 !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
-}
-:deep(.ant-select-selection-item) {
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  color: #334155 !important;
-}
-:deep(.ant-select-selection-placeholder) {
-  font-size: 12px !important;
-  color: #94a3b8 !important;
+  background: #F8F7FA !important;
 }
 
 /* ── Items Table ── */
@@ -1563,158 +1530,59 @@ export default defineComponent({
   border-collapse: collapse;
 }
 .items-table-ri th {
-  padding: 12px 16px;
+  background: #F8F7FA;
+  padding: 12px 14px;
   font-size: 11px;
   font-weight: 700;
-  color: #64748b;
+  color: #6F6B7D;
   text-transform: uppercase;
   letter-spacing: .05em;
   text-align: left;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #EBE9F1;
 }
 .items-table-ri td {
-  border-bottom: 1px solid #f1f5f9;
-  vertical-align: top;
-  padding: 8px 12px;
+  border-bottom: 1px solid #F1F0F2;
+  vertical-align: middle;
+  padding: 8px 10px;
 }
 .items-table-ri tbody tr:last-child td {
   border-bottom: none;
 }
-.item-row-ri { transition: background 0.15s; }
-
-.item-input-ri {
-  width: 100%;
-  padding: 6px 10px;
-  font-size: 12px;
-  color: #334155;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  outline: none;
-  font-family: inherit;
-  box-sizing: border-box;
-  transition: border-color 0.15s;
-}
-.item-input-ri:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
-}
-.item-input-ri::placeholder { color: #94a3b8; }
-
-/* ── Premium Note Textarea ── */
-.premium-note-textarea {
-  width: 100%;
-  padding: 10px 14px;
-  font-size: 12px;
-  color: #334155;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  outline: none;
-  font-family: inherit;
-  transition: all 0.2s;
-  box-sizing: border-box;
-  resize: vertical;
-  min-height: 80px;
-}
-.premium-note-textarea:hover { border-color: #cbd5e1; }
-.premium-note-textarea:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12); }
-.premium-note-textarea::placeholder { color: #94a3b8; }
-
-/* ── Premium Drawer Footer ── */
-.premium-drawer-footer {
-  border-top: 1px solid #e2e8f0;
-  background: linear-gradient(to right, #f8fafc, #fff);
-  padding: 18px 0 0;
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-@media (min-width: 640px) {
-  .premium-drawer-footer {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
-}
-
-/* ── Premium Modal Input ── */
-.premium-modal-input {
-  width: 100%;
-  padding: 8px 12px;
-  font-size: 12px;
-  color: #334155;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  outline: none;
-  font-family: inherit;
-  transition: all 0.2s;
-  box-sizing: border-box;
-}
-.premium-modal-input:hover { border-color: #cbd5e1; }
-.premium-modal-input:focus { border-color: #6366f1; background: #fff; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12); }
-.premium-modal-input::placeholder { color: #94a3b8; }
 
 /* ── Modal ── */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(15, 23, 42, 0.45);
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(47, 43, 61, 0.45);
   backdrop-filter: blur(2px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 1rem;
 }
 .modal-card {
-  background: #ffffff;
-  border-radius: 16px;
-  width: 100%;
-  max-width: 680px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  display: flex;
-  flex-direction: column;
-  max-height: calc(100vh - 2rem);
-  overflow: hidden;
+  background: #FFFFFF;
+  border-radius: 12px;
+  width: 100%; max-width: 680px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  display: flex; flex-direction: column;
+  max-height: calc(100vh - 2rem); overflow: hidden;
 }
 .modal-head {
   padding: 18px 24px;
-  border-bottom: 1px solid #f1f5f9;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #f8fafc;
+  border-bottom: 1px solid #F1F0F2;
+  display: flex; align-items: center; justify-content: space-between;
+  background: #FFFFFF;
 }
-.modal-title { font-size: 14px; font-weight: 700; color: #1e293b; }
+.modal-title { font-size: 14px; font-weight: 700; color: #4B465C; }
 .modal-close {
   background: transparent; border: none; font-size: 20px; font-weight: 700;
-  color: #94a3b8; cursor: pointer; line-height: 1;
+  color: #A8AAAE; cursor: pointer; line-height: 1;
 }
-.modal-close:hover { color: #475569; }
+.modal-close:hover { color: #4B465C; }
 .modal-body { padding: 24px; overflow-y: auto; }
 .modal-foot {
-  padding: 16px 24px; border-top: 1px solid #f1f5f9;
-  display: flex; justify-content: flex-end; gap: 12px; background: #f8fafc;
+  padding: 16px 24px; border-top: 1px solid #F1F0F2;
+  display: flex; justify-content: flex-end; gap: 12px; background: #FFFFFF;
 }
-
-.premium-btn-primary {
-  background: #1e293b; color: #fff; border: 1px solid #1e293b;
-  border-radius: 10px; padding: 10px 24px; font-size: 12.5px; font-weight: 600;
-  cursor: pointer; transition: all 0.2s; font-family: inherit;
-}
-.premium-btn-primary:hover { background: #0f172a; }
-.premium-btn-outline {
-  background: #fff; color: #475569; border: 1px solid #e2e8f0;
-  border-radius: 10px; padding: 10px 22px; font-size: 12.5px; font-weight: 600;
-  cursor: pointer; transition: all 0.2s; font-family: inherit;
-}
-.premium-btn-outline:hover { background: #f8fafc; border-color: #cbd5e1; }
 
 /* ── Fade transition for modal ── */
 .fade-enter-active,

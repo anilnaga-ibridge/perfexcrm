@@ -37,7 +37,7 @@
     <!-- ── Toolbar ── -->
     <div class="toolbar">
       <div class="toolbar-left">
-        <button class="btn-create" @click="showCreateDrawer = true">
+        <button v-if="canCreate" class="btn-create" @click="showCreateDrawer = true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Create New Invoice
         </button>
@@ -83,6 +83,7 @@
       <!-- LEFT: Invoice List -->
       <div class="list-pane">
         <div class="list-table-wrapper">
+          <!-- Desktop Table View -->
           <table class="inv-table">
             <thead>
               <tr>
@@ -148,12 +149,12 @@
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" style="margin-right:6px;vertical-align:middle"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                           View Invoice
                         </a-menu-item>
-                        <a-menu-item key="edit" @click="viewInvoice(inv)">
+                        <a-menu-item v-if="canEdit" key="edit" @click="viewInvoice(inv)">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" style="margin-right:6px;vertical-align:middle"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                           Edit Invoice
                         </a-menu-item>
-                        <a-menu-divider />
-                        <a-menu-item key="delete" @click="deleteInvoice(inv.id)" style="color:#ef4444">
+                        <a-menu-divider v-if="canDelete" />
+                        <a-menu-item v-if="canDelete" key="delete" @click="deleteInvoice(inv.id)" style="color:#ef4444">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" style="margin-right:6px;vertical-align:middle"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                           Delete
                         </a-menu-item>
@@ -164,6 +165,41 @@
               </tr>
             </tbody>
           </table>
+
+          <!-- Mobile Responsive Card View -->
+          <div class="mobile-cards-list" v-if="!loading">
+            <div 
+              v-for="inv in invoices" 
+              :key="'m-inv-' + inv.id"
+              class="mobile-row-card"
+              @click="viewInvoice(inv)"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="font-extrabold text-sm text-indigo-600">{{ inv.number }}</span>
+                </div>
+                <span class="status-badge" :class="'status-' + inv.status">
+                  {{ statusLabel(inv.status) }}
+                </span>
+              </div>
+
+              <div class="font-bold text-sm text-slate-800 flex items-center justify-between pt-1">
+                <span>👤 {{ inv.client?.company || '—' }}</span>
+                <span class="font-extrabold text-slate-900 text-base">{{ formatCurrency(inv.total) }}</span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100">
+                <div class="flex items-center gap-1.5 text-slate-500">
+                  <span class="text-slate-400">📅 Date:</span>
+                  <span>{{ formatDate(inv.date) }}</span>
+                </div>
+                <div class="flex items-center justify-end gap-1.5 text-slate-500" :class="{ 'text-overdue': isOverdue(inv) }">
+                  <span class="text-slate-400">Due:</span>
+                  <span>{{ formatDate(inv.duedate) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div v-if="loading" class="list-loading">
             <a-spin />
@@ -809,6 +845,9 @@ export default defineComponent({
   setup() {
     const router  = useRouter();
     const authStore = useAuthStore();
+    const canCreate = computed(() => authStore.hasPermission('Invoices', 'create'));
+    const canEdit   = computed(() => authStore.hasPermission('Invoices', 'edit'));
+    const canDelete = computed(() => authStore.hasPermission('Invoices', 'delete'));
     const settings = getFinanceSettings();
 
     const loading = ref(false);
@@ -1051,7 +1090,7 @@ export default defineComponent({
       } catch {}
     };
 
-    // Status widgets matching official Perfex layout
+    // Status widgets matching official iBridge layout
     const statusWidgets = computed(() => {
       const total = stats.value.total || 1;
       const pct = (n) => total > 0 ? Math.round((n / total) * 10000) / 100 : 0;
@@ -2292,16 +2331,62 @@ export default defineComponent({
   border-top: 1px solid #e2e8f0;
 }
 
+/* Mobile Cards List Hidden by Default on Desktop */
+.mobile-cards-list {
+  display: none;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   .status-widgets { grid-template-columns: repeat(3, 1fr); }
   .split-pane.has-panel { grid-template-columns: 1fr; }
   .detail-pane { border-top: 1px solid #e2e8f0; }
-  .header-badges { flex-direction: column; gap: 6px; align-items: flex-end; }
 }
-@media (max-width: 600px) {
-  .status-widgets { grid-template-columns: repeat(2, 1fr); }
-  .pay-grid { grid-template-columns: 1fr; }
-  .inv-actions-row { flex-direction: column; align-items: flex-start; }
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .header-badges {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .hdr-badge {
+    justify-content: space-between;
+    width: 100%;
+  }
+  .status-widgets {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .toolbar-left, .toolbar-right {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .inv-table {
+    display: none !important;
+  }
+  .mobile-cards-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .status-widgets {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

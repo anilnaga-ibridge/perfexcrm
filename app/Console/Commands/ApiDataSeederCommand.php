@@ -246,7 +246,10 @@ class ApiDataSeederCommand extends Command
             'name' => 'Sales Representative',
             'slug' => 'sales-rep',
             'description' => 'Handles leads and client contracts',
-            'permissions' => ['leads' => ['view', 'create', 'edit'], 'clients' => ['view']],
+            'permissions' => [
+                'Leads' => ['view_global' => true],
+                'Customers' => ['view_global' => true],
+            ],
         ], $token);
 
         if ($response->getStatusCode() !== 201) {
@@ -666,7 +669,7 @@ class ApiDataSeederCommand extends Command
         $this->info("API POST: Creating Estimate Request Form...");
         $response = $this->dispatchRequest('POST', '/api/estimate-request-forms', [
             'name' => 'Web Development Quote Request Form',
-            'email' => 'web-quotes@perfexcrm.io',
+            'email' => 'web-quotes@ibridgecrm.io',
             'tags' => 'web,estimates,api',
             'assigned_to' => $adminId,
             'status' => 'active',

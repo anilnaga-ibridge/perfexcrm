@@ -91,11 +91,155 @@
               <a-form-item label="VAT Number">
                 <a-input v-model:value="settings.company_info_vat" />
               </a-form-item>
+              <!-- User-Friendly Visual Company Information Format Builder -->
               <a-form-item label="Company Information Format (PDF and HTML)" style="grid-column: span 2;">
-                <a-textarea v-model:value="settings.company_info_format" :rows="6" />
-                <div class="merge-fields-block" style="margin-top:8px; font-size:12px; color:#64748b; line-height: 1.4;">
-                  Available merge fields:<br/>
-                  <code>{company_name} {address}, {city}, {state}, {zip_code}, {country_code}, {phone}, {vat_number}, {vat_number_with_label}</code>
+                <div class="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-4">
+                  
+                  <!-- Top Mode Switcher -->
+                  <div class="flex items-center justify-between pb-3 border-b border-slate-200/60 flex-wrap gap-2">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Document Header Layout Builder</span>
+                    </div>
+
+                    <!-- Builder Mode Toggle -->
+                    <div class="p-0.5 bg-slate-200/80 rounded-xl flex items-center gap-0.5">
+                      <button
+                        type="button"
+                        class="px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                        :class="companyFormatMode === 'visual' ? 'bg-white text-slate-800 shadow-2xs' : 'text-slate-500 hover:text-slate-700'"
+                        @click="companyFormatMode = 'visual'"
+                      >
+                        🎨 Visual Builder (Recommended)
+                      </button>
+                      <button
+                        type="button"
+                        class="px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                        :class="companyFormatMode === 'advanced' ? 'bg-white text-slate-800 shadow-2xs' : 'text-slate-500 hover:text-slate-700'"
+                        @click="companyFormatMode = 'advanced'"
+                      >
+                        ⚡ Advanced Code View
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- VISUAL BUILDER MODE (No Raw Variable Code Shown) -->
+                  <div v-if="companyFormatMode === 'visual'" class="space-y-4">
+                    <!-- Preset Style Buttons -->
+                    <div>
+                      <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block mb-2">Select Header Style Preset</span>
+                      <div class="grid grid-cols-3 gap-2.5">
+                        <button
+                          type="button"
+                          class="p-3 rounded-xl border text-left transition-all cursor-pointer shadow-2xs"
+                          :class="selectedCompanyPreset === 'standard' ? 'bg-indigo-50/70 border-indigo-300 text-indigo-900 ring-2 ring-indigo-500/20' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'"
+                          @click="applyCompanyPreset('standard')"
+                        >
+                          <div class="text-xs font-extrabold mb-0.5 flex items-center justify-between">
+                            <span>Standard Layout</span>
+                            <span v-if="selectedCompanyPreset === 'standard'" class="text-indigo-600 font-bold">✓</span>
+                          </div>
+                          <p class="text-[11px] text-slate-500 font-medium m-0">Company, Address, City/State/Zip, Country</p>
+                        </button>
+
+                        <button
+                          type="button"
+                          class="p-3 rounded-xl border text-left transition-all cursor-pointer shadow-2xs"
+                          :class="selectedCompanyPreset === 'detailed' ? 'bg-purple-50/70 border-purple-300 text-purple-900 ring-2 ring-purple-500/20' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'"
+                          @click="applyCompanyPreset('detailed')"
+                        >
+                          <div class="text-xs font-extrabold mb-0.5 flex items-center justify-between">
+                            <span>Detailed Layout</span>
+                            <span v-if="selectedCompanyPreset === 'detailed'" class="text-purple-600 font-bold">✓</span>
+                          </div>
+                          <p class="text-[11px] text-slate-500 font-medium m-0">Includes Phone Number & VAT Tax ID</p>
+                        </button>
+
+                        <button
+                          type="button"
+                          class="p-3 rounded-xl border text-left transition-all cursor-pointer shadow-2xs"
+                          :class="selectedCompanyPreset === 'compact' ? 'bg-slate-100 border-slate-300 text-slate-900 ring-2 ring-slate-400/20' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'"
+                          @click="applyCompanyPreset('compact')"
+                        >
+                          <div class="text-xs font-extrabold mb-0.5 flex items-center justify-between">
+                            <span>Inline Compact</span>
+                            <span v-if="selectedCompanyPreset === 'compact'" class="text-slate-800 font-bold">✓</span>
+                          </div>
+                          <p class="text-[11px] text-slate-500 font-medium m-0">Single line horizontal format</p>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Fields Checkboxes Selection -->
+                    <div>
+                      <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block mb-2">Include Company Details</span>
+                      <div class="grid grid-cols-3 gap-2.5 p-3.5 bg-white rounded-xl border border-slate-200/80">
+                        <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 select-none">
+                          <input type="checkbox" v-model="companyFields.name" @change="syncCompanyFormatFromCheckboxes" class="w-4 h-4 rounded border-slate-300 cursor-pointer theme-accent-chk" />
+                          <span>Company Name</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 select-none">
+                          <input type="checkbox" v-model="companyFields.address" @change="syncCompanyFormatFromCheckboxes" class="w-4 h-4 rounded border-slate-300 cursor-pointer theme-accent-chk" />
+                          <span>Street Address</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 select-none">
+                          <input type="checkbox" v-model="companyFields.cityStateZip" @change="syncCompanyFormatFromCheckboxes" class="w-4 h-4 rounded border-slate-300 cursor-pointer theme-accent-chk" />
+                          <span>City, State & Zip</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 select-none">
+                          <input type="checkbox" v-model="companyFields.country" @change="syncCompanyFormatFromCheckboxes" class="w-4 h-4 rounded border-slate-300 cursor-pointer theme-accent-chk" />
+                          <span>Country Code</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 select-none">
+                          <input type="checkbox" v-model="companyFields.phone" @change="syncCompanyFormatFromCheckboxes" class="w-4 h-4 rounded border-slate-300 cursor-pointer theme-accent-chk" />
+                          <span>Phone Number</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 select-none">
+                          <input type="checkbox" v-model="companyFields.vat" @change="syncCompanyFormatFromCheckboxes" class="w-4 h-4 rounded border-slate-300 cursor-pointer theme-accent-chk" />
+                          <span>VAT Number</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- ADVANCED DEVELOPER MODE (Raw Textarea & Code Variable Chips) -->
+                  <div v-else class="space-y-3">
+                    <div class="flex items-center justify-between">
+                      <span class="text-[11px] font-bold text-slate-500 block">Click code tag to insert:</span>
+                      <div class="flex flex-wrap items-center gap-1.5">
+                        <button
+                          v-for="field in companyMergeFields"
+                          :key="field.key"
+                          type="button"
+                          class="px-2 py-0.5 text-[11px] font-mono rounded-md bg-white border border-slate-200 hover:border-indigo-400 hover:text-indigo-600 cursor-pointer"
+                          @click="insertCompanyMergeField(field.key)"
+                        >
+                          + {{ field.label }}
+                        </button>
+                      </div>
+                    </div>
+                    <a-textarea
+                      v-model:value="settings.company_info_format"
+                      :rows="5"
+                      placeholder="Configure layout format..."
+                      class="theme-input-ctrl text-xs font-mono leading-relaxed"
+                    />
+                  </div>
+
+                  <!-- Live Document Visual Preview -->
+                  <div class="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-2xs">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        Live Invoice PDF / HTML Header Preview
+                      </span>
+                      <span class="text-[10px] font-extrabold text-emerald-700 bg-emerald-100/70 px-2.5 py-0.5 rounded-full border border-emerald-200">Live Render</span>
+                    </div>
+                    <div class="text-xs text-slate-800 font-medium whitespace-pre-wrap leading-relaxed border-l-3 border-indigo-500 pl-3.5 py-1.5 bg-slate-50/70 rounded-r-xl font-sans">
+                      {{ formattedCompanyPreview }}
+                    </div>
+                  </div>
+
                 </div>
               </a-form-item>
             </div>
@@ -206,7 +350,11 @@
                       <a-input v-model:value="settings.smtp_user" />
                     </a-form-item>
                     <a-form-item label="SMTP Password">
-                      <a-input v-model:value="settings.smtp_pass" type="password" />
+                      <a-input
+                        v-model:value="settings.smtp_pass"
+                        type="password"
+                        :placeholder="smtpPasswordConfigured ? 'Saved securely — enter a new password to replace it' : 'Enter SMTP password'"
+                      />
                     </a-form-item>
                     <a-form-item label="Email Charset">
                       <a-input v-model:value="settings.email_charset" />
@@ -219,28 +367,112 @@
                   <a-form-item label="Email Signature" style="margin-top:16px;">
                     <a-textarea v-model:value="settings.email_signature" :rows="3" />
                   </a-form-item>
-                  
-                  <a-form-item label="Predefined Header" style="margin-top:16px;">
-                    <a-textarea v-model:value="settings.email_predefined_header" :rows="8" class="code-textarea" />
-                  </a-form-item>
-                  
-                  <a-form-item label="Predefined Footer" style="margin-top:16px;">
-                    <a-textarea v-model:value="settings.email_predefined_footer" :rows="8" class="code-textarea" />
-                  </a-form-item>
 
-                  <!-- Send Test Email -->
-                  <div class="test-email-card">
-                    <h5 class="test-email-title">Send Test Email</h5>
-                    <p class="test-email-desc">Send test email to make sure that your SMTP settings is set correctly.</p>
-                    <div class="test-email-controls">
-                      <a-form-item label="Email Address" style="margin-bottom:0; flex:1;">
-                        <a-input v-model:value="settings.test_email_address" placeholder="Enter recipient email..." />
-                      </a-form-item>
-                      <a-button type="default" @click="sendTestEmail">Send Test Email</a-button>
+                  <!-- Direct Link Banner to Email Templates Studio -->
+                  <div class="mt-6 bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-purple-200/80 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                      <div class="w-12 h-12 rounded-2xl bg-purple-600 text-white flex items-center justify-center font-bold text-xl shadow-md shrink-0">
+                        ✉️
+                      </div>
+                      <div>
+                        <h4 class="text-base font-bold text-slate-800 m-0">Email Templates Studio</h4>
+                        <p class="text-xs text-slate-500 m-0 mt-0.5">Manage automated notification email templates for Company, Staff, HR, and Customers with WYSIWYG editor.</p>
+                      </div>
                     </div>
+                    <router-link to="/admin/setup/email-templates" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 shrink-0 no-underline">
+                      <span>Manage Email Templates</span>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </router-link>
                   </div>
-                </div>
-              </a-tab-pane>
+
+                    <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">
+                      <div class="flex items-center justify-between cursor-pointer select-none" @click="showCustomHtmlEditor = !showCustomHtmlEditor">
+                        <div>
+                          <h4 class="text-sm font-extrabold text-slate-900 m-0 flex items-center gap-2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="text-indigo-600"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                            Custom Predefined Header & Footer (Optional Code & Text Values)
+                          </h4>
+                          <p class="text-xs text-slate-400 font-medium m-0 mt-0.5">Click to view or manually enter custom header/footer values or HTML code.</p>
+                        </div>
+                        <button
+                          type="button"
+                          class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer border-none flex items-center gap-1.5 shrink-0"
+                        >
+                          <span>{{ showCustomHtmlEditor ? 'Hide Code Editor' : 'Edit Custom Header/Footer' }}</span>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" :class="{ 'rotate-180': showCustomHtmlEditor }" class="transition-transform"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                      </div>
+
+                      <!-- Expandable Textareas -->
+                      <div v-if="showCustomHtmlEditor" class="space-y-4 pt-3 border-t border-slate-100">
+                        <div>
+                          <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1.5">Predefined Header Content / HTML</label>
+                          <a-textarea v-model:value="settings.email_predefined_header" :rows="6" placeholder="Enter custom header text or HTML markup..." class="code-textarea font-mono text-xs" />
+                        </div>
+
+                        <div>
+                          <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1.5">Predefined Footer Content / HTML</label>
+                          <a-textarea v-model:value="settings.email_predefined_footer" :rows="6" placeholder="Enter custom footer text or HTML markup..." class="code-textarea font-mono text-xs" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Send Test Email Card -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">
+                      <div>
+                        <h4 class="text-sm font-extrabold text-slate-900 m-0">Send Test Email</h4>
+                        <p class="text-xs text-slate-400 font-medium m-0 mt-0.5">Send test email to make sure that your SMTP settings is set correctly.</p>
+                      </div>
+
+                      <div class="flex items-center gap-2.5 max-w-xl">
+                        <input
+                          v-model="settings.test_email_address"
+                          placeholder="you@example.com"
+                          class="w-full h-11 px-4 text-xs font-semibold theme-input-ctrl text-slate-800"
+                        />
+                        <button
+                          type="button"
+                          class="px-6 py-2.5 h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer shrink-0 flex items-center gap-2 whitespace-nowrap border-none"
+                          @click="sendTestEmail"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                          Send Test Email
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Bottom Fixed Action Footer Bar -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex items-center justify-between flex-wrap gap-3">
+                      <div class="flex items-center gap-2 text-xs font-bold text-amber-600">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
+                        <span class="text-amber-700 font-extrabold">● Unsaved Changes</span>
+                        <span class="text-slate-400 font-normal ml-1">You have unsaved changes</span>
+                      </div>
+
+                      <div class="flex items-center gap-3">
+                        <button
+                          type="button"
+                          class="px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl shadow-2xs transition-all cursor-pointer flex items-center gap-2"
+                          @click="resetEmailDefaults"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                          Reset to Default
+                        </button>
+                        <button
+                          type="button"
+                          class="px-7 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2"
+                          @click="saveAllSettings"
+                          :disabled="saving"
+                        >
+                          <svg v-if="saving" class="animate-spin" fill="none" viewBox="0 0 24 24" width="14" height="14"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                          <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                          Save Email Template Settings
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                </a-tab-pane>
 
               <!-- Tab 2: Email Queue -->
               <a-tab-pane key="queue" tab="Email Queue">
@@ -897,14 +1129,14 @@
             <h3 class="panel-section-title">Payment Gateways</h3>
             
             <!-- Gateway Tabs -->
-            <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
-              <a-button 
+            <div class="pill-tabs-bar">
+              <button 
                 v-for="gw in paymentGateways" 
                 :key="gw.key"
-                :type="activeGateway === gw.key ? 'primary' : 'default'"
-                size="small"
+                type="button"
+                :class="['pill-tab-btn', { active: activeGateway === gw.key }]"
                 @click="activeGateway = gw.key"
-              >{{ gw.label }}</a-button>
+              >{{ gw.label }}</button>
             </div>
 
             <!-- ── General ── -->
@@ -1302,7 +1534,7 @@
             <!-- ── 2Checkout ── -->
             <div v-if="activeGateway === '2checkout'">
               <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:20px; font-size:12.5px; color:#64748b; line-height:1.6;">
-                The IPN Endpoint for 2Checkout is ( https://perfexcrm.com/demo/gateways/two_checkout/webhook )
+                The IPN Endpoint for 2Checkout is ( https://ibridgecrm.com/demo/gateways/two_checkout/webhook )
               </div>
               <div class="switches-grid">
                 <div class="switch-row">
@@ -1412,119 +1644,131 @@
               </a-table>
             </div>
 
-            <!-- Template Variables Reference -->
-            <div v-pre style="margin-top: 24px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:16px;">
-              <h4 style="margin: 0 0 12px 0; font-weight: 600;">Template variables</h4>
-              
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                <div>
-                  <h5 style="font-weight: 600; margin: 0 0 8px 0;">Invoice:</h5>
-                  <div style="font-size: 12px; color: #475569; line-height: 1.8;">
-                    <div>{{INVOICE_ID}}</div>
-                    <div>{{INVOICE_NUMBER}}</div>
-                    <div>{{INVOICE_DATE}}</div>
-                    <div>{{INVOICE_DUE_DATE}}</div>
-                    <div>{{INVOICE_STATUS}}</div>
-                    <div>{{INVOICE_SUBTOTAL}}</div>
-                    <div>{{INVOICE_TOTAL_TAX}}</div>
-                    <div>{{INVOICE_ADJUSTMENT}}</div>
-                    <div>{{INVOICE_DISCOUNT_TOTAL}}</div>
-                    <div>{{INVOICE_TOTAL}}</div>
-                    <div>{{INVOICE_AMOUNT_PAID}}</div>
-                    <div>{{INVOICE_BALANCE_DUE}}</div>
-                    <div>{{CURRENCY_CODE}}</div>
-                    <div>{{INVOICE_BILLING_ADRESS}}</div>
-                    <div>{{INVOICE_BILLING_CITY}}</div>
-                    <div>{{INVOICE_BILLING_STATE}}</div>
-                    <div>{{INVOICE_BILLING_ZIP}}</div>
-                    <div>{{INVOICE_BILLING_COUNTRY_NAME}}</div>
-                    <div>{{INVOICE_BILLING_COUNTRY_ISO2}}</div>
-                    <div>{{INVOICE_BILLING_COUNTRY_ISO3}}</div>
-                    <div>{{INVOICE_SHIPPING_ADRESS}}</div>
-                    <div>{{INVOICE_SHIPPING_CITY}}</div>
-                    <div>{{INVOICE_SHIPPING_STATE}}</div>
-                    <div>{{INVOICE_SHIPPING_ZIP}}</div>
-                    <div>{{INVOICE_SHIPPING_COUNTRY_NAME}}</div>
-                    <div>{{INVOICE_SHIPPING_COUNTRY_ISO2}}</div>
-                    <div>{{INVOICE_SHIPPING_COUNTRY_ISO3}}</div>
-                  </div>
-                  
-                  <h5 style="font-weight: 600; margin: 12px 0 8px 0;">Invoice Items:</h5>
-                  <div style="font-size: 12px; color: #475569; line-height: 1.8;">
-                    <div>{{# LINE_ITEMS }}</div>
-                    <div style="padding-left: 16px;">{{LINE_ITEM_ID}}</div>
-                    <div style="padding-left: 16px;">{{LINE_ITEM_ORDER}}</div>
-                    <div style="padding-left: 16px;">{{LINE_ITEM_NAME}}</div>
-                    <div style="padding-left: 16px;">{{LINE_ITEM_DESCRIPTION}}</div>
-                    <div style="padding-left: 16px;">{{LINE_ITEM_QUANTITY_NUMBER}}</div>
-                    <div style="padding-left: 16px;">{{LINE_ITEM_QUANTITY_UNIT}}</div>
-                    <div style="padding-left: 16px;">{{LINE_ITEM_UNIT_PRICE}}</div>
-                    <div style="padding-left: 16px;">{{LINE_ITEM_TOTAL}}</div>
-                    <div style="padding-left: 16px;">{{# LINE_ITEM_TAXES }}</div>
-                    <div style="padding-left: 32px;">{{TAX_NAME}}</div>
-                    <div style="padding-left: 32px;">{{TAX_RATE}}</div>
-                    <div style="padding-left: 32px;">{{TAX_TOTAL}}</div>
-                    <div style="padding-left: 16px;">{{/ LINE_ITEM_TAXES }}</div>
-                    <div>{{/ LINE_ITEMS }}</div>
-                  </div>
+            <!-- Collapsible Template Variables Reference -->
+            <div class="template-vars-card mt-6">
+              <div class="template-vars-header" @click="showTemplateVars = !showTemplateVars">
+                <div class="flex items-center gap-2">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="text-indigo-600">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                  </svg>
+                  <span class="font-bold text-sm text-slate-800">Available Template Variables & Merge Fields</span>
                 </div>
-                
-                <div>
-                  <h5 style="font-weight: 600; margin: 0 0 8px 0;">Company:</h5>
-                  <div style="font-size: 12px; color: #475569; line-height: 1.8;">
-                    <div>{{COMPANY_NAME}}</div>
-                    <div>{{COMPANY_ADDRESS}}</div>
-                    <div>{{COMPANY_CITY}}</div>
-                    <div>{{COMPANY_STATE}}</div>
-                    <div>{{COMPANY_COUNTRY_NAME}}</div>
-                    <div>{{COMPANY_COUNTRY_ISO2}}</div>
-                    <div>{{COMPANY_COUNTRY_ISO3}}</div>
-                    <div>{{COMPANY_ZIP_CODE}}</div>
-                    <div>{{COMPANY_PHONE}}</div>
-                    <div>{{COMPANY_VAT_NUMBER}}</div>
+                <button type="button" class="btn-toggle-vars">
+                  {{ showTemplateVars ? 'Hide Reference' : 'Show Merge Fields' }}
+                </button>
+              </div>
+
+              <div v-if="showTemplateVars" v-pre class="template-vars-body mt-4">
+                <div class="vars-grid">
+                  <div class="vars-col">
+                    <h5 class="vars-cat-title">Invoice</h5>
+                    <div class="vars-tags-list mb-3">
+                      <code>{{INVOICE_ID}}</code>
+                      <code>{{INVOICE_NUMBER}}</code>
+                      <code>{{INVOICE_DATE}}</code>
+                      <code>{{INVOICE_DUE_DATE}}</code>
+                      <code>{{INVOICE_STATUS}}</code>
+                      <code>{{INVOICE_SUBTOTAL}}</code>
+                      <code>{{INVOICE_TOTAL_TAX}}</code>
+                      <code>{{INVOICE_ADJUSTMENT}}</code>
+                      <code>{{INVOICE_DISCOUNT_TOTAL}}</code>
+                      <code>{{INVOICE_TOTAL}}</code>
+                      <code>{{INVOICE_AMOUNT_PAID}}</code>
+                      <code>{{INVOICE_BALANCE_DUE}}</code>
+                      <code>{{CURRENCY_CODE}}</code>
+                      <code>{{INVOICE_BILLING_ADRESS}}</code>
+                      <code>{{INVOICE_BILLING_CITY}}</code>
+                      <code>{{INVOICE_BILLING_STATE}}</code>
+                      <code>{{INVOICE_BILLING_ZIP}}</code>
+                      <code>{{INVOICE_BILLING_COUNTRY_NAME}}</code>
+                      <code>{{INVOICE_BILLING_COUNTRY_ISO2}}</code>
+                      <code>{{INVOICE_BILLING_COUNTRY_ISO3}}</code>
+                      <code>{{INVOICE_SHIPPING_ADRESS}}</code>
+                      <code>{{INVOICE_SHIPPING_CITY}}</code>
+                      <code>{{INVOICE_SHIPPING_STATE}}</code>
+                      <code>{{INVOICE_SHIPPING_ZIP}}</code>
+                      <code>{{INVOICE_SHIPPING_COUNTRY_NAME}}</code>
+                      <code>{{INVOICE_SHIPPING_COUNTRY_ISO2}}</code>
+                      <code>{{INVOICE_SHIPPING_COUNTRY_ISO3}}</code>
+                    </div>
+
+                    <h5 class="vars-cat-title">Invoice Items</h5>
+                    <div class="vars-tags-list">
+                      <code>{{# LINE_ITEMS }}</code>
+                      <code>{{LINE_ITEM_ID}}</code>
+                      <code>{{LINE_ITEM_ORDER}}</code>
+                      <code>{{LINE_ITEM_NAME}}</code>
+                      <code>{{LINE_ITEM_DESCRIPTION}}</code>
+                      <code>{{LINE_ITEM_QUANTITY_NUMBER}}</code>
+                      <code>{{LINE_ITEM_QUANTITY_UNIT}}</code>
+                      <code>{{LINE_ITEM_UNIT_PRICE}}</code>
+                      <code>{{LINE_ITEM_TOTAL}}</code>
+                      <code>{{# LINE_ITEM_TAXES }}</code>
+                      <code>{{TAX_NAME}}</code>
+                      <code>{{TAX_RATE}}</code>
+                      <code>{{TAX_TOTAL}}</code>
+                      <code>{{/ LINE_ITEM_TAXES }}</code>
+                      <code>{{/ LINE_ITEMS }}</code>
+                    </div>
                   </div>
-                  
-                  <h5 style="font-weight: 600; margin: 12px 0 8px 0;">Customer:</h5>
-                  <div style="font-size: 12px; color: #475569; line-height: 1.8;">
-                    <div>{{CONTACT_FIRST_NAME}}</div>
-                    <div>{{CONTACT_LAST_NAME}}</div>
-                    <div>{{CONTACT_PHONE_NUMBER}}</div>
-                    <div>{{CONTACT_EMAIL}}</div>
-                    <div>{{CUSTOMER_NAME}}</div>
-                    <div>{{CUSTOMER_PHONE}}</div>
-                    <div>{{CUSTOMER_COUNTRY_NAME}}</div>
-                    <div>{{CUSTOMER_COUNTRY_ISO2}}</div>
-                    <div>{{CUSTOMER_COUNTRY_ISO3}}</div>
-                    <div>{{CUSTOMER_CITY}}</div>
-                    <div>{{CUSTOMER_ZIP}}</div>
-                    <div>{{CUSTOMER_STATE}}</div>
-                    <div>{{CUSTOMER_ADDRESS}}</div>
-                    <div>{{CUSTOMER_VAT_NUMBER}}</div>
-                    <div>{{CUSTOMER_ID}}</div>
-                  </div>
-                  
-                  <h5 style="font-weight: 600; margin: 12px 0 8px 0;">Credit Note:</h5>
-                  <div style="font-size: 12px; color: #475569; line-height: 1.8;">
-                    <div>{{CREDIT_NOTE_ID}}</div>
-                    <div>{{CREDIT_NOTE_NUMBER}}</div>
-                    <div>{{CREDIT_NOTE_DATE}}</div>
-                    <div>{{CREDIT_NOTE_STATUS}}</div>
-                    <div>{{CREDIT_NOTE_SUBTOTAL}}</div>
-                    <div>{{CREDIT_NOTE_TOTAL_TAX}}</div>
-                    <div>{{CREDIT_NOTE_ADJUSTMENT}}</div>
-                    <div>{{CREDIT_NOTE_DISCOUNT_TOTAL}}</div>
-                    <div>{{CREDIT_NOTE_TOTAL}}</div>
-                    <div>{{CURRENCY_CODE}}</div>
-                    <div>{{CREDIT_NOTE_BILLING_ADRESS}}</div>
-                    <div>{{CREDIT_NOTE_BILLING_CITY}}</div>
-                    <div>{{CREDIT_NOTE_BILLING_STATE}}</div>
-                    <div>{{CREDIT_NOTE_BILLING_ZIP}}</div>
-                    <div>{{CREDIT_NOTE_BILLING_COUNTRY}}</div>
-                    <div>{{CREDIT_NOTE_SHIPPING_ADRESS}}</div>
-                    <div>{{CREDIT_NOTE_SHIPPING_CITY}}</div>
-                    <div>{{CREDIT_NOTE_SHIPPING_STATE}}</div>
-                    <div>{{CREDIT_NOTE_SHIPPING_ZIP}}</div>
-                    <div>{{CREDIT_NOTE_SHIPPING_COUNTRY}}</div>
+
+                  <div class="vars-col">
+                    <h5 class="vars-cat-title">Company</h5>
+                    <div class="vars-tags-list mb-3">
+                      <code>{{COMPANY_NAME}}</code>
+                      <code>{{COMPANY_ADDRESS}}</code>
+                      <code>{{COMPANY_CITY}}</code>
+                      <code>{{COMPANY_STATE}}</code>
+                      <code>{{COMPANY_COUNTRY_NAME}}</code>
+                      <code>{{COMPANY_COUNTRY_ISO2}}</code>
+                      <code>{{COMPANY_COUNTRY_ISO3}}</code>
+                      <code>{{COMPANY_ZIP_CODE}}</code>
+                      <code>{{COMPANY_PHONE}}</code>
+                      <code>{{COMPANY_VAT_NUMBER}}</code>
+                    </div>
+
+                    <h5 class="vars-cat-title">Customer</h5>
+                    <div class="vars-tags-list mb-3">
+                      <code>{{CONTACT_FIRST_NAME}}</code>
+                      <code>{{CONTACT_LAST_NAME}}</code>
+                      <code>{{CONTACT_PHONE_NUMBER}}</code>
+                      <code>{{CONTACT_EMAIL}}</code>
+                      <code>{{CUSTOMER_NAME}}</code>
+                      <code>{{CUSTOMER_PHONE}}</code>
+                      <code>{{CUSTOMER_COUNTRY_NAME}}</code>
+                      <code>{{CUSTOMER_COUNTRY_ISO2}}</code>
+                      <code>{{CUSTOMER_COUNTRY_ISO3}}</code>
+                      <code>{{CUSTOMER_CITY}}</code>
+                      <code>{{CUSTOMER_ZIP}}</code>
+                      <code>{{CUSTOMER_STATE}}</code>
+                      <code>{{CUSTOMER_ADDRESS}}</code>
+                      <code>{{CUSTOMER_VAT_NUMBER}}</code>
+                      <code>{{CUSTOMER_ID}}</code>
+                    </div>
+
+                    <h5 class="vars-cat-title">Credit Note</h5>
+                    <div class="vars-tags-list">
+                      <code>{{CREDIT_NOTE_ID}}</code>
+                      <code>{{CREDIT_NOTE_NUMBER}}</code>
+                      <code>{{CREDIT_NOTE_DATE}}</code>
+                      <code>{{CREDIT_NOTE_STATUS}}</code>
+                      <code>{{CREDIT_NOTE_SUBTOTAL}}</code>
+                      <code>{{CREDIT_NOTE_TOTAL_TAX}}</code>
+                      <code>{{CREDIT_NOTE_ADJUSTMENT}}</code>
+                      <code>{{CREDIT_NOTE_DISCOUNT_TOTAL}}</code>
+                      <code>{{CREDIT_NOTE_TOTAL}}</code>
+                      <code>{{CURRENCY_CODE}}</code>
+                      <code>{{CREDIT_NOTE_BILLING_ADRESS}}</code>
+                      <code>{{CREDIT_NOTE_BILLING_CITY}}</code>
+                      <code>{{CREDIT_NOTE_BILLING_STATE}}</code>
+                      <code>{{CREDIT_NOTE_BILLING_ZIP}}</code>
+                      <code>{{CREDIT_NOTE_BILLING_COUNTRY}}</code>
+                      <code>{{CREDIT_NOTE_SHIPPING_ADRESS}}</code>
+                      <code>{{CREDIT_NOTE_SHIPPING_CITY}}</code>
+                      <code>{{CREDIT_NOTE_SHIPPING_STATE}}</code>
+                      <code>{{CREDIT_NOTE_SHIPPING_ZIP}}</code>
+                      <code>{{CREDIT_NOTE_SHIPPING_COUNTRY}}</code>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1539,7 +1783,7 @@
             <div class="settings-form-grid">
               <a-form-item label="Default customers theme">
                 <a-select v-model:value="settings.cust_theme" style="width: 100%">
-                  <a-select-option value="perfex">Perfex</a-select-option>
+                  <a-select-option value="ibridge">iBridge</a-select-option>
                 </a-select>
               </a-form-item>
               <a-form-item label="Default Country">
@@ -1794,11 +2038,11 @@
           <div v-else-if="activeCategory === 'support'">
             <h3 class="panel-section-title">Support Settings</h3>
             
-            <!-- Support Tabs -->
-            <div style="display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
-              <a-button :type="activeSupportTab === 'general' ? 'primary' : 'default'" size="small" @click="activeSupportTab = 'general'">General</a-button>
-              <a-button :type="activeSupportTab === 'email_piping' ? 'primary' : 'default'" size="small" @click="activeSupportTab = 'email_piping'">Email Piping</a-button>
-              <a-button :type="activeSupportTab === 'ticket_form' ? 'primary' : 'default'" size="small" @click="activeSupportTab = 'ticket_form'">Ticket Form</a-button>
+            <!-- Tabs -->
+            <div class="pill-tabs-bar" style="margin-bottom: 20px;">
+              <button type="button" :class="['pill-tab-btn', { active: activeSupportTab === 'general' }]" @click="activeSupportTab = 'general'">General</button>
+              <button type="button" :class="['pill-tab-btn', { active: activeSupportTab === 'email_piping' }]" @click="activeSupportTab = 'email_piping'">Email Piping</button>
+              <button type="button" :class="['pill-tab-btn', { active: activeSupportTab === 'ticket_form' }]" @click="activeSupportTab = 'ticket_form'">Ticket Form</button>
             </div>
 
             <!-- General Tab -->
@@ -2274,9 +2518,9 @@
             <h3 class="panel-section-title">Calendar settings</h3>
 
             <!-- Tabs -->
-            <div style="display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
-              <a-button :type="activeCalendarTab === 'general' ? 'primary' : 'default'" size="small" @click="activeCalendarTab = 'general'">General</a-button>
-              <a-button :type="activeCalendarTab === 'styling' ? 'primary' : 'default'" size="small" @click="activeCalendarTab = 'styling'">Styling</a-button>
+            <div class="pill-tabs-bar">
+              <button type="button" :class="['pill-tab-btn', { active: activeCalendarTab === 'general' }]" @click="activeCalendarTab = 'general'">General</button>
+              <button type="button" :class="['pill-tab-btn', { active: activeCalendarTab === 'styling' }]" @click="activeCalendarTab = 'styling'">Styling</button>
             </div>
 
             <!-- General Tab -->
@@ -2437,10 +2681,10 @@
             <h3 class="panel-section-title">PDF settings</h3>
 
             <!-- Tabs -->
-            <div style="display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
-              <a-button :type="activePdfTab === 'general' ? 'primary' : 'default'" size="small" @click="activePdfTab = 'general'">General</a-button>
-              <a-button :type="activePdfTab === 'signature' ? 'primary' : 'default'" size="small" @click="activePdfTab = 'signature'">Signature</a-button>
-              <a-button :type="activePdfTab === 'doc_formats' ? 'primary' : 'default'" size="small" @click="activePdfTab = 'doc_formats'">Document formats</a-button>
+            <div class="pill-tabs-bar">
+              <button type="button" :class="['pill-tab-btn', { active: activePdfTab === 'general' }]" @click="activePdfTab = 'general'">General</button>
+              <button type="button" :class="['pill-tab-btn', { active: activePdfTab === 'signature' }]" @click="activePdfTab = 'signature'">Signature</button>
+              <button type="button" :class="['pill-tab-btn', { active: activePdfTab === 'doc_formats' }]" @click="activePdfTab = 'doc_formats'">Document formats</button>
             </div>
 
             <!-- General Tab -->
@@ -2656,10 +2900,10 @@
             <p style="font-size: 12.5px; color: #64748b; margin-bottom: 16px;">Only 1 active SMS gateway is allowed</p>
 
             <!-- Gateway Tabs -->
-            <div style="display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
-              <a-button :type="activeSmsTab === 'clickatell' ? 'primary' : 'default'" size="small" @click="activeSmsTab = 'clickatell'">Clickatell</a-button>
-              <a-button :type="activeSmsTab === 'msg91' ? 'primary' : 'default'" size="small" @click="activeSmsTab = 'msg91'">MSG91</a-button>
-              <a-button :type="activeSmsTab === 'twilio' ? 'primary' : 'default'" size="small" @click="activeSmsTab = 'twilio'">Twilio</a-button>
+            <div class="pill-tabs-bar">
+              <button type="button" :class="['pill-tab-btn', { active: activeSmsTab === 'clickatell' }]" @click="activeSmsTab = 'clickatell'">Clickatell</button>
+              <button type="button" :class="['pill-tab-btn', { active: activeSmsTab === 'msg91' }]" @click="activeSmsTab = 'msg91'">MSG91</button>
+              <button type="button" :class="['pill-tab-btn', { active: activeSmsTab === 'twilio' }]" @click="activeSmsTab = 'twilio'">Twilio</button>
             </div>
 
             <!-- Clickatell -->
@@ -2704,23 +2948,23 @@
             <h3 class="panel-section-title">Cron Job</h3>
 
             <!-- Tabs -->
-            <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
-              <a-button :type="activeCronTab === 'command' ? 'primary' : 'default'" size="small" @click="activeCronTab = 'command'">Command</a-button>
-              <a-button :type="activeCronTab === 'invoice' ? 'primary' : 'default'" size="small" @click="activeCronTab = 'invoice'">Invoice</a-button>
-              <a-button :type="activeCronTab === 'estimates' ? 'primary' : 'default'" size="small" @click="activeCronTab = 'estimates'">Estimates</a-button>
-              <a-button :type="activeCronTab === 'proposals' ? 'primary' : 'default'" size="small" @click="activeCronTab = 'proposals'">Proposals</a-button>
-              <a-button :type="activeCronTab === 'expenses' ? 'primary' : 'default'" size="small" @click="activeCronTab = 'expenses'">Expenses</a-button>
-              <a-button :type="activeCronTab === 'contracts' ? 'primary' : 'default'" size="small" @click="activeCronTab = 'contracts'">Contracts</a-button>
-              <a-button :type="activeCronTab === 'tasks' ? 'primary' : 'default'" size="small" @click="activeCronTab = 'tasks'">Tasks</a-button>
-              <a-button :type="activeCronTab === 'tickets' ? 'primary' : 'default'" size="small" @click="activeCronTab = 'tickets'">Tickets</a-button>
-              <a-button :type="activeCronTab === 'surveys' ? 'primary' : 'default'" size="small" @click="activeCronTab = 'surveys'">Surveys</a-button>
+            <div class="pill-tabs-bar">
+              <button type="button" :class="['pill-tab-btn', { active: activeCronTab === 'command' }]" @click="activeCronTab = 'command'">Command</button>
+              <button type="button" :class="['pill-tab-btn', { active: activeCronTab === 'invoice' }]" @click="activeCronTab = 'invoice'">Invoice</button>
+              <button type="button" :class="['pill-tab-btn', { active: activeCronTab === 'estimates' }]" @click="activeCronTab = 'estimates'">Estimates</button>
+              <button type="button" :class="['pill-tab-btn', { active: activeCronTab === 'proposals' }]" @click="activeCronTab = 'proposals'">Proposals</button>
+              <button type="button" :class="['pill-tab-btn', { active: activeCronTab === 'expenses' }]" @click="activeCronTab = 'expenses'">Expenses</button>
+              <button type="button" :class="['pill-tab-btn', { active: activeCronTab === 'contracts' }]" @click="activeCronTab = 'contracts'">Contracts</button>
+              <button type="button" :class="['pill-tab-btn', { active: activeCronTab === 'tasks' }]" @click="activeCronTab = 'tasks'">Tasks</button>
+              <button type="button" :class="['pill-tab-btn', { active: activeCronTab === 'tickets' }]" @click="activeCronTab = 'tickets'">Tickets</button>
+              <button type="button" :class="['pill-tab-btn', { active: activeCronTab === 'surveys' }]" @click="activeCronTab = 'surveys'">Surveys</button>
             </div>
 
             <!-- Command Tab -->
             <div v-if="activeCronTab === 'command'">
               <div class="cron-instructions">
                 <p style="margin-bottom: 8px;">CRON COMMAND:</p>
-                <pre class="cron-command-block">wget -q -O- https://perfexcrm.com/demo/cron/index</pre>
+                <pre class="cron-command-block">wget -q -O- https://ibridgecrm.com/demo/cron/index</pre>
               </div>
               <a-button type="primary" style="margin-top: 12px;">Run Cron Manually</a-button>
             </div>
@@ -2851,10 +3095,10 @@
             <h3 class="panel-section-title">Misc settings</h3>
 
             <!-- Tabs -->
-            <div style="display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
-              <a-button :type="activeMiscTab === 'misc' ? 'primary' : 'default'" size="small" @click="activeMiscTab = 'misc'">Misc</a-button>
-              <a-button :type="activeMiscTab === 'tables' ? 'primary' : 'default'" size="small" @click="activeMiscTab = 'tables'">Tables</a-button>
-              <a-button :type="activeMiscTab === 'inline_create' ? 'primary' : 'default'" size="small" @click="activeMiscTab = 'inline_create'">Inline Create</a-button>
+            <div class="pill-tabs-bar">
+              <button type="button" :class="['pill-tab-btn', { active: activeMiscTab === 'misc' }]" @click="activeMiscTab = 'misc'">Misc</button>
+              <button type="button" :class="['pill-tab-btn', { active: activeMiscTab === 'tables' }]" @click="activeMiscTab = 'tables'">Tables</button>
+              <button type="button" :class="['pill-tab-btn', { active: activeMiscTab === 'inline_create' }]" @click="activeMiscTab = 'inline_create'">Inline Create</button>
             </div>
 
             <!-- Misc Tab -->
@@ -2999,8 +3243,9 @@
 </template>
 
 <script>
-import { defineComponent, ref, reactive, computed } from 'vue';
+import { defineComponent, ref, reactive, computed, watch, onMounted } from 'vue';
 import { message } from 'ant-design-vue';
+import axios from 'axios';
 
 export default defineComponent({
   name: 'SettingsView',
@@ -3008,6 +3253,7 @@ export default defineComponent({
     const activeCategory = ref('general');
     const activeGateway = ref('general');
     const activeSupportTab = ref('general');
+    const smtpPasswordConfigured = ref(false);
     const activeCalendarTab = ref('general');
     const activePdfTab = ref('general');
     const activeSmsTab = ref('clickatell');
@@ -3107,14 +3353,14 @@ export default defineComponent({
 
     const settings = reactive({
       // General Settings
-      site_name: 'Perfex CRM',
-      company_domain: 'https://perfexcrm.com',
+      site_name: 'iBridge CRM',
+      company_domain: 'https://ibridgecrm.com',
       rtl_admin: false,
       rtl_cust: false,
       allowed_file_types: '.png,.jpg,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.txt',
 
       // Company Info
-      company_info_name: 'Perfex INC',
+      company_info_name: 'Ibridge Digital',
       company_info_address: '172 Ivy Club Gottliebfurt',
       company_info_city: 'New Heaven',
       company_info_state: '',
@@ -3138,11 +3384,11 @@ export default defineComponent({
       mail_engine: 'PHPMailer',
       email_protocol: 'SMTP',
       email_encryption: 'TLS',
-      smtp_host: 'smtp.mailtrap.io',
-      smtp_port: 2525,
-      from_email: 'noreply@perfexcrm.com',
-      smtp_user: 'smtp_username_placeholder',
-      smtp_pass: '••••••••••••••••',
+      smtp_host: '',
+      smtp_port: 587,
+      from_email: 'admin@test.com',
+      smtp_user: 'admin@test.com',
+      smtp_pass: '',
       email_charset: 'utf-8',
       bcc_emails: '',
       email_signature: '',
@@ -3391,7 +3637,7 @@ hr {
       einvoice_attach_credit: false,
 
       // Configure Features - Customers
-      cust_theme: 'perfex',
+      cust_theme: 'ibridge',
       cust_default_country: '',
       cust_visible_tabs: ['notes', 'statements', 'invoices', 'payments', 'proposals', 'credit_notes', 'estimates', 'subscriptions', 'expenses', 'contracts', 'projects', 'tasks', 'tickets', 'files', 'vault', 'reminders', 'map'],
       cust_required_fields: ['first_name', 'last_name', 'email'],
@@ -3449,15 +3695,15 @@ hr {
       support_email_replies_only: false,
       support_import_reply_only: false,
       support_piped_priority: 'medium',
-      support_form_url: 'https://perfexcrm.com/demo/forms/ticket',
+      support_form_url: 'https://ibridgecrm.com/demo/forms/ticket',
       support_form_file: '',
-      support_form_embed: '<iframe width="600" height="850" src="https://perfexcrm.com/demo/forms/ticket" frameborder="0" allowfullscreen></iframe>',
-      support_form_direct_link: 'https://perfexcrm.com/demo/forms/ticket?styled=1',
-      support_form_direct_link_styled: 'https://perfexcrm.com/demo/forms/ticket?styled=1&with_logo=1',
-      support_form_col_default: 'https://perfexcrm.com/demo/forms/ticket?col=col-md-8',
-      support_form_col_offset: 'https://perfexcrm.com/demo/forms/ticket?col=col-md-8+col-md-offset-2',
-      support_form_col_narrow: 'https://perfexcrm.com/demo/forms/ticket?col=col-md-5',
-      support_form_language: 'https://perfexcrm.com/demo/forms/ticket?language=english',
+      support_form_embed: '<iframe width="600" height="850" src="https://ibridgecrm.com/demo/forms/ticket" frameborder="0" allowfullscreen></iframe>',
+      support_form_direct_link: 'https://ibridgecrm.com/demo/forms/ticket?styled=1',
+      support_form_direct_link_styled: 'https://ibridgecrm.com/demo/forms/ticket?styled=1&with_logo=1',
+      support_form_col_default: 'https://ibridgecrm.com/demo/forms/ticket?col=col-md-8',
+      support_form_col_offset: 'https://ibridgecrm.com/demo/forms/ticket?col=col-md-8+col-md-offset-2',
+      support_form_col_narrow: 'https://ibridgecrm.com/demo/forms/ticket?col=col-md-5',
+      support_form_language: 'https://ibridgecrm.com/demo/forms/ticket?language=english',
 
       // Configure Features - Leads
       leads_kanban_limit: 50,
@@ -3530,7 +3776,7 @@ hr {
       pdf_font_size: 10,
       pdf_heading_color: '#e5e7eb',
       pdf_heading_text_color: '#030712',
-      pdf_logo_url: 'https://perfexcrm.com/demo/pdflogo.jpg',
+      pdf_logo_url: 'https://ibridgecrm.com/demo/pdflogo.jpg',
       pdf_logo_width: 150,
       pdf_show_status: false,
       pdf_show_pay_link: false,
@@ -3621,11 +3867,38 @@ hr {
       misc_inline_expense_cat: false,
     });
 
-    // Load from localStorage if present
+    const smtpSettingKeys = new Set([
+      'mail_engine',
+      'email_protocol',
+      'email_encryption',
+      'smtp_host',
+      'smtp_port',
+      'from_email',
+      'smtp_user',
+      'smtp_pass',
+      'email_charset',
+      'bcc_emails',
+      'test_email_address',
+    ]);
+
+    const saveNonSensitiveSettings = () => {
+      const safeSettings = Object.fromEntries(
+        Object.entries(settings).filter(([key]) => !smtpSettingKeys.has(key))
+      );
+      localStorage.setItem('ibridge_settings', JSON.stringify(safeSettings));
+    };
+
+    // Migrate existing browser settings by dropping any previously stored
+    // SMTP credentials before loading the rest of the UI preferences.
     try {
-      const savedSettings = localStorage.getItem('perfex_settings');
+      const savedSettings = localStorage.getItem('ibridge_settings');
       if (savedSettings) {
-        Object.assign(settings, JSON.parse(savedSettings));
+        const parsedSettings = JSON.parse(savedSettings);
+        const safeSettings = Object.fromEntries(
+          Object.entries(parsedSettings).filter(([key]) => !smtpSettingKeys.has(key))
+        );
+        Object.assign(settings, safeSettings);
+        localStorage.setItem('ibridge_settings', JSON.stringify(safeSettings));
       }
     } catch (e) {
       console.error('Failed to load settings from localStorage', e);
@@ -3685,29 +3958,786 @@ hr {
       }, 1000);
     };
 
-    const saveAllSettings = () => {
+    const loadSmtpConfiguration = async () => {
+      try {
+        const response = await axios.get('/email-mailer-configuration');
+        const configuration = response.data.data;
+        Object.assign(settings, {
+          mail_engine: configuration.mail_engine,
+          email_protocol: configuration.email_protocol,
+          email_encryption: configuration.email_encryption,
+          smtp_host: configuration.smtp_host || '',
+          smtp_port: configuration.smtp_port || 587,
+          from_email: configuration.from_email || '',
+          smtp_user: configuration.smtp_user || '',
+          smtp_pass: '',
+          email_charset: configuration.email_charset || 'utf-8',
+          bcc_emails: configuration.bcc_emails || '',
+        });
+        smtpPasswordConfigured.value = Boolean(configuration.smtp_password_set);
+      } catch (error) {
+        console.error('Failed to load secure SMTP configuration', error);
+      }
+    };
+
+    const saveAllSettings = async () => {
       saving.value = true;
       try {
-        localStorage.setItem('perfex_settings', JSON.stringify(settings));
+        const response = await axios.put('/email-mailer-configuration', {
+          mail_engine: settings.mail_engine,
+          email_protocol: settings.email_protocol,
+          email_encryption: settings.email_encryption,
+          smtp_host: settings.smtp_host || null,
+          smtp_port: settings.smtp_port || null,
+          from_email: settings.from_email || null,
+          smtp_user: settings.smtp_user || null,
+          smtp_pass: settings.smtp_pass || '',
+          email_charset: settings.email_charset,
+          bcc_emails: settings.bcc_emails || null,
+        });
+        smtpPasswordConfigured.value = Boolean(response.data.data.smtp_password_set);
+        settings.smtp_pass = '';
+        saveNonSensitiveSettings();
+        saveEmailTemplatesState();
+        message.success('SMTP settings saved securely');
       } catch (e) {
-        console.error('Failed to save settings to localStorage', e);
-      }
-      setTimeout(() => {
+        console.error('Failed to save secure SMTP configuration', e);
+        message.error(e.response?.data?.message || 'Unable to save SMTP settings');
+      } finally {
         saving.value = false;
-        message.success('General Settings saved successfully');
-      }, 500);
+      }
+    };
+
+    onMounted(loadSmtpConfiguration);
+
+    const showTemplateVars = ref(false);
+
+    // Company Format Builder Helpers & Live Preview
+    const companyFormatMode = ref('visual');
+    const selectedCompanyPreset = ref('standard');
+    const companyFields = reactive({
+      name: true,
+      address: true,
+      cityStateZip: true,
+      country: true,
+      phone: true,
+      vat: true
+    });
+
+    const syncCompanyFormatFromCheckboxes = () => {
+      const parts = [];
+      if (companyFields.name) parts.push('{company_name}');
+      if (companyFields.address) parts.push('{address}');
+      if (companyFields.cityStateZip) parts.push('{city} {state} {zip_code}');
+      if (companyFields.country) parts.push('{country_code}');
+      if (companyFields.phone) parts.push('Phone: {phone}');
+      if (companyFields.vat) parts.push('{vat_number_with_label}');
+      settings.company_info_format = parts.join('\n');
+    };
+
+    const companyMergeFields = [
+      { key: '{company_name}', label: 'Company Name' },
+      { key: '{address}', label: 'Street Address' },
+      { key: '{city}', label: 'City' },
+      { key: '{state}', label: 'State' },
+      { key: '{zip_code}', label: 'Zip Code' },
+      { key: '{country_code}', label: 'Country Code' },
+      { key: '{phone}', label: 'Phone' },
+      { key: '{vat_number_with_label}', label: 'VAT Number (with Label)' },
+    ];
+
+    const insertCompanyMergeField = (key) => {
+      const current = settings.company_info_format || '';
+      settings.company_info_format = current ? current + ' ' + key : key;
+    };
+
+    const applyCompanyPreset = (type) => {
+      selectedCompanyPreset.value = type;
+      if (type === 'standard') {
+        companyFields.name = true;
+        companyFields.address = true;
+        companyFields.cityStateZip = true;
+        companyFields.country = true;
+        companyFields.phone = false;
+        companyFields.vat = false;
+        settings.company_info_format = `{company_name}\n{address}\n{city} {state} {zip_code}\n{country_code}`;
+      } else if (type === 'detailed') {
+        companyFields.name = true;
+        companyFields.address = true;
+        companyFields.cityStateZip = true;
+        companyFields.country = true;
+        companyFields.phone = true;
+        companyFields.vat = true;
+        settings.company_info_format = `{company_name}\n{address}\n{city} {state} {zip_code}\n{country_code}\nPhone: {phone}\n{vat_number_with_label}`;
+      } else if (type === 'compact') {
+        companyFields.name = true;
+        companyFields.address = true;
+        companyFields.cityStateZip = true;
+        companyFields.country = true;
+        companyFields.phone = false;
+        companyFields.vat = false;
+        settings.company_info_format = `{company_name} | {address}, {city} {state} {zip_code} {country_code}`;
+      }
+      message.info('Format layout updated');
+    };
+
+    const formattedCompanyPreview = computed(() => {
+      let fmt = settings.company_info_format || `{company_name}\n{address}\n{city} {state}\n{country_code} {zip_code}\n{vat_number_with_label}`;
+      const companyName = settings.company_info_name || 'iBridge CRM Ltd';
+      const address = settings.company_info_address || '172 Ivy Club Gottliebfurt';
+      const city = settings.company_info_city || 'New Heaven';
+      const state = settings.company_info_state || 'NY';
+      const zip = settings.company_info_zip || '2364';
+      const country = settings.company_info_country || 'US';
+      const phone = settings.company_info_phone || '+1 (555) 019-2834';
+      const vat = settings.company_info_vat || 'US987654321';
+
+      return fmt
+        .replace(/\{company_name\}/g, companyName)
+        .replace(/\{address\}/g, address)
+        .replace(/\{city\}/g, city)
+        .replace(/\{state\}/g, state)
+        .replace(/\{zip_code\}/g, zip)
+        .replace(/\{country_code\}/g, country)
+        .replace(/\{phone\}/g, phone)
+        .replace(/\{vat_number\}/g, vat)
+        .replace(/\{vat_number_with_label\}/g, 'VAT: ' + vat);
+    });
+
+    // Visual Email Template & Theme Designer Helpers
+    const emailThemeMode = ref('visual');
+    const activeEmailControlTab = ref('theme'); // 'theme' | 'branding' | 'content' | 'footer'
+    const showCustomHtmlEditor = ref(false);
+    const emailBgColor = ref('#F5F7FA');
+    const emailBgPresets = ['#FFFFFF', '#F5F7FA', '#FAF8F5', '#F1F5F9', '#EEF2FF'];
+    const emailFontFamily = ref('sans-serif');
+    const emailContainerWidth = ref('680px');
+    const emailFooterCompanyText = ref('Ibridge Digital');
+    const emailPreviewDevice = ref('desktop');
+
+    // Selectable Dynamic Email Templates & Renderer Data
+    const selectedEmailTemplateKey = ref('invoice_payment');
+
+    const emailTemplatesList = ref([
+      {
+        key: 'invoice_payment',
+        label: 'Invoice - Payment Received',
+        title: 'Payment Received',
+        greeting: 'Hello {{client_name}},',
+        body: 'Your payment of {{amount}} for Invoice {{invoice_number}} has been received successfully. Thank you for your business!',
+        buttonText: 'Download Receipt',
+        icon: 'invoice'
+      },
+      {
+        key: 'invoice_overdue',
+        label: 'Invoice - Overdue Notice',
+        title: 'Invoice Overdue Notice',
+        greeting: 'Dear {{client_name}},',
+        body: 'This is a polite reminder that Invoice {{invoice_number}} for {{amount}} was due on {{due_date}} and is currently overdue. Please submit payment at your earliest convenience.',
+        buttonText: 'View Invoice',
+        icon: 'invoice'
+      },
+      {
+        key: 'estimate_expiration',
+        label: 'Estimate - Expiration Reminder',
+        title: 'Estimate Expiration Reminder',
+        greeting: 'Hi {{client_name}},',
+        body: 'Estimate {{estimate_number}} for {{amount}} is scheduled to expire on {{due_date}}. Please review and accept the estimate to proceed.',
+        buttonText: 'Review Estimate',
+        icon: 'invoice'
+      },
+      {
+        key: 'proposal_sent',
+        label: 'Proposal - New Proposal Sent',
+        title: 'New Proposal for Review',
+        greeting: 'Hello {{client_name}},',
+        body: 'A new proposal for project {{project_name}} has been created and is ready for your review.',
+        buttonText: 'Open Proposal',
+        icon: 'mail'
+      },
+      {
+        key: 'ticket_comment',
+        label: 'Ticket - New Comment Received',
+        title: 'Support Ticket Update',
+        greeting: 'Hi {{client_name}},',
+        body: 'A new comment has been added to your support ticket {{ticket_id}}. Click below to view the updated ticket.',
+        buttonText: 'View Ticket',
+        icon: 'bell'
+      },
+      {
+        key: 'password_reset',
+        label: 'Password Reset Request',
+        title: 'Reset Your Password',
+        greeting: 'Hello {{client_name}},',
+        body: 'We received a request to reset the password for your account. If you did not request this change, please ignore this email.',
+        buttonText: 'Reset Password',
+        icon: 'star'
+      },
+      {
+        key: 'welcome_client',
+        label: 'Welcome Email to Client',
+        title: 'Welcome to Our Platform!',
+        greeting: 'Welcome {{client_name}},',
+        body: 'We are thrilled to have you on board with {{company_name}}. Your account is now active and ready to use.',
+        buttonText: 'Get Started',
+        icon: 'star'
+      },
+      {
+        key: 'custom',
+        label: 'Custom Template',
+        title: '{{email_heading}}',
+        greeting: '{{email_greeting}}',
+        body: '{{email_body}}',
+        buttonText: '{{primary_button_text}}',
+        icon: 'mail'
+      }
+    ]);
+
+    const currentTemplateObj = computed(() => {
+      return emailTemplatesList.value.find(t => t.key === selectedEmailTemplateKey.value) || emailTemplatesList.value[0];
+    });
+
+    // Editable Email Copy & Brand Fields (Declared before watcher)
+    const emailBrandLogoText = ref('Ibridge Digital');
+    const emailCompanyLogoUrl = ref('');
+    const emailHeroIcon = ref('invoice'); // 'mail', 'bell', 'invoice', 'star', 'custom', 'none'
+    const emailHeroCustomImageUrl = ref('');
+    const emailPreviewTitle = ref('Payment Received');
+    const emailGreeting = ref('Hello {{client_name}},');
+    const emailPreviewBody = ref('Your payment of {{amount}} for Invoice {{invoice_number}} has been received successfully. Thank you for your business!');
+    const emailButtonText = ref('Download Receipt');
+    const emailFooterNoticeText = ref('You are receiving this email because you are a valued customer. If you no longer wish to receive these emails, you can unsubscribe.');
+
+    const syncCompanyNameFromAdmin = () => {
+      const adminCompany = settings.company_info_name || 'Ibridge Digital';
+      emailBrandLogoText.value = adminCompany;
+      emailFooterCompanyText.value = adminCompany;
+      updateEmailTemplateFromVisual();
+      message.success(`Synced Company Name with Admin Settings ("${adminCompany}")`);
+    };
+
+    watch(() => settings.company_info_name, (newName) => {
+      if (newName) {
+        emailBrandLogoText.value = newName;
+        emailFooterCompanyText.value = newName;
+        updateEmailTemplateFromVisual();
+      }
+    });
+
+    const emailHeroGlyph = computed(() => ({
+      mail: '✉',
+      bell: '🔔',
+      invoice: '📄',
+      star: '★',
+      custom: '✦',
+    }[emailHeroIcon.value] || '✉'));
+
+    const openEmailPreviewInNewTab = () => {
+      const previewWindow = window.open('', '_blank');
+      if (!previewWindow) {
+        message.warning('Your browser blocked the preview window. Please allow pop-ups and try again.');
+        return;
+      }
+
+      const escapeHtml = (value) => String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+      const safeColor = /^#[0-9a-f]{3,8}$/i.test(emailBgColor.value) ? emailBgColor.value : '#F5F7FA';
+      const fontFamily = { 'sans-serif': 'Arial, Helvetica, sans-serif', serif: 'Georgia, Times, serif', monospace: 'Courier New, monospace' }[emailFontFamily.value] || 'Arial, Helvetica, sans-serif';
+      const maxWidth = ['600px', '680px', '720px'].includes(emailContainerWidth.value) ? emailContainerWidth.value : '680px';
+      const customImage = emailHeroIcon.value === 'custom' && /^(https?:|data:image\/)/.test(emailHeroCustomImageUrl.value)
+        ? `<img src="${escapeHtml(emailHeroCustomImageUrl.value)}" alt="" style="width:48px;height:48px;object-fit:contain;border-radius:50%;background:#fff;padding:5px;" />`
+        : escapeHtml(emailHeroIcon.value === 'none' ? '' : emailHeroGlyph.value);
+      const action = emailButtonText.value
+        ? `<div style="padding-top:24px"><span style="display:inline-block;background:#2563eb;color:#fff;padding:12px 22px;border-radius:8px;font-weight:700;font-size:13px;">${escapeHtml(emailButtonText.value)}</span></div>`
+        : '';
+
+      const headerLogo = /^(https?:|data:image\/)/.test(emailCompanyLogoUrl.value)
+        ? `<img src="${escapeHtml(emailCompanyLogoUrl.value)}" alt="Company logo" style="max-width:120px;height:32px;object-fit:contain;object-position:left center" />`
+        : `✦ ${escapeHtml(emailBrandLogoText.value || '{{company_name}}')}`;
+      previewWindow.document.write(`<!doctype html><html><head><title>Email preview</title><meta name="viewport" content="width=device-width, initial-scale=1" /></head><body style="margin:0;padding:32px 16px;background:${safeColor};font-family:${fontFamily};color:#0f172a"><main style="max-width:${maxWidth};margin:0 auto;background:#fff;border-radius:16px;padding:32px;box-sizing:border-box;text-align:center;box-shadow:0 12px 32px rgba(15,23,42,.12)"><header style="display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:1px solid #e2e8f0;font-size:12px;font-weight:700"><span style="color:#2563eb">${headerLogo}</span><span style="color:#94a3b8">{{company_name}}</span></header>${customImage ? `<div style="width:56px;height:56px;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;margin:28px auto 18px;font-size:24px">${customImage}</div>` : ''}<h1 style="font-size:24px;margin:0 0 8px">${escapeHtml(emailPreviewTitle.value)}</h1><p style="margin:0 0 20px;color:#64748b;font-size:14px;font-weight:600">${escapeHtml(emailGreeting.value)}</p><div style="padding:18px;background:#f8fafc;border-radius:10px;text-align:left;white-space:pre-wrap;line-height:1.6;font-size:14px">${escapeHtml(emailPreviewBody.value)}</div>${action}<footer style="border-top:1px solid #e2e8f0;margin-top:28px;padding-top:18px;font-size:12px;color:#94a3b8"><strong style="display:block;color:#0f172a;margin-bottom:7px">${escapeHtml(emailFooterCompanyText.value)}</strong><span>${escapeHtml(emailFooterNoticeText.value)}</span><div style="margin-top:10px;color:#2563eb;text-decoration:underline">{{unsubscribe_text}}</div></footer></main></body></html>`);
+      previewWindow.document.close();
+    };
+
+    // Reactive Merge Fields List (Includes Admin Custom Created Fields)
+    const emailMergeFields = ref([
+      { tag: '{{client_name}}', label: 'Client Name' },
+      { tag: '{{invoice_number}}', label: 'Invoice #' },
+      { tag: '{{amount}}', label: 'Amount' },
+      { tag: '{{due_date}}', label: 'Due Date' },
+      { tag: '{{company_name}}', label: 'Company Name' },
+    ]);
+
+    const companyLogoFileInput = ref(null);
+    const heroLogoFileInput = ref(null);
+
+    const handleHeroLogoFileUpload = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) {
+        message.error('Logo image file must be smaller than 2MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        emailHeroCustomImageUrl.value = evt.target.result;
+        emailHeroIcon.value = 'custom';
+        updateEmailTemplateFromVisual();
+        message.success('Custom company logo uploaded successfully');
+      };
+      reader.readAsDataURL(file);
+    };
+
+    const handleCompanyLogoFileUpload = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) {
+        message.error('Company logo image must be smaller than 2MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        emailCompanyLogoUrl.value = evt.target.result;
+        updateEmailTemplateFromVisual();
+        message.success('Company logo added to this email template');
+      };
+      reader.readAsDataURL(file);
+    };
+
+    const saveEmailTemplatesState = () => {
+      try {
+        const stateToSave = {
+          emailTemplatesList: emailTemplatesList.value,
+          selectedEmailTemplateKey: selectedEmailTemplateKey.value,
+          emailMergeFields: emailMergeFields.value,
+          emailBgColor: emailBgColor.value,
+          emailFontFamily: emailFontFamily.value,
+          emailContainerWidth: emailContainerWidth.value,
+          emailBrandLogoText: emailBrandLogoText.value,
+          emailCompanyLogoUrl: emailCompanyLogoUrl.value,
+          emailHeroIcon: emailHeroIcon.value,
+          emailHeroCustomImageUrl: emailHeroCustomImageUrl.value,
+          emailPreviewTitle: emailPreviewTitle.value,
+          emailGreeting: emailGreeting.value,
+          emailPreviewBody: emailPreviewBody.value,
+          emailButtonText: emailButtonText.value,
+          emailFooterCompanyText: emailFooterCompanyText.value,
+          emailFooterNoticeText: emailFooterNoticeText.value
+        };
+        localStorage.setItem('ibridge_email_templates_designer', JSON.stringify(stateToSave));
+      } catch (e) {
+        console.error('Failed to save email templates state:', e);
+      }
+    };
+
+    onMounted(() => {
+      // 1. Sync from theme settings if present
+      try {
+        const savedTheme = localStorage.getItem('crm_theme_style_settings');
+        if (savedTheme) {
+          const parsedTheme = JSON.parse(savedTheme);
+          if (parsedTheme.company_name) {
+            settings.company_info_name = parsedTheme.company_name;
+          }
+        }
+      } catch (e) {}
+
+      // 2. Listen for live theme style update custom event
+      if (typeof window !== 'undefined' && window.addEventListener) {
+        window.addEventListener('crm-theme-settings-updated', (evt) => {
+          if (evt.detail && evt.detail.company_name) {
+            settings.company_info_name = evt.detail.company_name;
+            emailBrandLogoText.value = evt.detail.company_name;
+            emailFooterCompanyText.value = evt.detail.company_name;
+            updateEmailTemplateFromVisual();
+          }
+        });
+      }
+
+      try {
+        const saved = localStorage.getItem('ibridge_email_templates_designer');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.emailTemplatesList && Array.isArray(parsed.emailTemplatesList)) {
+            emailTemplatesList.value = parsed.emailTemplatesList;
+          }
+          if (parsed.emailMergeFields && Array.isArray(parsed.emailMergeFields)) {
+            emailMergeFields.value = parsed.emailMergeFields;
+          }
+          if (parsed.selectedEmailTemplateKey) {
+            selectedEmailTemplateKey.value = parsed.selectedEmailTemplateKey;
+          }
+          if (parsed.emailBgColor) emailBgColor.value = parsed.emailBgColor;
+          if (parsed.emailFontFamily) emailFontFamily.value = parsed.emailFontFamily;
+          if (parsed.emailContainerWidth) emailContainerWidth.value = parsed.emailContainerWidth;
+
+          if (parsed.emailBrandLogoText && parsed.emailBrandLogoText !== 'iBRIDGE' && parsed.emailBrandLogoText !== 'iBridge INC') {
+            emailBrandLogoText.value = parsed.emailBrandLogoText;
+          } else {
+            emailBrandLogoText.value = settings.company_info_name || 'Ibridge Digital';
+          }
+
+          if (parsed.emailFooterCompanyText && parsed.emailFooterCompanyText !== 'iBridge CRM Inc.' && parsed.emailFooterCompanyText !== 'iBridge INC') {
+            emailFooterCompanyText.value = parsed.emailFooterCompanyText;
+          } else {
+            emailFooterCompanyText.value = settings.company_info_name || 'Ibridge Digital';
+          }
+
+          if (parsed.emailCompanyLogoUrl !== undefined) emailCompanyLogoUrl.value = parsed.emailCompanyLogoUrl;
+          if (parsed.emailHeroIcon) emailHeroIcon.value = parsed.emailHeroIcon;
+          if (parsed.emailHeroCustomImageUrl !== undefined) emailHeroCustomImageUrl.value = parsed.emailHeroCustomImageUrl;
+          if (parsed.emailPreviewTitle) emailPreviewTitle.value = parsed.emailPreviewTitle;
+          if (parsed.emailGreeting) emailGreeting.value = parsed.emailGreeting;
+          if (parsed.emailPreviewBody) emailPreviewBody.value = parsed.emailPreviewBody;
+          if (parsed.emailButtonText !== undefined) emailButtonText.value = parsed.emailButtonText;
+          if (parsed.emailFooterNoticeText) emailFooterNoticeText.value = parsed.emailFooterNoticeText;
+
+          updateEmailTemplateFromVisual();
+        } else {
+          emailBrandLogoText.value = settings.company_info_name || 'Ibridge Digital';
+          emailFooterCompanyText.value = settings.company_info_name || 'Ibridge Digital';
+          updateEmailTemplateFromVisual();
+        }
+      } catch (e) {
+        console.error('Failed to restore email template state:', e);
+      }
+    });
+
+    const updateEmailTemplateFromVisual = () => {
+      const tmpl = emailTemplatesList.value.find(t => t.key === selectedEmailTemplateKey.value);
+      if (tmpl) {
+        tmpl.title = emailPreviewTitle.value;
+        tmpl.greeting = emailGreeting.value;
+        tmpl.body = emailPreviewBody.value;
+        tmpl.buttonText = emailButtonText.value;
+        tmpl.icon = emailHeroIcon.value;
+        tmpl.brandLogoText = emailBrandLogoText.value;
+        tmpl.companyLogoUrl = emailCompanyLogoUrl.value;
+        tmpl.customImageUrl = emailHeroCustomImageUrl.value;
+        tmpl.footerCompanyText = emailFooterCompanyText.value;
+        tmpl.footerNoticeText = emailFooterNoticeText.value;
+      }
+
+      const headerHtml = `<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<style>
+body {
+  background-color: ${emailBgColor.value};
+  font-family: ${emailFontFamily.value};
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+}
+table {
+  border-collapse: separate;
+  width: 100%;
+}
+table td {
+  font-family: ${emailFontFamily.value};
+  font-size: 14px;
+  vertical-align: top;
+}
+.body {
+  background-color: ${emailBgColor.value};
+  width: 100%;
+}
+.container {
+  display: block;
+  margin: 0 auto !important;
+  max-width: ${emailContainerWidth.value};
+  padding: 20px 10px;
+}
+.main {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 100%;
+}
+.wrapper {
+  padding: 24px;
+}
+</style>
+</head>
+<body class="">
+<table border="0" cellpadding="0" cellspacing="0" class="body">
+<tr>
+<td>&nbsp;</td>
+<td class="container">
+<div class="content">
+<table class="main">
+<tr>
+<td class="wrapper">
+<table border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td>`;
+
+      const footerHtml = `</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<div class="footer" style="padding-top:16px; text-align:center; color:#94a3b8; font-size:12px;">
+<table border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td class="content-block">
+<span>${emailFooterCompanyText.value}</span>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</td>
+<td>&nbsp;</td>
+</tr>
+</table>
+</body>
+</html>`;
+
+      settings.email_predefined_header = headerHtml;
+      settings.email_predefined_footer = footerHtml;
+
+      saveEmailTemplatesState();
+    };
+
+    watch(selectedEmailTemplateKey, (newKey) => {
+      const tmpl = emailTemplatesList.value.find(t => t.key === newKey);
+      if (tmpl) {
+        emailPreviewTitle.value = tmpl.title || '';
+        emailGreeting.value = tmpl.greeting || 'Hello {{client_name}},';
+        emailPreviewBody.value = tmpl.body || '';
+        emailButtonText.value = tmpl.buttonText || '';
+        if (tmpl.icon) emailHeroIcon.value = tmpl.icon;
+        if (tmpl.brandLogoText) emailBrandLogoText.value = tmpl.brandLogoText;
+        if (tmpl.companyLogoUrl !== undefined) emailCompanyLogoUrl.value = tmpl.companyLogoUrl;
+        if (tmpl.customImageUrl !== undefined) emailHeroCustomImageUrl.value = tmpl.customImageUrl;
+        if (tmpl.footerCompanyText) emailFooterCompanyText.value = tmpl.footerCompanyText;
+        if (tmpl.footerNoticeText) emailFooterNoticeText.value = tmpl.footerNoticeText;
+      }
+      saveEmailTemplatesState();
+    }, { immediate: true });
+
+    // New & Edit Email Template Modal State & Actions
+    const showNewTemplateModal = ref(false);
+    const showEditTemplateModal = ref(false);
+
+    const newTemplateForm = reactive({
+      label: '',
+      preset: 'invoice'
+    });
+
+    const editTemplateForm = reactive({
+      label: ''
+    });
+
+    const openNewTemplateModal = () => {
+      newTemplateForm.label = '';
+      newTemplateForm.preset = 'invoice';
+      showNewTemplateModal.value = true;
+    };
+
+    const submitCreateNewTemplate = () => {
+      if (!newTemplateForm.label.trim()) {
+        message.error('Please enter a Template Name');
+        return;
+      }
+      const newKey = 'custom_' + Date.now();
+
+      const presetsMap = {
+        invoice: {
+          title: 'Invoice Payment Notice',
+          greeting: 'Hello {{client_name}},',
+          body: 'Your payment of {{amount}} for Invoice {{invoice_number}} has been received successfully. Thank you for your business!',
+          buttonText: 'View Invoice',
+          icon: 'invoice'
+        },
+        estimate: {
+          title: 'Estimate Expiration Notice',
+          greeting: 'Dear {{client_name}},',
+          body: 'Estimate {{estimate_number}} for {{amount}} is scheduled to expire on {{due_date}}. Please review and accept the estimate.',
+          buttonText: 'Review Estimate',
+          icon: 'invoice'
+        },
+        proposal: {
+          title: 'New Proposal Sent',
+          greeting: 'Hello {{client_name}},',
+          body: 'A new proposal for project {{project_name}} has been created and is ready for your review.',
+          buttonText: 'Open Proposal',
+          icon: 'mail'
+        },
+        ticket: {
+          title: 'Support Ticket Update',
+          greeting: 'Hi {{client_name}},',
+          body: 'A new comment has been added to your support ticket {{ticket_id}}. Click below to view the updated ticket.',
+          buttonText: 'View Ticket',
+          icon: 'bell'
+        },
+        welcome: {
+          title: 'Welcome to Our Platform!',
+          greeting: 'Welcome {{client_name}},',
+          body: 'We are thrilled to have you on board with {{company_name}}. Your account is active and ready to use.',
+          buttonText: 'Get Started',
+          icon: 'star'
+        },
+        password: {
+          title: 'Reset Your Password',
+          greeting: 'Hello {{client_name}},',
+          body: 'We received a request to reset your account password. If you did not request this, please ignore this email.',
+          buttonText: 'Reset Password',
+          icon: 'star'
+        },
+        custom: {
+          title: newTemplateForm.label,
+          greeting: 'Hello {{client_name}},',
+          body: 'Type your custom email template message body content here...',
+          buttonText: 'View Details',
+          icon: 'mail'
+        }
+      };
+
+      const selectedPreset = presetsMap[newTemplateForm.preset] || presetsMap.custom;
+
+      const newTmpl = {
+        key: newKey,
+        label: newTemplateForm.label,
+        title: selectedPreset.title,
+        greeting: selectedPreset.greeting,
+        body: selectedPreset.body,
+        buttonText: selectedPreset.buttonText,
+        icon: selectedPreset.icon,
+        brandLogoText: emailBrandLogoText.value || 'iBRIDGE',
+        companyLogoUrl: emailCompanyLogoUrl.value || '',
+        customImageUrl: emailHeroCustomImageUrl.value || '',
+        footerCompanyText: emailFooterCompanyText.value || '{{company_name}}',
+        footerNoticeText: emailFooterNoticeText.value || 'You are receiving this email because you are a valued customer.'
+      };
+
+      emailTemplatesList.value.push(newTmpl);
+      selectedEmailTemplateKey.value = newKey;
+
+      // Apply newly created template values to live editor states
+      emailBrandLogoText.value = newTmpl.brandLogoText;
+      emailCompanyLogoUrl.value = newTmpl.companyLogoUrl;
+      emailHeroIcon.value = newTmpl.icon;
+      if (newTmpl.customImageUrl) emailHeroCustomImageUrl.value = newTmpl.customImageUrl;
+      emailPreviewTitle.value = newTmpl.title;
+      emailGreeting.value = newTmpl.greeting;
+      emailPreviewBody.value = newTmpl.body;
+      emailButtonText.value = newTmpl.buttonText;
+      emailFooterCompanyText.value = newTmpl.footerCompanyText;
+      emailFooterNoticeText.value = newTmpl.footerNoticeText;
+
+      saveEmailTemplatesState();
+      showNewTemplateModal.value = false;
+      message.success(`Email Template "${newTmpl.label}" created! You can now customize all fields on the left panel.`);
+    };
+
+    const openEditTemplateModal = () => {
+      const tmpl = emailTemplatesList.value.find(t => t.key === selectedEmailTemplateKey.value);
+      if (tmpl) {
+        editTemplateForm.label = tmpl.label;
+        showEditTemplateModal.value = true;
+      }
+    };
+
+    const submitEditTemplateName = () => {
+      if (!editTemplateForm.label.trim()) {
+        message.error('Template Name cannot be empty');
+        return;
+      }
+      const tmpl = emailTemplatesList.value.find(t => t.key === selectedEmailTemplateKey.value);
+      if (tmpl) {
+        tmpl.label = editTemplateForm.label;
+        saveEmailTemplatesState();
+        showEditTemplateModal.value = false;
+        message.success('Template name updated successfully!');
+      }
+    };
+
+
+
+    // Admin Custom Merge Field Creator State
+    const showAddCustomFieldModal = ref(false);
+    const customFieldForm = reactive({
+      label: '',
+      key: ''
+    });
+
+    const openAddCustomFieldModal = () => {
+      customFieldForm.label = '';
+      customFieldForm.key = '';
+      showAddCustomFieldModal.value = true;
+    };
+
+    const submitCreateCustomField = () => {
+      if (!customFieldForm.label.trim()) {
+        message.error('Please enter a Field Name');
+        return;
+      }
+      let cleanKey = customFieldForm.key.trim() || customFieldForm.label.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+      cleanKey = cleanKey.replace(/^\{\{|\}\}$/g, '');
+      const tag = `{{${cleanKey}}}`;
+
+      if (emailMergeFields.value.some(f => f.tag === tag)) {
+        message.error('A merge field with this code tag already exists!');
+        return;
+      }
+
+      emailMergeFields.value.push({
+        tag: tag,
+        label: customFieldForm.label
+      });
+
+      saveEmailTemplatesState();
+      showAddCustomFieldModal.value = false;
+      message.success(`Custom Variable "${customFieldForm.label}" (${tag}) created!`);
+    };
+
+    const insertEmailMergeTag = (tag) => {
+      emailPreviewBody.value = emailPreviewBody.value ? emailPreviewBody.value + ' ' + tag : tag;
+      updateEmailTemplateFromVisual();
+    };
+
+    const resetEmailDefaults = () => {
+      emailBgColor.value = '#F5F7FA';
+      emailFontFamily.value = 'sans-serif';
+      emailContainerWidth.value = '680px';
+      emailFooterCompanyText.value = '{{company_name}}';
+      emailBrandLogoText.value = 'iBRIDGE';
+      emailCompanyLogoUrl.value = '';
+      emailHeroIcon.value = 'invoice';
+      emailHeroCustomImageUrl.value = '';
+      selectedEmailTemplateKey.value = 'invoice_payment';
+      emailPreviewTitle.value = 'Payment Received';
+      emailGreeting.value = 'Hello {{client_name}},';
+      emailPreviewBody.value = 'Your payment of {{amount}} for Invoice {{invoice_number}} has been received successfully. Thank you for your business!';
+      emailButtonText.value = 'Download Receipt';
+      emailFooterNoticeText.value = 'You are receiving this email because you are a valued customer. If you no longer wish to receive these emails, you can unsubscribe.';
+      try {
+        localStorage.removeItem('ibridge_email_templates_designer');
+      } catch (e) {}
+      updateEmailTemplateFromVisual();
+      message.info('Reset email template to default styling');
     };
 
     return {
       activeCategory,
       activeGateway,
       activeSupportTab,
+      smtpPasswordConfigured,
       activeCalendarTab,
       activePdfTab,
       activeSmsTab,
       activeCronTab,
       activeMiscTab,
       showOpenAIFineTune,
+      showTemplateVars,
       saving,
       groupedCategories,
       availableLanguages,
@@ -3721,7 +4751,59 @@ hr {
       queueColumns,
       filteredQueue,
       sendTestEmail,
-      saveAllSettings
+      saveAllSettings,
+      companyFormatMode,
+      selectedCompanyPreset,
+      companyFields,
+      syncCompanyFormatFromCheckboxes,
+      companyMergeFields,
+      insertCompanyMergeField,
+      applyCompanyPreset,
+      formattedCompanyPreview,
+      emailThemeMode,
+      activeEmailControlTab,
+      showCustomHtmlEditor,
+      emailBgPresets,
+      selectedEmailTemplateKey,
+      emailTemplatesList,
+      currentTemplateObj,
+      showNewTemplateModal,
+      showEditTemplateModal,
+      showAddCustomFieldModal,
+      newTemplateForm,
+      editTemplateForm,
+      customFieldForm,
+      openNewTemplateModal,
+      submitCreateNewTemplate,
+      openEditTemplateModal,
+      submitEditTemplateName,
+      openAddCustomFieldModal,
+      submitCreateCustomField,
+      emailBgColor,
+      emailFontFamily,
+      emailContainerWidth,
+      emailFooterCompanyText,
+      emailPreviewDevice,
+      emailBrandLogoText,
+      emailCompanyLogoUrl,
+      emailHeroIcon,
+      emailHeroCustomImageUrl,
+      handleHeroLogoFileUpload,
+      handleCompanyLogoFileUpload,
+      companyLogoFileInput,
+      heroLogoFileInput,
+      emailPreviewTitle,
+      emailGreeting,
+      emailPreviewBody,
+      emailButtonText,
+      emailFooterNoticeText,
+      emailHeroGlyph,
+      openEmailPreviewInNewTab,
+      emailMergeFields,
+      insertEmailMergeTag,
+      resetEmailDefaults,
+      updateEmailTemplateFromVisual,
+      syncCompanyNameFromAdmin
     };
   }
 });
@@ -3732,32 +4814,34 @@ hr {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 .section-title {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 700;
-  color: #1e293b;
+  color: #4B465C;
   margin: 0;
 }
 .settings-layout-wrap {
   display: flex;
   gap: 24px;
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #f1f5f9;
+  background: #FFFFFF;
+  border-radius: 8px;
+  border: 1px solid #EBE9F1;
   padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 6px rgba(47, 43, 61, 0.06);
 }
 .settings-nav-sidebar {
-  width: 265px;
+  width: 250px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  border-right: 1px solid #f1f5f9;
-  padding-right: 16px;
-  max-height: 800px;
+  background: #F8F7FA;
+  border-radius: 8px;
+  border: 1px solid #EBE9F1;
+  padding: 16px 12px;
+  max-height: 820px;
   overflow-y: auto;
 }
 .nav-group-container {
@@ -3767,17 +4851,17 @@ hr {
 }
 .nav-group-header {
   font-size: 11px;
-  font-weight: 800;
-  color: #94a3b8;
+  font-weight: 700;
+  color: #82868B;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   margin-bottom: 6px;
-  padding-left: 10px;
+  padding-left: 8px;
 }
 .nav-group-items {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 .settings-nav-item {
   display: flex;
@@ -3785,38 +4869,42 @@ hr {
   padding: 8px 12px;
   border-radius: 6px;
   cursor: pointer;
-  color: #64748b;
-  transition: all 0.15s ease;
+  color: #4B465C;
+  font-weight: 600;
+  font-size: 12.5px;
+  transition: all 0.2s ease;
 }
 .settings-nav-item:hover {
-  background: #f8fafc;
-  color: #0f172a;
+  background: #FFFFFF;
+  color: #7367F0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 .settings-nav-item--active {
-  background: #e0e7ff;
-  color: #4f46e5;
-  font-weight: 600;
+  background: #7367F0 !important;
+  color: #FFFFFF !important;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(115, 103, 240, 0.35);
 }
 .nav-label {
-  font-size: 13px;
+  font-size: 12.5px;
 }
 .settings-content-panel {
   flex: 1;
   min-height: 520px;
-  padding-left: 8px;
+  padding-left: 4px;
 }
 .panel-section-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 24px;
+  color: #4B465C;
+  margin-bottom: 20px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #f8fafc;
+  border-bottom: 1px solid #EBE9F1;
 }
 .settings-sub-section-title {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
-  color: #334155;
+  color: #4B465C;
   margin-bottom: 16px;
 }
 .settings-form-grid {
@@ -3825,18 +4913,19 @@ hr {
   gap: 16px 24px;
 }
 .settings-hint-text {
-  font-size: 12.5px;
-  color: #64748b;
+  font-size: 12px;
+  color: #82868B;
   margin-bottom: 20px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #F8F7FA;
+  border: 1px solid #EBE9F1;
   padding: 10px 14px;
   border-radius: 6px;
+  font-weight: 500;
 }
 .languages-grid-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  background: #F8F7FA;
+  border: 1px solid #EBE9F1;
+  border-radius: 6px;
   padding: 16px;
   margin-top: 8px;
   max-height: 200px;
@@ -3856,7 +4945,7 @@ hr {
   line-height: 1.5;
   background: #0f172a;
   color: #e2e8f0;
-  border-radius: 8px;
+  border-radius: 6px;
   padding: 16px;
   border: none;
 }
@@ -3866,9 +4955,9 @@ hr {
   box-shadow: none;
 }
 .test-email-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  background: #F8F7FA;
+  border: 1px solid #EBE9F1;
+  border-radius: 6px;
   padding: 16px;
   margin-top: 24px;
 }
@@ -3876,11 +4965,11 @@ hr {
   font-size: 13px;
   font-weight: 700;
   margin: 0 0 6px 0;
-  color: #1e293b;
+  color: #4B465C;
 }
 .test-email-desc {
-  font-size: 12.5px;
-  color: #64748b;
+  font-size: 12px;
+  color: #82868B;
   margin: 0 0 16px 0;
 }
 .test-email-controls {
@@ -3898,7 +4987,7 @@ hr {
   align-items: center;
   justify-content: space-between;
   padding-bottom: 14px;
-  border-bottom: 1px solid #f8fafc;
+  border-bottom: 1px solid #EBE9F1;
 }
 .switch-labels {
   display: flex;
@@ -3907,13 +4996,13 @@ hr {
   max-width: 80%;
 }
 .switch-title {
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
-  color: #1e293b;
+  color: #4B465C;
 }
 .switch-hint {
-  font-size: 12px;
-  color: #64748b;
+  font-size: 11.5px;
+  color: #82868B;
   margin: 0;
 }
 .data-table-controls {
@@ -3929,40 +5018,40 @@ hr {
 }
 .info-table td {
   padding: 12px 16px;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 13px;
-  color: #475569;
+  border-bottom: 1px solid #EBE9F1;
+  font-size: 12.5px;
+  color: #4B465C;
 }
 .info-table tr:hover td {
-  background: #f8fafc;
+  background: #F8F7FA;
 }
 .pulse-indicator {
   display: inline-block;
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #10b981;
-  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  background-color: #28C76F;
+  box-shadow: 0 0 0 0 rgba(40, 199, 111, 0.7);
   animation: pulse 1.6s infinite;
 }
 @keyframes pulse {
   0% {
     transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    box-shadow: 0 0 0 0 rgba(40, 199, 111, 0.7);
   }
   70% {
     transform: scale(1);
-    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 6px rgba(40, 199, 111, 0);
   }
   100% {
     transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 0 rgba(40, 199, 111, 0);
   }
 }
 .settings-actions {
   margin-top: 32px;
   padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid #EBE9F1;
   display: flex;
   justify-content: flex-end;
 }
@@ -3972,10 +5061,11 @@ hr {
   border-radius: 6px;
 }
 :deep(.ant-radio-button-wrapper) {
-  font-size: 12.5px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   min-width: 52px;
   text-align: center;
+  border-color: #DBDADE;
 }
 :deep(.ant-radio-button-wrapper:first-child) {
   border-radius: 6px 0 0 6px;
@@ -3983,32 +5073,51 @@ hr {
 :deep(.ant-radio-button-wrapper:last-child) {
   border-radius: 0 6px 6px 0;
 }
+:deep(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)) {
+  background: #7367F0 !important;
+  border-color: #7367F0 !important;
+  color: #FFFFFF !important;
+}
 :deep(.ant-form-item-label > label) {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
-  color: #1e293b;
+  color: #4B465C;
 }
 :deep(.ant-select-selector) {
   border-radius: 6px !important;
+  border-color: #DBDADE !important;
 }
 :deep(.ant-input),
 :deep(.ant-input-number),
 :deep(.ant-input-affix-wrapper) {
-  border-radius: 6px;
+  border-radius: 6px !important;
+  border-color: #DBDADE !important;
+}
+:deep(.ant-input:focus),
+:deep(.ant-input-affix-wrapper:focus),
+:deep(.ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector) {
+  border-color: #7367F0 !important;
+  box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.2) !important;
 }
 :deep(.ant-btn) {
   border-radius: 6px;
-  font-weight: 500;
+  font-weight: 600;
 }
 :deep(.ant-btn-primary) {
-  box-shadow: 0 1px 2px rgba(79, 70, 229, 0.2);
+  background: #7367F0;
+  border-color: #7367F0;
+  box-shadow: 0 2px 4px rgba(115, 103, 240, 0.35);
+}
+:deep(.ant-btn-primary:hover) {
+  background: #685dd8;
+  border-color: #685dd8;
 }
 :deep(.ant-table) {
-  border-radius: 8px;
+  border-radius: 6px;
   overflow: hidden;
 }
 :deep(.ant-modal-content) {
-  border-radius: 12px;
+  border-radius: 8px;
 }
 :deep(.ant-upload) {
   width: 100%;
@@ -4018,23 +5127,23 @@ hr {
   text-align: left;
 }
 :deep(.ant-form-item-extra) {
-  font-size: 12px;
-  color: #64748b;
+  font-size: 11.5px;
+  color: #82868B;
   margin-top: 4px;
 }
 .cron-instructions {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  background: #F8F7FA;
+  border: 1px solid #EBE9F1;
+  border-radius: 6px;
   padding: 16px;
 }
 .cron-command-block {
   font-family: 'SF Mono', 'Fira Code', 'Fira Mono', Menlo, Consolas, monospace;
-  font-size: 12.5px;
+  font-size: 12px;
   background: #0f172a;
   color: #a5f3fc;
   padding: 14px 18px;
-  border-radius: 8px;
+  border-radius: 6px;
   margin: 8px 0;
   overflow-x: auto;
   white-space: nowrap;
@@ -4042,5 +5151,377 @@ hr {
 }
 .cron-command-block:hover {
   background: #1e293b;
+}
+
+/* Sub-tabs Pill Navigation Bar */
+.pill-tabs-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #EBE9F1;
+}
+
+.pill-tab-btn {
+  background: #FFFFFF;
+  border: 1px solid #DBDADE;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4B465C;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.pill-tab-btn:hover {
+  border-color: #7367F0;
+  color: #7367F0;
+}
+
+.pill-tab-btn.active {
+  background: #7367F0 !important;
+  color: #FFFFFF !important;
+  border-color: #7367F0 !important;
+  box-shadow: 0 2px 4px rgba(115, 103, 240, 0.35);
+}
+
+/* Template Variables Helper */
+.template-vars-card {
+  background: #F8F7FA;
+  border: 1px solid #EBE9F1;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-top: 24px;
+}
+.template-vars-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+.btn-toggle-vars {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #7367F0;
+  background: #FFFFFF;
+  border: 1px solid #DBDADE;
+  padding: 5px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-toggle-vars:hover {
+  border-color: #7367F0;
+}
+.vars-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  padding-top: 14px;
+  border-top: 1px solid #EBE9F1;
+}
+.vars-cat-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #4B465C;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.vars-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.vars-tags-list code {
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  background: #FFFFFF;
+  color: #7367F0;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #EBE9F1;
+}
+
+/* Mobile Responsiveness for Settings */
+@media (max-width: 900px) {
+  .settings-layout-wrap {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+  .settings-nav-sidebar {
+    width: 100%;
+    max-height: none;
+    flex-direction: row;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 10px;
+    gap: 8px;
+  }
+  .settings-nav-item {
+    flex: 0 0 auto;
+  }
+  .settings-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .switch-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .switch-labels {
+    max-width: 100%;
+  }
+  .vars-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* ── Email template studio ─────────────────────────────────────────────── */
+.email-template-studio {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 94% 0%, rgba(59, 130, 246, 0.11), transparent 30%),
+    linear-gradient(145deg, #ffffff, #f8fbff 62%, #f4f7ff);
+  box-shadow: 0 18px 46px rgba(15, 23, 42, 0.07);
+}
+.email-studio-header,
+.email-preview-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.email-studio-header {
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+.email-studio-title-wrap,
+.email-studio-actions,
+.email-panel-heading > div,
+.email-designer-mode-tabs {
+  display: flex;
+  align-items: center;
+}
+.email-studio-title-wrap { gap: 13px; }
+.email-studio-mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: #fff;
+  font-size: 20px;
+  box-shadow: 0 8px 16px rgba(79, 70, 229, 0.24);
+}
+.email-studio-eyebrow {
+  margin-bottom: 3px;
+  color: #2563eb;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.email-studio-title-wrap h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+.email-studio-title-wrap p,
+.email-panel-heading p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+}
+.email-studio-actions { gap: 9px; }
+.email-template-picker { display: grid; gap: 3px; }
+.email-template-picker > span {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.email-template-picker select {
+  min-width: 245px;
+  height: 38px;
+  padding: 0 30px 0 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  outline: none;
+  background: #fff;
+  color: #1e293b;
+  font-size: 12px;
+  font-weight: 700;
+}
+.email-template-picker select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.13); }
+.email-icon-action,
+.email-primary-action,
+.email-open-preview,
+.email-text-action {
+  border: 0;
+  cursor: pointer;
+  transition: .2s ease;
+}
+.email-icon-action {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  align-self: end;
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  background: #fff;
+  color: #475569;
+}
+.email-icon-action:hover { color: #2563eb; border-color: #93c5fd; background: #eff6ff; }
+.email-primary-action,
+.email-open-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.email-primary-action {
+  min-height: 38px;
+  align-self: end;
+  padding: 0 14px;
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 6px 13px rgba(37, 99, 235, .2);
+}
+.email-primary-action:hover { background: #1d4ed8; transform: translateY(-1px); }
+.email-designer-mode-tabs {
+  gap: 8px;
+  margin: 18px 0;
+  padding: 5px;
+  width: fit-content;
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  background: rgba(255,255,255,.8);
+}
+.email-designer-mode {
+  display: grid;
+  gap: 1px;
+  min-width: 136px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: .2s ease;
+}
+.email-designer-mode span { font-size: 12px; font-weight: 800; }
+.email-designer-mode small { font-size: 10px; font-weight: 600; opacity: .72; }
+.email-designer-panel {
+  padding: 20px;
+  border: 1px solid #dbe3ef;
+  border-radius: 18px;
+  background: rgba(255,255,255,.94);
+  box-shadow: 0 10px 26px rgba(15,23,42,.045);
+}
+.email-controls-panel { position: sticky; top: 16px; }
+.email-panel-heading { padding-bottom: 15px; border-bottom: 1px solid #edf2f7; }
+.email-panel-heading > div { gap: 8px; }
+.email-panel-heading span {
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 7px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 10px;
+  font-weight: 800;
+}
+.email-panel-heading h4 { margin: 0; color: #0f172a; font-size: 14px; font-weight: 800; }
+.email-panel-heading.compact { padding: 0; border: 0; }
+.email-company-logo-card {
+  display: grid;
+  gap: 10px;
+  padding: 13px;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+.email-company-logo-copy {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.email-company-logo-copy strong { color: #1e293b; font-size: 12px; font-weight: 800; }
+.email-company-logo-copy span { color: #64748b; font-size: 11px; font-weight: 500; }
+.email-company-logo-controls { display: flex; align-items: center; gap: 8px; }
+.email-company-logo-preview,
+.email-company-logo-placeholder {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #bfdbfe;
+  border-radius: 9px;
+  background: #fff;
+}
+.email-company-logo-preview img { width: 100%; height: 100%; object-fit: contain; }
+.email-company-logo-placeholder { color: #64748b; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.email-logo-upload-button,
+.email-logo-remove {
+  flex: 0 0 auto;
+  border: 0;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+}
+.email-logo-upload-button {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+}
+.email-logo-upload-button:hover { background: #1d4ed8; }
+.email-logo-remove { padding: 4px; background: transparent; color: #dc2626; }
+.email-logo-remove:hover { text-decoration: underline; }
+.email-open-preview { padding: 8px 11px; background: #eff6ff; color: #1d4ed8; }
+.email-open-preview:hover { background: #dbeafe; }
+.email-text-action {
+  padding: 0;
+  background: transparent;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 800;
+}
+.email-text-action:hover { color: #1d4ed8; text-decoration: underline; }
+@media (max-width: 1024px) {
+  .email-controls-panel { position: static; }
+}
+@media (max-width: 720px) {
+  .email-template-studio { padding: 16px; border-radius: 18px; }
+  .email-studio-header,
+  .email-preview-toolbar { align-items: flex-start; flex-direction: column; }
+  .email-studio-actions { width: 100%; flex-wrap: wrap; }
+  .email-template-picker { flex: 1; min-width: 0; }
+  .email-template-picker select { min-width: 0; width: 100%; }
+  .email-designer-mode-tabs { width: 100%; }
+  .email-designer-mode { flex: 1; min-width: 0; }
+  .email-company-logo-copy { display: grid; gap: 2px; }
+  .email-company-logo-controls { flex-wrap: wrap; }
+  .email-company-logo-controls input { min-width: 180px; }
 }
 </style>

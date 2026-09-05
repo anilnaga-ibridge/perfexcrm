@@ -26,7 +26,7 @@ class EstimateRequestController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $requests = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         $stats = [

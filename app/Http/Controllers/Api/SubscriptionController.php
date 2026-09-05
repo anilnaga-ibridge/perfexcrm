@@ -11,6 +11,10 @@ class SubscriptionController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Subscriptions.view')) {
+            abort(403, 'Unauthorized. Missing required permission: Subscriptions.view');
+        }
+
         $query = Subscription::with('client:id,company', 'project:id,name');
 
         if ($request->filled('search')) {
@@ -30,7 +34,7 @@ class SubscriptionController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $subscriptions = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         // Summary stats
@@ -51,6 +55,10 @@ class SubscriptionController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Subscriptions.create')) {
+            abort(403, 'Unauthorized. Missing required permission: Subscriptions.create');
+        }
+
         $validated = $request->validate([
             'name'                => 'required|string|max:255',
             'client_id'           => 'required|exists:clients,id',
@@ -82,6 +90,10 @@ class SubscriptionController extends Controller
 
     public function update(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Subscriptions.edit')) {
+            abort(403, 'Unauthorized. Missing required permission: Subscriptions.edit');
+        }
+
         $subscription = Subscription::find($id);
         if (!$subscription) return response()->json(['message' => 'Subscription not found'], 404);
 
@@ -106,8 +118,12 @@ class SubscriptionController extends Controller
         return response()->json($subscription->load('client', 'project'));
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Subscriptions.delete')) {
+            abort(403, 'Unauthorized. Missing required permission: Subscriptions.delete');
+        }
+
         $subscription = Subscription::find($id);
         if (!$subscription) return response()->json(['message' => 'Subscription not found'], 404);
         $subscription->delete();

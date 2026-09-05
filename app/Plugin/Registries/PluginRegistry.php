@@ -59,6 +59,9 @@ class PluginRegistry
 
         $dirs = File::directories($modulesDir);
         foreach ($dirs as $dir) {
+            if (is_link($dir)) {
+                continue;
+            }
             $alias = basename($dir);
             $manifestPath = $dir . '/module.json';
             $info = null;
@@ -67,7 +70,7 @@ class PluginRegistry
                 $content = File::get($manifestPath);
                 $info = json_decode($content, true);
             } else {
-                // Fallback to legacy Perfex/CodeIgniter style PHP file comment parsing
+                // Fallback to legacy iBridge/CodeIgniter style PHP file comment parsing
                 $files = File::files($dir);
                 foreach ($files as $file) {
                     if ($file->getExtension() === 'php') {
@@ -82,7 +85,10 @@ class PluginRegistry
 
             if ($info && is_array($info)) {
                 $alias = $info['alias'] ?? $alias;
-                $normalizedAlias = ModuleValidator::normalizeAlias($alias);
+                $hasValidator = class_exists('\App\Services\ModuleValidator', false);
+                $normalizedAlias = $hasValidator 
+                    ? \App\Services\ModuleValidator::normalizeAlias($alias) 
+                    : strtolower(preg_replace('/[^a-z0-9]+/', '-', trim($alias, '-')));
                 
                 // Determine namespace prefix
                 $namespace = $this->aliasToNamespace($normalizedAlias);
@@ -162,7 +168,7 @@ class PluginRegistry
     }
 
     /**
-     * Parse WordPress/Perfex style comment headers from legacy PHP files.
+     * Parse WordPress/iBridge style comment headers from legacy PHP files.
      */
     protected function parseLegacyPhpHeaders(string $filePath): ?array
     {

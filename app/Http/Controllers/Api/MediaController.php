@@ -43,7 +43,7 @@ class MediaController extends Controller
 
         if ($request->hasFile('file')) {
             $request->validate([
-                'file' => 'required|file|max:10240', // 10MB max
+                'file' => 'required|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,jpg,jpeg,png,gif,webp,svg,mp4,webm,mp3,wav', // 10MB max
             ]);
 
             $file = $request->file('file');

@@ -53,6 +53,7 @@
     </div>
 
     <div class="table-container">
+      <!-- Desktop Table View -->
       <table class="data-table">
         <thead>
           <tr>
@@ -100,7 +101,7 @@
             <td>
               <div class="action-buttons">
                 <button class="action-btn" title="Edit" @click="openEdit(form)">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
                 <button class="action-btn delete-btn" title="Delete" @click="deleteForm(form)">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -110,6 +111,50 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Mobile Responsive Card View -->
+      <div class="mobile-cards-list" v-if="!loading">
+        <div 
+          v-for="form in forms" 
+          :key="'m-er-' + form.id"
+          class="mobile-row-card"
+          @click="openEdit(form)"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="status-badge" :class="form.status">{{ form.status }}</span>
+              <span class="font-extrabold text-sm text-sky-600">#{{ form.id }}</span>
+            </div>
+            <div v-if="form.assigned" class="assignee-cell">
+              <img v-if="form.assigned.profile_image" :src="form.assigned.profile_image" class="assignee-avatar" />
+              <div v-else class="assignee-avatar assignee-placeholder">{{ form.assigned.name.charAt(0) }}</div>
+            </div>
+          </div>
+
+          <div class="font-bold text-sm text-slate-800 pt-1">
+            {{ form.email || '—' }}
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100">
+            <div class="tags-wrap col-span-2" v-if="form.tags">
+              <span v-for="tag in parseTags(form.tags)" :key="tag" class="tag-pill">{{ tag }}</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-slate-500">
+              <span class="text-slate-400">👤 Assigned:</span>
+              <span class="font-semibold text-slate-700 truncate">{{ form.assigned?.name || '—' }}</span>
+            </div>
+            <div class="flex items-center justify-end gap-1.5 text-slate-500">
+              <span class="text-slate-400">📅</span>
+              <span>{{ formatDate(form.created_at) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="!forms.length" class="text-center p-6 text-slate-400 text-xs font-semibold">
+          No forms found
+        </div>
+      </div>
+
       <div class="pagination" v-if="totalPages > 1">
         <button :disabled="page <= 1" @click="page--; load()">‹ Prev</button>
         <span>Page {{ page }} of {{ totalPages }}</span>
@@ -117,184 +162,225 @@
       </div>
     </div>
 
-    <Teleport to="body">
-      <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
-        <div class="modal-box form-modal">
-          <div class="modal-header">
-            <h2>{{ editing ? 'Edit Form' : 'New Form' }}</h2>
-            <button class="close-btn" @click="showModal = false">&times;</button>
+    <!-- Create/Edit Drawer -->
+    <a-drawer
+      v-model:open="showModal"
+      placement="right"
+      :width="640"
+      :footer-style="{ padding: '16px 24px', background: '#fafafa', borderTop: '1px solid #f1f5f9' }"
+      :header-style="{ padding: '20px 24px', background: '#ffffff', borderBottom: '1px solid #f1f5f9' }"
+      @close="showModal = false"
+    >
+      <template #title>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl text-white flex items-center justify-center shadow-md shrink-0 theme-primary-grad">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </div>
+          <div class="min-w-0">
+            <h3 class="text-base font-extrabold text-slate-800 m-0 leading-snug whitespace-nowrap">{{ editing ? 'Edit Form' : 'New Form' }}</h3>
+            <p class="text-xs text-slate-400 font-medium m-0 mt-0.5 whitespace-nowrap">Configure web estimate form parameters & notifications</p>
+          </div>
+        </div>
+      </template>
+
+      <div class="space-y-5">
+        <!-- Tab Pills -->
+        <div class="p-1 bg-slate-100 rounded-2xl border border-slate-200/80 flex items-center gap-1">
+          <button
+            v-for="t in tabs"
+            :key="t.key"
+            type="button"
+            class="flex-1 py-2 px-3 text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
+            :class="activeTab === t.key ? 'bg-white text-slate-800 shadow-2xs' : 'text-slate-500 hover:text-slate-700'"
+            @click="activeTab = t.key"
+          >
+            {{ t.label }}
+          </button>
+        </div>
+
+        <div class="p-1">
+          <!-- General Tab -->
+          <div v-if="activeTab === 'general'" class="space-y-4">
+            <div>
+              <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1.5">
+                Form Name <span class="text-rose-500">*</span>
+              </label>
+              <input v-model="form.name" placeholder="e.g. Website Estimate Request" class="w-full h-11 px-4 text-xs font-semibold theme-input-ctrl" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">Use Google Recaptcha</label>
+              <div class="flex items-center gap-6 p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                <label class="inline-flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                  <input type="radio" v-model="form.recaptcha_enabled" :value="false" class="theme-accent-chk" /> No
+                </label>
+                <label class="inline-flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                  <input type="radio" v-model="form.recaptcha_enabled" :value="true" class="theme-accent-chk" /> Yes
+                </label>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Language <span class="text-rose-500">*</span></label>
+                <select v-model="form.language" class="w-full h-10 px-3.5 text-xs font-semibold theme-input-ctrl cursor-pointer">
+                  <option value="English">English</option>
+                  <option value="Spanish">Spanish</option>
+                  <option value="French">French</option>
+                  <option value="German">German</option>
+                  <option value="Italian">Italian</option>
+                  <option value="Portuguese">Portuguese</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Status <span class="text-rose-500">*</span></label>
+                <select v-model="form.status" class="w-full h-10 px-3.5 text-xs font-semibold theme-input-ctrl cursor-pointer">
+                  <option value="processing">Processing</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Responsible (Assignee)</label>
+                <select v-model="form.assigned_to" class="w-full h-10 px-3.5 text-xs font-semibold theme-input-ctrl cursor-pointer">
+                  <option :value="null">— Select Staff —</option>
+                  <option v-for="s in staffList" :key="s.id" :value="s.id">{{ s.name }}</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Email</label>
+                <input v-model="form.email" placeholder="contact@example.com" class="w-full h-10 px-3.5 text-xs font-semibold theme-input-ctrl" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">Tags</label>
+              <div class="p-2.5 border border-slate-200/80 rounded-2xl bg-slate-50/50 flex flex-wrap items-center gap-1.5 focus-within:bg-white theme-input-ctrl transition-all">
+                <div class="flex flex-wrap gap-1.5">
+                  <span
+                    v-for="(tag, i) in form.tagList"
+                    :key="i"
+                    class="px-2.5 py-1 text-[11px] font-bold rounded-lg inline-flex items-center gap-1.5 shadow-2xs theme-tag-chip"
+                  >
+                    {{ tag }}
+                    <button type="button" @click="form.tagList.splice(i, 1); form.tags = form.tagList.join(',')" class="hover:opacity-75 font-extrabold text-xs">&times;</button>
+                  </span>
+                </div>
+                <input
+                  v-model="tagInput"
+                  placeholder="Type and press Enter..."
+                  class="text-xs font-semibold bg-transparent outline-none flex-1 min-w-[140px] text-slate-800 placeholder-slate-400"
+                  @keydown.enter.prevent="addTag"
+                  @keydown.,.prevent="addTag"
+                />
+              </div>
+            </div>
           </div>
 
-          <div class="form-tabs">
-            <button v-for="t in tabs" :key="t.key" class="form-tab" :class="{active: activeTab === t.key}" @click="activeTab = t.key">{{ t.label }}</button>
+          <!-- Branding Tab -->
+          <div v-else-if="activeTab === 'branding'" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">Submit Button Text <span class="text-rose-500">*</span></label>
+              <input v-model="form.submit_btn_text" placeholder="Submit" class="w-full h-10 px-3.5 text-xs font-semibold theme-input-ctrl" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">Submit Button Background Color</label>
+              <div class="flex items-center gap-3">
+                <input type="color" v-model="form.submit_btn_bg_color" class="w-10 h-10 p-1 border border-slate-200 rounded-xl cursor-pointer bg-white shrink-0" />
+                <input v-model="form.submit_btn_bg_color" placeholder="#84c529" class="w-full h-10 px-3.5 text-xs font-semibold theme-input-ctrl" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">Submit Button Text Color</label>
+              <div class="flex items-center gap-3">
+                <input type="color" v-model="form.submit_btn_text_color" class="w-10 h-10 p-1 border border-slate-200 rounded-xl cursor-pointer bg-white shrink-0" />
+                <input v-model="form.submit_btn_text_color" placeholder="#ffffff" class="w-full h-10 px-3.5 text-xs font-semibold theme-input-ctrl" />
+              </div>
+            </div>
           </div>
 
-          <div class="modal-body">
-            <div v-if="activeTab === 'general'" class="tab-content">
-              <div class="form-row">
-                <div class="form-group flex-1">
-                  <label>Form Name <span class="req">*</span></label>
-                  <input v-model="form.name" placeholder="e.g. Website Estimate Request" class="er-input" />
-                </div>
-              </div>
-
-              <div class="form-row">
-                <div class="form-group flex-1">
-                  <label>Use Google Recaptcha</label>
-                  <div class="radio-group">
-                    <label class="radio-label"><input type="radio" v-model="form.recaptcha_enabled" :value="false" /> No</label>
-                    <label class="radio-label"><input type="radio" v-model="form.recaptcha_enabled" :value="true" /> Yes</label>
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-row">
-                <div class="form-group flex-1">
-                  <label>Language <span class="req">*</span></label>
-                  <select v-model="form.language" class="er-input">
-                    <option value="English">English</option>
-                    <option value="Spanish">Spanish</option>
-                    <option value="French">French</option>
-                    <option value="German">German</option>
-                    <option value="Italian">Italian</option>
-                    <option value="Portuguese">Portuguese</option>
-                  </select>
-                </div>
-                <div class="form-group flex-1">
-                  <label>Status <span class="req">*</span></label>
-                  <select v-model="form.status" class="er-input">
-                    <option value="processing">Processing</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="form-row">
-                <div class="form-group flex-1">
-                  <label>Responsible (Assignee)</label>
-                  <select v-model="form.assigned_to" class="er-input">
-                    <option :value="null">— Select Staff —</option>
-                    <option v-for="s in staffList" :key="s.id" :value="s.id">{{ s.name }}</option>
-                  </select>
-                </div>
-                <div class="form-group flex-1">
-                  <label>Email</label>
-                  <input v-model="form.email" placeholder="contact@example.com" class="er-input" />
-                </div>
-              </div>
-
-              <div class="form-row">
-                <div class="form-group flex-1">
-                  <label>Tags</label>
-                  <div class="tag-input-wrap">
-                    <div class="tag-list">
-                      <span v-for="(tag, i) in form.tagList" :key="i" class="tag-pill">
-                        {{ tag }}
-                        <button class="tag-pill-del" @click="form.tagList.splice(i, 1); form.tags = form.tagList.join(',')">&times;</button>
-                      </span>
-                      <input v-model="tagInput" placeholder="Type and press Enter" class="tag-field" @keydown.enter.prevent="addTag" @keydown.,.prevent="addTag" />
-                    </div>
-                  </div>
-                </div>
+          <!-- Submission Tab -->
+          <div v-else-if="activeTab === 'submission'" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-2">What should happen after a visitor submits this form?</label>
+              <div class="space-y-2.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80">
+                <label class="flex items-center gap-2.5 text-xs font-bold text-slate-700 cursor-pointer">
+                  <input type="radio" v-model="form.submission_action" value="message" class="theme-accent-chk" />
+                  <span>Display thank you message</span>
+                </label>
+                <label class="flex items-center gap-2.5 text-xs font-bold text-slate-700 cursor-pointer">
+                  <input type="radio" v-model="form.submission_action" value="redirect" class="theme-accent-chk" />
+                  <span>Redirect to another website</span>
+                </label>
               </div>
             </div>
-
-            <div v-else-if="activeTab === 'branding'" class="tab-content">
-              <div class="form-row">
-                <div class="form-group flex-1">
-                  <label>Submit button text <span class="req">*</span></label>
-                  <input v-model="form.submit_btn_text" placeholder="Submit" class="er-input" />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group flex-1">
-                  <label>Submit button background color</label>
-                  <div class="color-input-row">
-                    <input type="color" v-model="form.submit_btn_bg_color" class="color-picker" />
-                    <input v-model="form.submit_btn_bg_color" placeholder="#84c529" class="er-input color-text-input" />
-                  </div>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group flex-1">
-                  <label>Submit button background text</label>
-                  <div class="color-input-row">
-                    <input type="color" v-model="form.submit_btn_text_color" class="color-picker" />
-                    <input v-model="form.submit_btn_text_color" placeholder="#ffffff" class="er-input color-text-input" />
-                  </div>
-                </div>
-              </div>
+            <div v-if="form.submission_action === 'message'">
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">Message to show after submission <span class="text-rose-500">*</span></label>
+              <textarea v-model="form.submission_message" placeholder="Thank you for your submission..." class="w-full p-4 text-xs font-semibold theme-input-ctrl text-slate-800 placeholder-slate-400 resize-y leading-relaxed" rows="4"></textarea>
             </div>
-
-            <div v-else-if="activeTab === 'submission'" class="tab-content">
-              <div class="form-row">
-                <div class="form-group flex-1">
-                  <label>What should happen after a visitor submits this form?</label>
-                  <div class="radio-group vertical">
-                    <label class="radio-label"><input type="radio" v-model="form.submission_action" value="message" /> Display thank you message</label>
-                    <label class="radio-label"><input type="radio" v-model="form.submission_action" value="redirect" /> Redirect to another website</label>
-                  </div>
-                </div>
-              </div>
-              <div v-if="form.submission_action === 'message'" class="form-row">
-                <div class="form-group flex-1">
-                  <label>Message to show after form is successfully submitted <span class="req">*</span></label>
-                  <textarea v-model="form.submission_message" placeholder="Thank you for your submission. We will get back to you shortly." class="er-input er-textarea" rows="4"></textarea>
-                </div>
-              </div>
-              <div v-if="form.submission_action === 'redirect'" class="form-row">
-                <div class="form-group flex-1">
-                  <label>Redirect URL <span class="req">*</span></label>
-                  <input v-model="form.submission_redirect_url" placeholder="https://example.com/thank-you" class="er-input" />
-                </div>
-              </div>
+            <div v-if="form.submission_action === 'redirect'">
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">Redirect URL <span class="text-rose-500">*</span></label>
+              <input v-model="form.submission_redirect_url" placeholder="https://example.com/thank-you" class="w-full h-10 px-3.5 text-xs font-semibold theme-input-ctrl" />
             </div>
+          </div>
 
-            <div v-else-if="activeTab === 'notifications'" class="tab-content">
-              <div class="form-row">
-                <div class="form-group flex-1">
-                  <label class="toggle-row">
-                    <input type="checkbox" v-model="form.notify_enabled" class="toggle-checkbox" />
-                    <span class="toggle-switch"></span>
-                    Notify when estimate request submitted in this form
+          <!-- Notifications Tab -->
+          <div v-else-if="activeTab === 'notifications'" class="space-y-4">
+            <label class="flex items-center gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 cursor-pointer text-xs font-bold text-slate-700 select-none">
+              <input type="checkbox" v-model="form.notify_enabled" class="w-4 h-4 rounded border-slate-300 cursor-pointer theme-accent-chk" />
+              <span>Notify when estimate request submitted in this form</span>
+            </label>
+
+            <div v-if="form.notify_enabled" class="space-y-4 pt-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-2">Notification Target</label>
+                <div class="space-y-2.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80">
+                  <label class="flex items-center gap-2.5 text-xs font-bold text-slate-700 cursor-pointer">
+                    <input type="radio" v-model="form.notify_type" value="specific" class="theme-accent-chk" /> Specific Staff Members
+                  </label>
+                  <label class="flex items-center gap-2.5 text-xs font-bold text-slate-700 cursor-pointer">
+                    <input type="radio" v-model="form.notify_type" value="responsible" class="theme-accent-chk" /> Responsible person
                   </label>
                 </div>
               </div>
 
-              <div v-if="form.notify_enabled">
-                <div class="form-row">
-                  <div class="form-group flex-1">
-                    <label>Staff Members with roles</label>
-                    <div class="radio-group vertical">
-                      <label class="radio-label"><input type="radio" v-model="form.notify_type" value="specific" /> Specific Staff Members</label>
-                      <label class="radio-label"><input type="radio" v-model="form.notify_type" value="responsible" /> Responsible person</label>
-                    </div>
-                  </div>
-                </div>
-
-                <div v-if="form.notify_type === 'specific'" class="form-row">
-                  <div class="form-group flex-1">
-                    <label>Staff Members to Notify</label>
-                    <div class="staff-checkbox-grid">
-                      <label v-for="s in staffList" :key="s.id" class="staff-checkbox-item">
-                        <input type="checkbox" :value="s.id" v-model="form.notifyStaffIds" />
-                        <span>{{ s.name }}</span>
-                      </label>
-                    </div>
-                  </div>
+              <div v-if="form.notify_type === 'specific'">
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Staff Members to Notify</label>
+                <div class="max-h-44 overflow-y-auto p-3 border border-slate-200/80 rounded-2xl bg-slate-50/50 space-y-1">
+                  <label v-for="s in staffList" :key="s.id" class="flex items-center justify-between p-2 rounded-xl hover:bg-white transition-all cursor-pointer">
+                    <span class="text-xs font-semibold text-slate-700">{{ s.name }}</span>
+                    <input type="checkbox" :value="s.id" v-model="form.notifyStaffIds" class="w-4 h-4 rounded border-slate-300 cursor-pointer theme-accent-chk" />
+                  </label>
                 </div>
               </div>
             </div>
           </div>
-
-          <div class="modal-footer">
-            <button class="btn-cancel" @click="showModal = false">Cancel</button>
-            <button class="btn-save" @click="saveForm">{{ editing ? 'Update Form' : 'Create Form' }}</button>
-          </div>
         </div>
       </div>
-    </Teleport>
+
+      <template #footer>
+        <div class="flex items-center justify-end gap-3">
+          <button
+            type="button"
+            class="px-5 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer border border-slate-200/80"
+            @click="showModal = false"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="px-7 py-2.5 text-xs font-bold text-white rounded-xl cursor-pointer shadow-md transition-all flex items-center gap-2 theme-primary-grad"
+            @click="saveForm"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            {{ editing ? 'Update Form' : 'Create Form' }}
+          </button>
+        </div>
+      </template>
+    </a-drawer>
   </div>
 </template>
 
@@ -594,5 +680,77 @@ select.er-input { cursor: pointer; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px 20px; border-top: 1.5px solid #f1f5f9; flex-shrink: 0; }
 .btn-cancel { padding: 9px 18px; background: #f1f5f9; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; cursor: pointer; color: #475569; }
 .btn-save { padding: 9px 22px; background: linear-gradient(135deg,#1e9aff,#0b6eff); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-.btn-save:hover { box-shadow: 0 4px 14px rgba(30,154,255,.35); }
+
+/* Dynamic Theme Utility Classes */
+.theme-primary-btn {
+  background: var(--theme-primary, #6366f1) !important;
+  color: #ffffff !important;
+}
+.theme-primary-btn:hover {
+  background: var(--theme-primary-hover, #4f46e5) !important;
+}
+.theme-primary-grad {
+  background: linear-gradient(135deg, var(--theme-primary, #6366f1) 0%, var(--theme-primary-hover, #4f46e5) 100%) !important;
+  color: #ffffff !important;
+}
+.theme-input-ctrl {
+  background-color: rgba(248, 250, 252, 0.8);
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+}
+.theme-input-ctrl:focus {
+  background-color: #ffffff;
+  border-color: var(--theme-primary, #6366f1) !important;
+  box-shadow: 0 0 0 4px var(--theme-primary-light, rgba(99, 102, 241, 0.15)) !important;
+  outline: none;
+}
+.theme-accent-chk {
+  accent-color: var(--theme-primary, #6366f1) !important;
+}
+.theme-tag-chip {
+  background: var(--theme-primary-light, rgba(99, 102, 241, 0.12)) !important;
+  color: var(--theme-primary, #6366f1) !important;
+  border: 1px solid var(--theme-primary-light, rgba(99, 102, 241, 0.25)) !important;
+}
+/* Mobile Cards List Hidden by Default on Desktop */
+.mobile-cards-list {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .filters-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .search-wrap, .search-input, .filter-select {
+    width: 100% !important;
+  }
+  .data-table {
+    display: none !important;
+  }
+  .mobile-cards-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 560px) {
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .form-row { flex-direction: column; }
+}
 </style>

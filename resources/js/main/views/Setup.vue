@@ -5,7 +5,7 @@
       <h1 class="setup-title">Setup</h1>
     </div>
 
-    <div class="setup-layout">
+    <div :class="['setup-layout', { 'setup-layout--themed': activeSection === 'settings' }]">
       <!-- Right Content Panel -->
       <div class="setup-content">
 
@@ -13,7 +13,7 @@
         <div v-if="activeSection === 'staff'">
           <div class="section-toolbar">
             <h2 class="section-title">Staff Members</h2>
-            <button class="btn-primary" @click="openAddStaff = true">
+            <button class="btn-primary" @click="openAddStaff">
               <span>+</span> Add Staff Member
             </button>
           </div>
@@ -38,9 +38,9 @@
             >
               <template #bodyCell="{ column, record }">
                 <template v-if="column.key === 'name'">
-                  <div class="flex-name">
+                  <div class="flex-name cursor-pointer" @click="viewStaff(record)">
                     <div class="avatar-circle">{{ initials(record.name) }}</div>
-                    <div class="name-main">{{ record.name }}</div>
+                    <div class="name-main hover:text-blue-600 font-semibold">{{ record.name }}</div>
                   </div>
                 </template>
                 <template v-if="column.key === 'role'">
@@ -62,197 +62,7 @@
             </a-table>
           </div>
 
-          <!-- Add/Edit Staff Modal -->
-          <a-modal
-            v-model:open="openAddStaff"
-            :title="editingStaff ? 'Edit Staff Member' : 'Add New Staff Member'"
-            :width="720"
-            :footer="null"
-            :destroyOnClose="true"
-            @cancel="resetStaffForm"
-          >
-            <a-tabs v-model:activeKey="staffActiveTab">
-              <a-tab-pane key="profile" tab="Profile">
-                <a-form layout="vertical" :model="staffForm">
-                  <div class="profile-image-row">
-                    <div class="profile-image-upload">
-                      <div class="avatar-circle large" v-if="!staffForm.profile_image" :style="{ background: avatarColor(staffForm.first_name + ' ' + staffForm.last_name) }">
-                        {{ initials(staffForm.first_name + ' ' + staffForm.last_name) || '?' }}
-                      </div>
-                      <img v-else :src="staffForm.profile_image" class="profile-preview" />
-                      <div class="upload-actions">
-                        <a-button size="small" @click="$refs.staffFileInput?.click()">Choose File</a-button>
-                        <span class="file-hint">No file chosen</span>
-                      </div>
-                      <input type="file" ref="staffFileInput" accept="image/*" style="display:none" @change="onStaffFileChange" />
-                    </div>
-                    <div class="staff-type-badge">
-                      <a-checkbox :checked="isStaffAdminRole" @change="toggleStaffAdmin">Administrator</a-checkbox>
-                    </div>
-                  </div>
 
-                  <div class="form-row">
-                    <a-form-item label="* First Name" :rules="[{ required: true, message: 'First name required' }]">
-                      <a-input v-model:value="staffForm.first_name" placeholder="First Name" />
-                    </a-form-item>
-                    <a-form-item label="* Last Name" :rules="[{ required: true, message: 'Last name required' }]">
-                      <a-input v-model:value="staffForm.last_name" placeholder="Last Name" />
-                    </a-form-item>
-                  </div>
-
-                  <div class="form-row">
-                    <a-form-item label="* Email" :rules="[{ required: true, type: 'email', message: 'Valid email required' }]">
-                      <a-input v-model:value="staffForm.email" placeholder="Email" />
-                    </a-form-item>
-                    <a-form-item label="Hourly Rate">
-                      <a-input-number v-model:value="staffForm.hourly_rate" :min="0" :precision="2" style="width: 100%">
-                        <template #addonBefore>$</template>
-                      </a-input-number>
-                    </a-form-item>
-                  </div>
-
-                  <div class="form-row">
-                    <a-form-item label="Phone">
-                      <a-input v-model:value="staffForm.phone" placeholder="Phone" />
-                    </a-form-item>
-                    <a-form-item label="Facebook">
-                      <a-input v-model:value="staffForm.facebook" placeholder="Facebook" />
-                    </a-form-item>
-                  </div>
-
-                  <div class="form-row">
-                    <a-form-item label="LinkedIn">
-                      <a-input v-model:value="staffForm.linkedin" placeholder="LinkedIn" />
-                    </a-form-item>
-                    <a-form-item label="Skype">
-                      <a-input v-model:value="staffForm.skype" placeholder="Skype" />
-                    </a-form-item>
-                  </div>
-
-                  <div class="form-row">
-                    <a-form-item label="Default Language">
-                      <a-select v-model:value="staffForm.default_language" style="width: 100%">
-                        <a-select-option value="">System Default</a-select-option>
-                        <a-select-option value="en">English</a-select-option>
-                        <a-select-option value="es">Spanish</a-select-option>
-                        <a-select-option value="fr">French</a-select-option>
-                        <a-select-option value="de">German</a-select-option>
-                      </a-select>
-                    </a-form-item>
-                    <a-form-item label="Direction">
-                      <a-select v-model:value="staffForm.direction" style="width: 100%">
-                        <a-select-option value="">LTR</a-select-option>
-                        <a-select-option value="rtl">RTL</a-select-option>
-                      </a-select>
-                    </a-form-item>
-                  </div>
-
-                  <a-form-item label="Email Signature">
-                    <a-textarea v-model:value="staffForm.email_signature" :rows="3" placeholder="Email signature..." />
-                  </a-form-item>
-
-                  <a-form-item label="Member departments">
-                    <a-checkbox-group v-model:value="staffForm.departments">
-                      <a-checkbox value="Marketing">Marketing</a-checkbox>
-                      <a-checkbox value="Sales">Sales</a-checkbox>
-                      <a-checkbox value="Abuse">Abuse</a-checkbox>
-                    </a-checkbox-group>
-                  </a-form-item>
-
-                  <a-form-item>
-                    <a-checkbox v-model:checked="staffForm.send_welcome_email">Send welcome email</a-checkbox>
-                  </a-form-item>
-
-                  <div class="form-row">
-                    <a-form-item
-                      label="* Password"
-                      :rules="editingStaff ? [] : [{ required: true, message: 'Password required' }]"
-                    >
-                      <a-input-password v-model:value="staffForm.password" placeholder="Password" />
-                    </a-form-item>
-                    <a-form-item label="Confirm Password">
-                      <a-input-password v-model:value="staffForm.password_confirmation" placeholder="Confirm password" />
-                    </a-form-item>
-                  </div>
-                </a-form>
-              </a-tab-pane>
-
-              <a-tab-pane key="permissions" tab="Permissions">
-                <div class="permissions-section">
-                  <div class="perm-info">
-                    <a-typography-link href="#" @click.prevent>Click here to read more about permissions</a-typography-link>
-                  </div>
-
-                  <a-form-item label="Role">
-                    <a-select v-model:value="staffForm.role_id" style="width: 280px" @change="onStaffRoleChange">
-                      <a-select-option v-for="r in staffRoles" :key="r.id" :value="r.id">{{ r.name }}</a-select-option>
-                    </a-select>
-                  </a-form-item>
-
-                  <div v-if="isStaffAdminRole" class="admin-notice">
-                    <a-checkbox checked disabled>Administrator</a-checkbox>
-                    <span class="admin-hint">Administrator has full access to all features</span>
-                  </div>
-
-                  <div class="permissions-grid">
-                    <div class="perm-table">
-                      <div class="perm-table-header">
-                        <div class="perm-cell feature-col">Features</div>
-                        <div class="perm-cell cap-col" v-for="cap in allCapabilities" :key="cap.key">{{ cap.label }}</div>
-                      </div>
-                      <div v-for="feat in featureList" :key="feat.key" class="perm-table-row">
-                        <div class="perm-cell feature-col">{{ feat.label }}</div>
-                        <div class="perm-cell cap-col" v-for="cap in feat.caps" :key="cap.key">
-                          <a-checkbox
-                            v-if="cap.type === 'checkbox'"
-                            :checked="getStaffPerm(feat.key, cap.key)"
-                            @change="e => setStaffPerm(feat.key, cap.key, e.target.checked)"
-                          />
-                          <span v-else-if="cap.type === 'label'" class="cap-label">{{ cap.label }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </a-tab-pane>
-            </a-tabs>
-
-            <div class="modal-footer">
-              <a-button @click="openAddStaff = false">Cancel</a-button>
-              <a-button type="primary" :loading="staffSaving" @click="saveStaff">{{ editingStaff ? 'Update' : 'Add Staff Member' }}</a-button>
-            </div>
-          </a-modal>
-
-          <!-- View Staff Modal -->
-          <a-modal
-            v-model:open="viewStaffModal"
-            title="View Staff Member"
-            :footer="null"
-            :width="560"
-          >
-            <div v-if="viewingStaff" class="view-staff-modal">
-              <div class="view-field">
-                <label>Full Name</label>
-                <a-input :value="viewingStaff.name" disabled />
-              </div>
-              <div class="view-field">
-                <label>Email Address</label>
-                <a-input :value="viewingStaff.email" disabled />
-              </div>
-              <div class="view-field">
-                <label>Role</label>
-                <a-input :value="viewingStaff.role || 'Employee'" disabled />
-              </div>
-              <div class="view-field">
-                <label>Last Login</label>
-                <a-input :value="formatLastLogin(viewingStaff.last_login)" disabled />
-              </div>
-              <div class="view-field">
-                <label>Status</label>
-                <a-input :value="viewingStaff.active ? 'Active' : 'Inactive'" disabled />
-              </div>
-            </div>
-          </a-modal>
         </div>
 
         <!-- ── CUSTOMERS (Settings) ── -->
@@ -351,113 +161,9 @@
           </div>
         </div>
 
-        <!-- ── PLUGINS ── -->
-        <div v-if="activeSection === 'plugins'">
-          <h2 class="section-title">Plugins</h2>
-
-          <!-- Upload Plugin Card -->
-          <div class="mod-upload-card">
-            <div class="mod-upload-title">Upload Plugin</div>
-            <p class="mod-upload-desc">If you have a plugin in a <code>.zip</code> format, you may install it by uploading it here.</p>
-            <div class="mod-upload-row">
-              <label class="mod-file-label">
-                <input type="file" accept=".zip" ref="moduleFileInput" @change="onModuleFileChange" style="display:none" />
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                {{ moduleFileName || 'No file chosen' }}
-              </label>
-              <button class="btn-primary btn-sm" @click="uploadModule" :disabled="!moduleFileName || uploadLoading">
-                <span v-if="uploadLoading" class="mod-action-spinner"></span>
-                {{ uploadLoading ? 'Uploading...' : 'Upload Plugin' }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Table Controls -->
-          <div class="mod-table-controls">
-            <div class="mod-table-left">
-              <a-select v-model:value="modPerPage" size="small" style="width:65px">
-                <a-select-option :value="10">10</a-select-option>
-                <a-select-option :value="25">25</a-select-option>
-                <a-select-option :value="50">50</a-select-option>
-              </a-select>
-            </div>
-            <div class="mod-table-right">
-              <a-input
-                v-model:value="modSearch"
-                placeholder="Search..."
-                size="small"
-                style="width:200px"
-                allow-clear
-              />
-            </div>
-          </div>
-
-          <!-- Plugins Table -->
-          <div class="mod-table-wrap">
-            <a-spin :spinning="modulesLoading" tip="Loading plugins...">
-            <table class="mod-table">
-              <thead>
-                <tr>
-                  <th>Plugin</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="mod in paginatedModules.list" :key="mod.key">
-                  <td class="mod-name-cell">
-                    <div class="mod-name-link">{{ mod.name }}</div>
-                    <div class="mod-actions-row">
-                      <template v-for="(action, idx) in mod.actions" :key="idx">
-                        <span v-if="idx > 0" class="mod-action-sep">|</span>
-                        <a
-                          v-if="modLoading(mod.id)"
-                          class="mod-action-link mod-action-link--loading"
-                        ><span class="mod-action-spinner"></span> Loading...</a>
-                        <a
-                          v-else
-                          class="mod-action-link"
-                          :class="{ 'mod-action-link--deactivate': action === 'Deactivate', 'mod-action-link--danger': action === 'Activate' }"
-                          @click="handleModuleAction(mod, action)"
-                        >{{ action }}</a>
-                      </template>
-                    </div>
-                  </td>
-                  <td class="mod-desc-cell">
-                    <div class="mod-desc-text">{{ mod.description }}</div>
-                    <div class="mod-version">Version {{ mod.version }}</div>
-                  </td>
-                </tr>
-                <tr v-if="!modulesLoading && paginatedModules.total === 0">
-                  <td colspan="2" style="text-align:center;padding:40px;color:#94a3b8">No plugins found</td>
-                </tr>
-              </tbody>
-            </table>
-            </a-spin>
-          </div>
-
-          <!-- Table Footer -->
-          <div class="mod-table-footer">
-            <div class="mod-footer-info">
-              Showing {{ paginatedModules.start }} to {{ paginatedModules.end }} of {{ paginatedModules.total }} entries
-            </div>
-            <div class="mod-footer-pages" v-if="paginatedModules.total > modPerPage">
-              <a-button size="small" :disabled="modCurrentPage <= 1" @click="modCurrentPage--">
-                &laquo; Prev
-              </a-button>
-              <template v-for="p in modPageNumbers" :key="p">
-                <a-button
-                  v-if="p !== '...'"
-                  size="small"
-                  :type="p === modCurrentPage ? 'primary' : 'default'"
-                  @click="modCurrentPage = p"
-                >{{ p }}</a-button>
-                <span v-else class="mod-page-ellipsis">...</span>
-              </template>
-              <a-button size="small" :disabled="modCurrentPage >= modPageCount" @click="modCurrentPage++">
-                Next &raquo;
-              </a-button>
-            </div>
-          </div>
+        <!-- ── PLUGINS / MODULES ── -->
+        <div v-if="activeSection === 'plugins' || activeSection === 'modules'">
+          <ModulesView />
         </div>
 
         <!-- ── EMAIL TEMPLATES ── -->
@@ -516,6 +222,94 @@
 
       </div><!-- .setup-content -->
     </div><!-- .setup-layout -->
+
+    <!-- Permissions Explained Modal -->
+    <a-modal v-model:open="showPermissionsInfo" title="Staff Permissions Explained" :width="760" :footer="null">
+      <div class="permissions-guide-content space-y-4 text-xs text-slate-600 max-h-[65vh] overflow-y-auto pr-2">
+        <div class="p-3 bg-blue-50 border border-blue-200 rounded text-blue-900 font-medium mb-3">
+          Permissions control what features and data staff members can view, create, edit, or delete across iBridge CRM.
+        </div>
+
+        <div class="perm-guide-item border-b border-slate-100 pb-3">
+          <h4 class="font-bold text-slate-800 text-sm mb-1">Invoices</h4>
+          <ul class="list-disc pl-4 space-y-1">
+            <li><strong>View (Global):</strong> All invoices.</li>
+            <li><strong>View (Own):</strong> Only invoices created by a staff member.</li>
+            <li><strong>Create:</strong> Create invoices.</li>
+            <li><strong>Edit:</strong> All (if View Global permission) and own.</li>
+            <li><strong>Delete:</strong> All (if View Global permission) and own.</li>
+          </ul>
+          <p class="text-[11px] text-slate-400 mt-1">Staff members can also view assigned invoices if allowed in Setup &rarr; Settings &rarr; Finance &rarr; Invoices.</p>
+        </div>
+
+        <div class="perm-guide-item border-b border-slate-100 pb-3">
+          <h4 class="font-bold text-slate-800 text-sm mb-1">Estimates</h4>
+          <ul class="list-disc pl-4 space-y-1">
+            <li><strong>View (Global):</strong> All estimates.</li>
+            <li><strong>View (Own):</strong> Only estimates created by the staff member.</li>
+            <li><strong>Create:</strong> Create estimates.</li>
+            <li><strong>Edit / Delete:</strong> All (if View Global permission) and own.</li>
+          </ul>
+        </div>
+
+        <div class="perm-guide-item border-b border-slate-100 pb-3">
+          <h4 class="font-bold text-slate-800 text-sm mb-1">Proposals</h4>
+          <ul class="list-disc pl-4 space-y-1">
+            <li><strong>View (Global):</strong> All proposals.</li>
+            <li><strong>View (Own):</strong> Only proposals created by staff member.</li>
+            <li><strong>Create / Edit / Delete:</strong> Standard scope based on global vs own permissions.</li>
+          </ul>
+        </div>
+
+        <div class="perm-guide-item border-b border-slate-100 pb-3">
+          <h4 class="font-bold text-slate-800 text-sm mb-1">Expenses &amp; Contracts</h4>
+          <ul class="list-disc pl-4 space-y-1">
+            <li><strong>View (Global):</strong> All expenses / contracts.</li>
+            <li><strong>View (Own):</strong> Only expenses / contracts created by staff member.</li>
+            <li><strong>Create / Edit / Delete:</strong> Scoped permissions.</li>
+          </ul>
+        </div>
+
+        <div class="perm-guide-item border-b border-slate-100 pb-3">
+          <h4 class="font-bold text-slate-800 text-sm mb-1">Payments</h4>
+          <ul class="list-disc pl-4 space-y-1">
+            <li><strong>View (Global):</strong> All payments.</li>
+            <li><strong>View (Own):</strong> Based on invoices View (Own) permissions.</li>
+            <li><strong>Create / Edit / Delete:</strong> Scoped to invoice permissions.</li>
+          </ul>
+        </div>
+
+        <div class="perm-guide-item border-b border-slate-100 pb-3">
+          <h4 class="font-bold text-slate-800 text-sm mb-1">Projects &amp; Tasks</h4>
+          <ul class="list-disc pl-4 space-y-1">
+            <li><strong>Projects View (Own):</strong> Allows viewing projects where staff member is added as project member.</li>
+            <li><strong>Tasks View (Own):</strong> Allows viewing tasks assigned, followed, or public tasks.</li>
+          </ul>
+        </div>
+
+        <div class="perm-guide-item border-b border-slate-100 pb-3">
+          <h4 class="font-bold text-slate-800 text-sm mb-1">Customers</h4>
+          <ul class="list-disc pl-4 space-y-1">
+            <li><strong>View (Own):</strong> Based on Customer Admin assignment.</li>
+            <li><strong>Create:</strong> Auto-adds staff as Customer Admin if lacking View Global.</li>
+          </ul>
+        </div>
+
+        <div class="perm-guide-item border-b border-slate-100 pb-3">
+          <h4 class="font-bold text-slate-800 text-sm mb-1">Leads</h4>
+          <ul class="list-disc pl-4 space-y-1">
+            <li><strong>View (Global):</strong> If unchecked, staff only view assigned, created, or public leads.</li>
+            <li><strong>Create / Edit:</strong> All staff members can create &amp; edit accessible leads.</li>
+            <li><strong>Delete:</strong> Staff members delete own leads only.</li>
+          </ul>
+        </div>
+
+        <div class="perm-guide-item pb-1">
+          <h4 class="font-bold text-slate-800 text-sm mb-1">Other Modules &amp; Permissions</h4>
+          <p class="text-xs text-slate-600">Items, Knowledge Base, Goals, Email Templates, Reports, Roles, Settings, Staff, Surveys, Bulk PDF Exporter, and Support Tickets function with standard View (Global/Own), Create, Edit, and Delete capability levels.</p>
+        </div>
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -555,6 +349,8 @@ import GdprView from './setup/Gdpr.vue';
 import RolesView from './setup/Roles.vue';
 import ThemeStyleView from './setup/ThemeStyle.vue';
 import SettingsView from './setup/Settings.vue';
+import ModulesView from './setup/Modules.vue';
+import { getPermission, setPermission, isUserAdminRole } from '../utils/permissions';
 
 export default defineComponent({
   name: 'SetupPage',
@@ -587,6 +383,7 @@ export default defineComponent({
     RolesView,
     ThemeStyleView,
     SettingsView,
+    ModulesView,
   },
   setup() {
     const router = useRouter();
@@ -755,11 +552,11 @@ export default defineComponent({
     const staffTotal = ref(0);
     const staffLoading = ref(false);
     const staffSearch = ref('');
-    const openAddStaff = ref(false);
     const staffSaving = ref(false);
     const editingStaff = ref(false);
     const staffActiveTab = ref('profile');
     const staffRoles = ref([]);
+    const showPermissionsInfo = ref(false);
 
     const staffForm = reactive({
       id: null, first_name: '', last_name: '', email: '', password: '', password_confirmation: '',
@@ -777,122 +574,176 @@ export default defineComponent({
     ];
 
     const featureList = [
-      { key: 'Bulk PDF Export', label: 'Bulk PDF Export', caps: [{ key: 'view_global', type: 'checkbox' }] },
+      { key: 'Bulk PDF Export', label: 'Bulk PDF Export', caps: [
+        { key: 'view_global', label: 'View(Global)' },
+      ]},
       { key: 'Contracts', label: 'Contracts', caps: [
-        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
-        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
-        { key: 'view_all_templates', type: 'label', label: 'View All Templates' },
+        { key: 'view_own', label: 'View (Own)' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
+        { key: 'view_all_templates', label: 'View All Templates' },
       ]},
       { key: 'Credit Notes', label: 'Credit Notes', caps: [
-        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
-        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'view_own', label: 'View (Own)' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
       ]},
       { key: 'Customers', label: 'Customers', caps: [
-        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
-        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'view_own', label: 'View (Own)', tooltip: 'Based on customer admin assignment' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
       ]},
       { key: 'Email Templates', label: 'Email Templates', caps: [
-        { key: 'view_global', type: 'checkbox' }, { key: 'edit', type: 'checkbox' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'edit', label: 'Edit' },
       ]},
       { key: 'Estimates', label: 'Estimates', caps: [
-        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
-        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'view_own', label: 'View (Own)' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
       ]},
       { key: 'Expenses', label: 'Expenses', caps: [
-        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
-        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'view_own', label: 'View (Own)' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
       ]},
       { key: 'Invoices', label: 'Invoices', caps: [
-        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
-        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'view_own', label: 'View (Own)' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
       ]},
       { key: 'Items', label: 'Items', caps: [
-        { key: 'view_global', type: 'checkbox' }, { key: 'create', type: 'checkbox' },
-        { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
       ]},
       { key: 'Knowledge Base', label: 'Knowledge Base', caps: [
-        { key: 'view_global', type: 'checkbox' }, { key: 'create', type: 'checkbox' },
-        { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
       ]},
       { key: 'Payments', label: 'Payments', caps: [
-        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
-        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'view_own', label: 'View (Own)', tooltip: 'Based on invoices View (Own) permissions' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
       ]},
       { key: 'Projects', label: 'Projects', caps: [
-        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
-        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
-        { key: 'create_timesheets', type: 'label', label: 'Create Timesheets' },
-        { key: 'edit_milestones', type: 'label', label: 'Edit Milestones' },
-        { key: 'delete_milestones', type: 'label', label: 'Delete Milestones' },
+        { key: 'view_own', label: 'View (Own)', tooltip: 'Only projects where staff member is added as project member' },
+        { key: 'view_global', label: 'View(Global)', tooltip: 'All projects' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
+        { key: 'create_timesheets', label: 'Create Timesheets' },
+        { key: 'edit_milestones', label: 'Edit Milestones' },
+        { key: 'delete_milestones', label: 'Delete Milestones' },
       ]},
       { key: 'Proposals', label: 'Proposals', caps: [
-        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
-        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
-        { key: 'view_all_templates', type: 'label', label: 'View All Templates' },
+        { key: 'view_own', label: 'View (Own)' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
+        { key: 'view_all_templates', label: 'View All Templates' },
       ]},
       { key: 'Reports', label: 'Reports', caps: [
-        { key: 'view_global', type: 'checkbox' }, { key: 'view_timesheets', type: 'label', label: 'View Timesheets Report' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'view_timesheets', label: 'View Timesheets Report' },
       ]},
       { key: 'Staff Roles', label: 'Staff Roles', caps: [
-        { key: 'view_global', type: 'checkbox' }, { key: 'create', type: 'checkbox' },
-        { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
       ]},
       { key: 'Settings', label: 'Settings', caps: [
-        { key: 'view_global', type: 'checkbox' }, { key: 'edit', type: 'checkbox' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'edit', label: 'Edit' },
       ]},
       { key: 'Staff', label: 'Staff', caps: [
-        { key: 'view_global', type: 'checkbox' }, { key: 'create', type: 'checkbox' },
-        { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
       ]},
       { key: 'Subscriptions', label: 'Subscriptions', caps: [
-        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
-        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'view_own', label: 'View (Own)' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
       ]},
       { key: 'Tasks', label: 'Tasks', caps: [
-        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
-        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
-        { key: 'edit_timesheets_global', type: 'label', label: 'Edit Timesheets (Global)' },
-        { key: 'edit_own_timesheets', type: 'label', label: 'Edit Own Timesheets' },
-        { key: 'delete_timesheets_global', type: 'label', label: 'Delete Timesheets (Global)' },
-        { key: 'delete_own_timesheets', type: 'label', label: 'Delete own Timesheets' },
+        { key: 'view_own', label: 'View (Own)', tooltip: 'Only tasks assigned, followed or public' },
+        { key: 'view_global', label: 'View(Global)', tooltip: 'All tasks' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
+        { key: 'edit_timesheets_global', label: 'Edit Timesheets (Global)' },
+        { key: 'edit_own_timesheets', label: 'Edit Own Timesheets' },
+        { key: 'delete_timesheets_global', label: 'Delete Timesheets (Global)' },
+        { key: 'delete_own_timesheets', label: 'Delete own Timesheets' },
       ]},
       { key: 'Task Checklist Templates', label: 'Task Checklist Templates', caps: [
-        { key: 'create', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'create', label: 'Create' },
+        { key: 'delete', label: 'Delete' },
       ]},
       { key: 'Estimate Request', label: 'Estimate Request', caps: [
-        { key: 'view_own', type: 'checkbox' }, { key: 'view_global', type: 'checkbox' },
-        { key: 'create', type: 'checkbox' }, { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'view_own', label: 'View (Own)' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
       ]},
       { key: 'Leads', label: 'Leads', caps: [
-        { key: 'view_global', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'view_global', label: 'View(Global)', tooltip: 'If unchecked, staff member only views assigned, created or public leads' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
       ]},
       { key: 'Surveys', label: 'Surveys', caps: [
-        { key: 'view_global', type: 'checkbox' }, { key: 'create', type: 'checkbox' },
-        { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
       ]},
       { key: 'e-Invoice', label: 'e-Invoice', caps: [
-        { key: 'bulk_export', type: 'label', label: 'Bulk export' },
+        { key: 'bulk_export', label: 'Bulk export' },
       ]},
       { key: 'Goals', label: 'Goals', caps: [
-        { key: 'view_global', type: 'checkbox' }, { key: 'create', type: 'checkbox' },
-        { key: 'edit', type: 'checkbox' }, { key: 'delete', type: 'checkbox' },
+        { key: 'view_global', label: 'View(Global)' },
+        { key: 'create', label: 'Create' },
+        { key: 'edit', label: 'Edit' },
+        { key: 'delete', label: 'Delete' },
       ]},
     ];
 
     const isStaffAdminRole = computed(() => {
       const r = staffRoles.value.find(x => x.id === staffForm.role_id);
-      return r?.slug === 'admin';
+      return isUserAdminRole(r);
     });
 
     const getStaffPerm = (feature, cap) => {
-      const perms = staffForm.permissions || {};
-      return perms[feature]?.[cap] ?? false;
+      return getPermission(staffForm.permissions, feature, cap);
     };
 
     const setStaffPerm = (feature, cap, val) => {
-      if (!staffForm.permissions) staffForm.permissions = {};
-      if (!staffForm.permissions[feature]) staffForm.permissions[feature] = {};
-      staffForm.permissions[feature][cap] = val;
+      setPermission(staffForm.permissions, feature, cap, val);
     };
 
     const toggleStaffAdmin = (e) => {
@@ -954,10 +805,11 @@ export default defineComponent({
 
     const loadRoles = async () => {
       try {
-        const { data } = await axios.get('/api/roles');
-        staffRoles.value = data;
+        const res = await axios.get('/api/roles');
+        const roleData = res.data?.data || res.data || [];
+        staffRoles.value = Array.isArray(roleData) ? roleData : [];
       } catch (e) {
-        console.error('Failed to load roles', e);
+        console.error('Error loading roles:', e);
       }
     };
 
@@ -1066,20 +918,25 @@ export default defineComponent({
 
     const formatLastLogin = (date) => {
       if (!date) return 'Never';
-      const diff = Math.floor((Date.now() - new Date(date)) / 1000);
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return 'Never';
+      const diff = Math.floor((Date.now() - d.getTime()) / 1000);
       if (diff < 60) return 'Just now';
       if (diff < 3600) return Math.floor(diff / 60) + ' minutes ago';
       if (diff < 86400) return Math.floor(diff / 3600) + ' hours ago';
       if (diff < 2592000) return Math.floor(diff / 86400) + ' days ago';
-      return new Date(date).toLocaleDateString();
+      return d.toLocaleDateString();
+    };
+
+    const openAddStaff = () => {
+      router.push('/admin/setup/staff/member');
     };
 
     const viewingStaff = ref(null);
     const viewStaffModal = ref(false);
 
     const viewStaff = (record) => {
-      viewingStaff.value = record;
-      viewStaffModal.value = true;
+      router.push(`/admin/setup/staff/${record.id}`);
     };
 
     // ── Settings data ──────────────────────────────
@@ -1095,6 +952,7 @@ export default defineComponent({
     const moduleFileName = ref('');
     const modulesLoading = ref(false);
     const uploadLoading = ref(false);
+    const syncLoading = ref(false);
     const modActionLoading = ref(new Set());
     const moduleFileInput = ref(null);
 
@@ -1196,9 +1054,46 @@ export default defineComponent({
         await moduleStore.fetchActiveModules(true);
         await moduleStore.fetchActiveMenus(true);
       } catch (e) {
-        message.error(e.response?.data?.message || 'Upload failed');
+        const data = e.response?.data;
+        let errMsg = 'Upload failed';
+        if (data) {
+          if (data.message && typeof data.message === 'string') {
+            errMsg = data.message;
+          } else if (data.errors && typeof data.errors === 'object') {
+            const firstKey = Object.keys(data.errors)[0];
+            if (firstKey && Array.isArray(data.errors[firstKey])) {
+              errMsg = data.errors[firstKey][0];
+            }
+          }
+        }
+        message.error(errMsg);
       } finally {
         uploadLoading.value = false;
+      }
+    };
+
+    const syncFromDisk = async () => {
+      syncLoading.value = true;
+      try {
+        const res = await axios.post('/plugins/sync-filesystem');
+        const synced = res.data?.synced || [];
+        const errors = res.data?.errors || [];
+        if (synced.length > 0) {
+          message.success(`Synced ${synced.length} plugin(s): ${synced.map(s => s.name).join(', ')}`);
+        } else {
+          message.info('All filesystem plugins are already registered.');
+        }
+        if (errors.length > 0) {
+          errors.forEach(e => message.warning(`${e.alias}: ${e.error}`));
+        }
+        fetchModules();
+        const moduleStore = useModuleStore();
+        await moduleStore.fetchActiveModules(true);
+        await moduleStore.fetchActiveMenus(true);
+      } catch (e) {
+        message.error(e.response?.data?.message || 'Sync failed');
+      } finally {
+        syncLoading.value = false;
       }
     };
 
@@ -1279,6 +1174,15 @@ export default defineComponent({
       }
     };
 
+    const handleSwitchChange = async (mod, checked) => {
+      const action = checked ? 'Activate' : 'Deactivate';
+      await handleModuleAction(mod, action);
+    };
+
+    const secondaryActions = (mod) => {
+      return (mod.actions || []).filter(act => act !== 'Activate' && act !== 'Deactivate');
+    };
+
 
 
 
@@ -1286,7 +1190,7 @@ export default defineComponent({
 
 
     const helpItems = [
-      { title: 'Documentation', desc: 'Read the full documentation for Perfex CRM setup and usage guides.', link: '#', icon: iconSvg('help') },
+      { title: 'Documentation', desc: 'Read the full documentation for iBridge CRM setup and usage guides.', link: '#', icon: iconSvg('help') },
       { title: 'Video Tutorials', desc: 'Watch step-by-step video tutorials for key features.', link: '#', icon: iconSvg('theme') },
       { title: 'Submit Ticket', desc: 'Open a support ticket for technical issues or feature requests.', link: '#', icon: iconSvg('email') },
     ];
@@ -1304,14 +1208,14 @@ export default defineComponent({
     return {
       activeSection, activeSubSection, sections,
       staffList, staffTotal, staffLoading, staffSearch, staffColumns,
-      openAddStaff, staffForm, staffSaving, editingStaff, staffActiveTab, staffRoles,
+      openAddStaff, staffForm, staffSaving, editingStaff, staffActiveTab, staffRoles, showPermissionsInfo,
       allCapabilities, featureList, isStaffAdminRole,
       getStaffPerm, setStaffPerm, toggleStaffAdmin, onStaffRoleChange, onStaffFileChange, avatarColor,
       loadStaff, loadRoles, editStaffMember, saveStaff, deleteStaff, resetStaffForm, initials,
       formatLastLogin, viewingStaff, viewStaffModal, viewStaff,
       modules, filteredModules, paginatedModules, modulesLoading,
       modSearch, modPerPage, modCurrentPage, modPageCount, modPageNumbers,
-      moduleFileName, uploadLoading, modLoading, onModuleFileChange, uploadModule, handleModuleAction,
+      moduleFileName, uploadLoading, syncLoading, modLoading, onModuleFileChange, uploadModule, syncFromDisk, handleModuleAction, handleSwitchChange, secondaryActions,
       helpItems,
       saveSettings, navigateToSection,
     };
@@ -1366,6 +1270,10 @@ function iconSvg(type) {
   border-radius: 8px;
   overflow: hidden;
   min-height: 600px;
+}
+.setup-layout--themed {
+  background: transparent;
+  border: none;
 }
 
 
@@ -1606,6 +1514,78 @@ function iconSvg(type) {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+}
+.mod-info-cell {
+  vertical-align: top;
+}
+.mod-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mod-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+.mod-desc-text {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+}
+.mod-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #64748b;
+  font-size: 11px;
+}
+.mod-meta-sep {
+  color: #cbd5e1;
+  padding: 0 4px;
+}
+.mod-actions-cell {
+  vertical-align: middle;
+  text-align: center;
+}
+.mod-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.mod-action-link {
+  font-size: 12px;
+  color: #4f46e5;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.12s;
+}
+.mod-action-link:hover { color: #3730a3; text-decoration: underline; }
+.mod-action-link--danger { color: #ef4444 !important; }
+.mod-action-link--danger:hover { color: #b91c1c !important; }
+.mod-action-sep {
+  color: #cbd5e1;
+  font-size: 11px;
+  padding: 0 1px;
+}
+.mod-action-spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #cbd5e1;
+  border-top-color: #64748b;
+  border-radius: 50%;
+  animation: mod-spin 0.6s linear infinite;
+}
+@keyframes mod-spin {
+  to { transform: rotate(360deg); }
+}
+.mod-version {
+  font-size: 11.5px;
+  color: #94a3b8;
+  margin-top: 4px;
+  font-style: italic;
 }
 .mod-file-label {
   display: inline-flex;

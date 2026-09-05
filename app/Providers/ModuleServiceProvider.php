@@ -132,7 +132,10 @@ class ModuleServiceProvider extends ServiceProvider
         });
 
         // 2. Load global WordPress-style actions/filters helper functions
-        require_once app_path('Plugin/Hooks/helpers.php');
+        $helpersPath = app_path('Plugin/Hooks/helpers.php');
+        if (@is_readable($helpersPath)) {
+            require_once $helpersPath;
+        }
 
         // 3. Register PSR-4 autoloader namespaces for active modules
         $activeModules = $this->getActiveModules();
@@ -189,24 +192,37 @@ class ModuleServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // 1. Bootstrap dynamically registered commands
-        $this->app->make(\App\Plugin\Registries\CommandRegistry::class)->bootstrap();
+        try {
+            // 1. Bootstrap dynamically registered commands
+            if (class_exists(\App\Plugin\Registries\CommandRegistry::class)) {
+                $this->app->make(\App\Plugin\Registries\CommandRegistry::class)->bootstrap();
+            }
 
-        // 2. Bootstrap dynamic scheduler bindings when Scheduler resolves
-        if ($this->app->runningInConsole()) {
-            $this->app->resolving(\Illuminate\Console\Scheduling\Schedule::class, function ($schedule) {
-                $this->app->make(\App\Plugin\Registries\SchedulerRegistry::class)->bootstrap($schedule);
-            });
-        }
+            // 2. Bootstrap dynamic scheduler bindings when Scheduler resolves
+            if ($this->app->runningInConsole() && class_exists(\App\Plugin\Registries\SchedulerRegistry::class)) {
+                $this->app->resolving(\Illuminate\Console\Scheduling\Schedule::class, function ($schedule) {
+                    $this->app->make(\App\Plugin\Registries\SchedulerRegistry::class)->bootstrap($schedule);
+                });
+            }
 
-        // 3. Backward-compatible dynamic loading for legacy modules (without providers)
-        $registry = $this->app->make(\App\Plugin\Registries\PluginRegistry::class);
-        $activeModules = $this->getActiveModules();
+            // 3. Backward-compatible dynamic loading for legacy modules (without providers)
+            if (!class_exists(\App\Plugin\Registries\PluginRegistry::class)) {
+                return;
+            }
+
+            $registry = $this->app->make(\App\Plugin\Registries\PluginRegistry::class);
+            $activeModules = $this->getActiveModules();
 
         if (!empty($activeModules)) {
             foreach ($activeModules as $module) {
                 $moduleAlias = $module->alias;
                 $moduleName = $module->name;
+
+                // Ensure legacy CodeIgniter-style symlinks exist
+                try {
+                    \App\Services\ModuleManager::createLegacySymlink($moduleAlias);
+                } catch (\Exception $e) {}
+
                 $nsPrefix = $this->resolveNamespace($moduleAlias, $moduleName);
                 $alias = strtolower($moduleAlias);
                 $modulePath = $this->resolveModulePath($moduleAlias, $moduleName);
@@ -241,13 +257,11 @@ class ModuleServiceProvider extends ServiceProvider
                         $apiRoutesPath = "{$modulePath}/Routes/api.php";
                     }
                     if (file_exists($apiRoutesPath)) {
-                        Route::middleware('api')
+                        Route::middleware(['api', 'auth:sanctum'])
                             ->prefix('api')
                             ->namespace("Modules\\{$nsPrefix}\\Controllers\Api")
                             ->group($apiRoutesPath);
                     }
-
-                    // 2. Dynamic Views
                     $viewsPath = "{$modulePath}/Views";
                     if (is_dir($viewsPath)) {
                         $this->loadViewsFrom($viewsPath, $alias);
@@ -258,8 +272,28 @@ class ModuleServiceProvider extends ServiceProvider
                     if (is_dir($migrationsPath)) {
                         $this->loadMigrationsFrom($migrationsPath);
                     }
+
+                    // 4. Universal CodeIgniter / iBridge Hook & Helper Loader
+                    $entryCandidates = [
+                        "{$modulePath}/{$moduleAlias}.php",
+                        "{$modulePath}/" . str_replace('-', '_', $moduleAlias) . ".php",
+                    ];
+                    foreach ($entryCandidates as $entryFile) {
+                        if (file_exists($entryFile)) {
+                            try {
+                                require_once base_path('app/Services/CICompatLayer.php');
+                                require_once $entryFile;
+                            } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::warning("[Module Hook Boot Error] Module '{$moduleAlias}': " . $e->getMessage());
+                            }
+                            break;
+                        }
+                    }
                 }
             }
+        }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("ModuleServiceProvider boot warning: " . $e->getMessage());
         }
     }
 

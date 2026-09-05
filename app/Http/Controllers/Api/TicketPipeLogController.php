@@ -32,7 +32,7 @@ class TicketPipeLogController extends Controller
             $query->whereDate('created_at', '<=', $request->input('to_date'));
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $logs = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return response()->json([

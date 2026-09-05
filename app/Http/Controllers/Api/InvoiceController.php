@@ -11,6 +11,10 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Invoices.view')) {
+            abort(403, 'Unauthorized. Missing required permission: Invoices.view');
+        }
+
         $query = Invoice::with('client:id,company', 'project:id,name');
 
         if ($request->filled('client_id')) {
@@ -29,7 +33,7 @@ class InvoiceController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $invoices = $query->orderBy('date', 'desc')->paginate($perPage);
 
         // Summary stats
@@ -53,6 +57,10 @@ class InvoiceController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Invoices.create')) {
+            abort(403, 'Unauthorized. Missing required permission: Invoices.create');
+        }
+
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
             'project_id'=> 'nullable|exists:projects,id',
@@ -101,10 +109,12 @@ class InvoiceController extends Controller
             'items.*.tax_rate'   => 'nullable|numeric|min:0|max:100',
         ]);
 
-        // Auto-generate invoice number if not given
+        // Auto-generate invoice number if not given (atomic to prevent race conditions)
         if (empty($validated['number'])) {
-            $last = Invoice::max('id') ?? 0;
-            $validated['number'] = 'INV-' . str_pad($last + 1, 5, '0', STR_PAD_LEFT);
+            $validated['number'] = \DB::transaction(function () {
+                $last = Invoice::max('id') ?? 0;
+                return 'INV-' . str_pad($last + 1, 5, '0', STR_PAD_LEFT);
+            });
         }
 
         $invoice = \DB::transaction(function() use ($validated) {
@@ -130,6 +140,10 @@ class InvoiceController extends Controller
 
     public function update(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Invoices.edit')) {
+            abort(403, 'Unauthorized. Missing required permission: Invoices.edit');
+        }
+
         $invoice = Invoice::find($id);
         if (!$invoice) return response()->json(['message' => 'Invoice not found'], 404);
 
@@ -194,8 +208,12 @@ class InvoiceController extends Controller
         return response()->json($invoice->load(['client', 'project:id,name']));
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Invoices.delete')) {
+            abort(403, 'Unauthorized. Missing required permission: Invoices.delete');
+        }
+
         $invoice = Invoice::find($id);
         if (!$invoice) return response()->json(['message' => 'Invoice not found'], 404);
         $invoice->delete();

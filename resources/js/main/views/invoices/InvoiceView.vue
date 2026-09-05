@@ -48,11 +48,14 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" style="margin-right:6px;vertical-align:middle"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                 Mark as Paid
               </a-menu-item>
-              <a-menu-item key="duplicate">
+              <a-menu-item key="duplicate" @click="duplicateInvoice">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" style="margin-right:6px;vertical-align:middle"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                 Duplicate Invoice
               </a-menu-item>
-              <a-menu-item key="credit">Credit Invoice</a-menu-item>
+              <a-menu-item key="credit" @click="creditInvoice">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" style="margin-right:6px;vertical-align:middle"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Credit / Cancel Invoice
+              </a-menu-item>
               <a-menu-divider />
               <a-menu-item key="delete" @click="confirmDelete" style="color:#ef4444">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" style="margin-right:6px;vertical-align:middle"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
@@ -101,7 +104,7 @@
               <div class="company-logo">
                 <svg viewBox="0 0 40 40" fill="none" width="36" height="36"><rect width="40" height="40" rx="8" fill="#3b82f6"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="18" font-weight="800" font-family="Inter,sans-serif">P</text></svg>
               </div>
-              <div class="company-name">Perfex Inc</div>
+              <div class="company-name">Ibridge Digital</div>
               <div class="company-addr">172 Ivy Club Gottliebfurt<br>New Heaven, Canada [CA] 2364</div>
             </div>
             <div class="doc-to">
@@ -1045,6 +1048,79 @@ export default defineComponent({
       }
     };
 
+    const duplicateInvoice = async () => {
+      if (!invoice.value) return;
+      try {
+        const payload = {
+          client_id: invoice.value.client_id,
+          project_id: invoice.value.project_id,
+          status: 'draft',
+          date: new Date().toISOString().slice(0, 10),
+          duedate: invoice.value.duedate || new Date().toISOString().slice(0, 10),
+          prevent_overdue_reminders: invoice.value.prevent_overdue_reminders || false,
+          allowed_payment_modes: invoice.value.allowed_payment_modes || '',
+          currency: invoice.value.currency || 'USD',
+          sale_agent: invoice.value.sale_agent || '',
+          recurring_type: invoice.value.recurring_type || 'no',
+          discount_type: invoice.value.discount_type || 'no_discount',
+          admin_note: invoice.value.admin_note || '',
+          qty_display_mode: invoice.value.qty_display_mode || 'qty',
+          client_note: invoice.value.client_note || '',
+          terms_conditions: invoice.value.terms_conditions || '',
+          subtotal: invoice.value.subtotal || 0,
+          discount_percent: invoice.value.discount_percent || 0,
+          discount_val: invoice.value.discount_val || 0,
+          tax: invoice.value.tax || 0,
+          adjustment: invoice.value.adjustment || 0,
+          total: invoice.value.total || 0,
+          notes: invoice.value.notes || '',
+          tags: invoice.value.tags || '',
+          billing_street: invoice.value.billing_street || '',
+          billing_city: invoice.value.billing_city || '',
+          billing_state: invoice.value.billing_state || '',
+          billing_zip: invoice.value.billing_zip || '',
+          billing_country: invoice.value.billing_country || '',
+          shipping_street: invoice.value.shipping_street || '',
+          shipping_city: invoice.value.shipping_city || '',
+          shipping_state: invoice.value.shipping_state || '',
+          shipping_zip: invoice.value.shipping_zip || '',
+          shipping_country: invoice.value.shipping_country || '',
+          items: (invoice.value.items || []).map(i => ({
+            description: i.description,
+            long_description: i.long_description || '',
+            qty: i.qty,
+            unit: i.unit || 'Unit',
+            rate: i.rate,
+            tax_rate: i.tax_rate || 0
+          }))
+        };
+        const res = await axios.post('/api/invoices', payload);
+        message.success(`Invoice duplicated as ${res.data.number || 'new invoice'}`);
+        router.push({ name: 'admin.invoices.view', params: { id: res.data.id } });
+      } catch (e) {
+        message.error(e.response?.data?.message || 'Failed to duplicate invoice');
+      }
+    };
+
+    const creditInvoice = () => {
+      if (!invoice.value) return;
+      Modal.confirm({
+        title: 'Credit / Cancel Invoice',
+        content: `Are you sure you want to mark ${invoice.value.number} as cancelled / credited?`,
+        okText: 'Credit Invoice',
+        cancelText: 'Cancel',
+        async onOk() {
+          try {
+            await axios.put(`/api/invoices/${invoice.value.id}`, { status: 'cancelled' });
+            message.success('Invoice marked as cancelled / credited');
+            loadInvoice();
+          } catch {
+            message.error('Failed to update invoice status');
+          }
+        }
+      });
+    };
+
     const confirmDelete = () => {
       Modal.confirm({
         title: 'Delete Invoice',
@@ -1128,7 +1204,7 @@ export default defineComponent({
       invoice, showPayModal, showEditModal,
       sideTab, sideTabs, payForm,
       totalPaid, amountDue, payPercent,
-      loadInvoice, downloadPDF, sendEmail, markAsPaid, confirmDelete, submitPayment,
+      loadInvoice, downloadPDF, sendEmail, markAsPaid, duplicateInvoice, creditInvoice, confirmDelete, submitPayment,
       isOverdue, statusLabel, formatCurrency, formatDate,
       
       showAddressOverrides,
@@ -1155,7 +1231,7 @@ export default defineComponent({
 /* ── Base ── */
 .invoice-view-page {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #f1f5f9;
+  background: #f8fafc;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -1166,14 +1242,15 @@ export default defineComponent({
   position: sticky;
   top: 0;
   z-index: 100;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 24px;
+  padding: 12px 28px;
   gap: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 .top-bar-left {
   display: flex;
@@ -1184,66 +1261,69 @@ export default defineComponent({
 .top-bar-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 .back-btn {
-  background: none;
+  background: #f1f5f9;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 6px 12px;
+  border-radius: 10px;
+  padding: 7px 14px;
   font-size: 12.5px;
-  font-weight: 500;
+  font-weight: 600;
   color: #475569;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-family: inherit;
-  transition: all 0.12s;
+  transition: all 0.15s ease;
   white-space: nowrap;
 }
-.back-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+.back-btn:hover { background: #e2e8f0; border-color: #cbd5e1; color: #1e293b; }
 
 .inv-title-group { display: flex; align-items: center; gap: 10px; }
-.inv-heading { font-size: 16px; font-weight: 700; color: #1e293b; }
+.inv-heading { font-size: 17px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px; }
 .project-ref {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   font-size: 11.5px;
-  color: #64748b;
-  background: #f1f5f9;
-  padding: 3px 8px;
-  border-radius: 4px;
+  font-weight: 600;
+  color: #4f46e5;
+  background: #eef2ff;
+  border: 1px solid #e0e7ff;
+  padding: 3px 10px;
+  border-radius: 8px;
 }
 
 /* Action Buttons */
 .action-btn {
   background: #fff;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 7px 13px;
+  border-radius: 10px;
+  padding: 7px 14px;
   font-size: 12.5px;
-  font-weight: 500;
-  color: #374151;
+  font-weight: 600;
+  color: #334155;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-family: inherit;
-  transition: all 0.12s;
+  transition: all 0.15s ease;
   white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
-.action-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+.action-btn:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
 
 /* PAY Button */
 .pay-btn {
-  background: linear-gradient(135deg, #16a34a, #15803d);
+  background: linear-gradient(135deg, #059669, #10b981);
   color: #fff;
   border: none;
-  border-radius: 6px;
-  padding: 8px 18px;
+  border-radius: 10px;
+  padding: 8px 20px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -1251,18 +1331,18 @@ export default defineComponent({
   align-items: center;
   gap: 6px;
   font-family: inherit;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
   white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(22,163,74,0.3);
+  box-shadow: 0 2px 8px rgba(16,185,129,0.3);
 }
 .pay-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #15803d, #166534);
+  background: linear-gradient(135deg, #047857, #059669);
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(22,163,74,0.35);
+  box-shadow: 0 4px 12px rgba(16,185,129,0.35);
 }
 .pay-btn:disabled {
-  background: #bbf7d0;
-  color: #16a34a;
+  background: #d1fae5;
+  color: #059669;
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
@@ -1272,17 +1352,17 @@ export default defineComponent({
 .status-badge {
   display: inline-block;
   padding: 3px 10px;
-  border-radius: 5px;
+  border-radius: 8px;
   font-size: 11.5px;
   font-weight: 700;
   text-transform: capitalize;
 }
-.status-unpaid         { background: #fee2e2; color: #dc2626; }
-.status-paid           { background: #dcfce7; color: #16a34a; }
-.status-partially_paid { background: #fef3c7; color: #d97706; }
-.status-overdue        { background: #ffedd5; color: #ea580c; }
-.status-draft          { background: #f1f5f9; color: #64748b; }
-.status-cancelled      { background: #f1f5f9; color: #94a3b8; }
+.status-unpaid         { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+.status-paid           { background: #dcfce7; color: #16a34a; border: 1px solid #86efac; }
+.status-partially_paid { background: #fef3c7; color: #d97706; border: 1px solid #fde68a; }
+.status-overdue        { background: #ffedd5; color: #ea580c; border: 1px solid #fed7aa; }
+.status-draft          { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+.status-cancelled      { background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; }
 
 /* ── Page Body ── */
 .page-loading {
@@ -1298,9 +1378,9 @@ export default defineComponent({
 }
 .page-body {
   display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 20px;
-  padding: 24px;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  padding: 28px;
   align-items: start;
 }
 
@@ -1309,9 +1389,9 @@ export default defineComponent({
 .invoice-doc {
   background: #fff;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 40px 48px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  border-radius: 20px;
+  padding: 44px 52px;
+  box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
   max-width: 900px;
   margin: 0 auto;
 }
@@ -1323,46 +1403,47 @@ export default defineComponent({
   align-items: flex-start;
   margin-bottom: 32px;
   padding-bottom: 24px;
-  border-bottom: 2px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
 }
 .doc-from {}
 .company-logo { margin-bottom: 10px; }
-.company-name { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 6px; }
-.company-addr { font-size: 12px; color: #64748b; line-height: 1.6; }
-.doc-to { text-align: right; }
-.doc-to-label { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
-.doc-to-name { font-size: 15px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.company-name { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
+.company-addr { font-size: 12px; color: #64748b; line-height: 1.65; font-weight: 500; }
+.doc-to { text-align: right; background: #f8fafc; padding: 14px 18px; border-radius: 14px; border: 1px solid #f1f5f9; min-width: 220px; }
+.doc-to-label { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+.doc-to-name { font-size: 15px; font-weight: 700; color: #4f46e5; margin-bottom: 4px; }
 .client-link {
-  color: #3b82f6;
+  color: #4f46e5;
   text-decoration: none;
   font-weight: 700;
   transition: color 0.12s;
 }
 .client-link:hover {
-  color: #2563eb;
+  color: #3730a3;
   text-decoration: underline;
 }
-.doc-to-addr { font-size: 12px; color: #64748b; }
+.doc-to-addr { font-size: 12px; color: #64748b; font-weight: 500; }
 
 /* Meta row */
 .doc-meta-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
-.doc-num { font-size: 26px; font-weight: 800; color: #3b82f6; letter-spacing: -0.5px; }
+.doc-num { font-size: 28px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px; }
 .doc-meta-right { text-align: right; }
 .meta-item { font-size: 12.5px; color: #64748b; margin-bottom: 4px; }
-.meta-label { font-weight: 600; color: #374151; }
-.due-overdue { color: #dc2626; font-weight: 700; }
+.meta-label { font-weight: 600; color: #475569; }
+.due-overdue { color: #dc2626; font-weight: 800; }
 .tag-pill {
   display: inline-block;
   background: #f1f5f9;
   color: #475569;
-  border-radius: 999px;
-  padding: 1px 7px;
+  border-radius: 6px;
+  padding: 2px 8px;
   font-size: 10.5px;
+  font-weight: 600;
   margin-left: 4px;
   border: 1px solid #e2e8f0;
 }
@@ -1371,40 +1452,44 @@ export default defineComponent({
 .doc-project-ref {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 12.5px;
-  color: #64748b;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 6px;
-  padding: 8px 12px;
-  margin-bottom: 20px;
+  font-weight: 500;
+  color: #312e81;
+  background: #eef2ff;
+  border: 1px solid #e0e7ff;
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin-bottom: 24px;
 }
 
 /* Items table */
 .items-table {
   width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 4px;
-  font-size: 13px;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 12px;
+  font-size: 12.5px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
 }
 .items-table th {
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 9px 10px;
+  background: #0f172a;
+  color: #fff;
+  padding: 12px 14px;
   text-align: left;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 700;
-  color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
-.item-row td { padding: 13px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
-.item-row:last-child td { border-bottom: 1px solid #e2e8f0; }
-.item-idx { color: #94a3b8; font-size: 12px; }
-.item-name { font-weight: 600; color: #1e293b; margin-bottom: 3px; }
-.item-desc { font-size: 11.5px; color: #64748b; line-height: 1.5; }
+.item-row td { padding: 14px; border-bottom: 1px solid #f1f5f9; vertical-align: top; background: #fff; }
+.item-row:hover td { background: #f8fafc; }
+.item-row:last-child td { border-bottom: none; }
+.item-idx { color: #94a3b8; font-size: 12px; font-weight: 600; }
+.item-name { font-weight: 700; color: #0f172a; margin-bottom: 3px; font-size: 12.5px; }
+.item-desc { font-size: 11.5px; color: #64748b; line-height: 1.5; font-weight: 500; }
 
 /* Totals */
 .totals-block {
@@ -1418,25 +1503,27 @@ export default defineComponent({
 .total-line {
   display: flex;
   justify-content: space-between;
-  width: 260px;
-  padding: 7px 12px;
-  font-size: 13px;
+  width: 280px;
+  padding: 9px 14px;
+  font-size: 12.5px;
   color: #475569;
   border-bottom: 1px solid #f1f5f9;
 }
-.total-line span:last-child { font-weight: 600; }
+.total-line span:last-child { font-weight: 700; color: #0f172a; }
 .total-grand {
   background: #f8fafc;
-  border-top: 2px solid #e2e8f0;
-  border-bottom: 2px solid #e2e8f0;
-  font-weight: 700;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 800;
   font-size: 14px;
-  color: #1e293b;
+  color: #0f172a;
+  border-radius: 8px;
+  margin: 4px 0;
 }
 .total-due {
   background: #fff;
-  font-weight: 800;
-  font-size: 15px;
+  font-weight: 900;
+  font-size: 16px;
   border: none;
   padding-top: 10px;
 }
@@ -1445,91 +1532,92 @@ export default defineComponent({
 .doc-notes {
   background: #fffbeb;
   border: 1px solid #fde68a;
-  border-radius: 8px;
-  padding: 14px 16px;
+  border-radius: 14px;
+  padding: 16px 20px;
   margin-bottom: 28px;
 }
-.doc-notes-title { font-weight: 700; font-size: 12px; color: #92400e; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-.doc-notes p { font-size: 13px; color: #374151; margin: 0; line-height: 1.6; }
+.doc-notes-title { font-weight: 800; font-size: 11px; color: #92400e; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.doc-notes p { font-size: 12.5px; color: #451a03; margin: 0; line-height: 1.6; font-weight: 500; }
 
 /* Signature */
 .doc-signature {
   display: flex;
-  gap: 40px;
+  gap: 48px;
   margin-bottom: 28px;
-  padding-top: 16px;
+  padding-top: 20px;
 }
 .sig-block { flex: 1; }
-.sig-line { border-bottom: 1px solid #334155; margin-bottom: 8px; height: 40px; }
-.sig-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+.sig-line { border-bottom: 2px dashed #cbd5e1; margin-bottom: 8px; height: 44px; }
+.sig-label { font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; text-align: center; }
 
 /* Footer */
 .doc-footer {
   text-align: center;
   font-size: 12.5px;
+  font-weight: 600;
   color: #94a3b8;
-  padding-top: 16px;
+  padding-top: 20px;
   border-top: 1px solid #f1f5f9;
 }
 
 /* ── Sidebar ── */
-.sidebar-column { display: flex; flex-direction: column; gap: 16px; }
+.sidebar-column { display: flex; flex-direction: column; gap: 20px; }
 .sidebar-card {
   background: #fff;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 18px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 .sidebar-card-title {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 800;
   color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 14px;
+  letter-spacing: 0.08em;
+  margin-bottom: 16px;
 }
 
 /* Payment summary */
-.payment-summary { margin-bottom: 14px; }
+.payment-summary { margin-bottom: 16px; }
 .ps-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 7px 0;
-  font-size: 13px;
+  padding: 8px 0;
+  font-size: 12.5px;
   color: #475569;
   border-bottom: 1px solid #f1f5f9;
 }
 .ps-row:last-child { border-bottom: none; }
-.ps-row-due { font-weight: 700; font-size: 14px; color: #1e293b; }
-.ps-val { font-weight: 700; }
+.ps-row-due { font-weight: 800; font-size: 14px; color: #0f172a; padding-top: 10px; }
+.ps-val { font-weight: 700; color: #0f172a; }
 .ps-val.paid { color: #16a34a; }
 
 /* Progress bar */
-.pay-progress-wrap { margin-bottom: 14px; }
+.pay-progress-wrap { margin-bottom: 16px; }
 .pay-progress-bar {
   height: 8px;
-  background: #e2e8f0;
+  background: #f1f5f9;
   border-radius: 999px;
   overflow: hidden;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 }
 .pay-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #16a34a, #22c55e);
+  background: linear-gradient(90deg, #10b981, #059669);
   border-radius: 999px;
   transition: width 0.5s ease;
 }
-.pay-progress-pct { font-size: 11px; color: #64748b; font-weight: 500; }
+.pay-progress-pct { font-size: 11px; color: #64748b; font-weight: 600; }
 
 .record-pay-btn {
   width: 100%;
-  background: linear-gradient(135deg, #16a34a, #15803d);
+  background: linear-gradient(135deg, #059669, #10b981);
   color: #fff;
   border: none;
-  border-radius: 6px;
-  padding: 10px;
+  border-radius: 10px;
+  padding: 11px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -1538,12 +1626,13 @@ export default defineComponent({
   justify-content: center;
   gap: 6px;
   font-family: inherit;
-  transition: all 0.15s;
-  box-shadow: 0 2px 8px rgba(22,163,74,0.25);
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.25);
 }
 .record-pay-btn:hover {
-  background: linear-gradient(135deg, #15803d, #166534);
-  box-shadow: 0 4px 12px rgba(22,163,74,0.35);
+  background: linear-gradient(135deg, #047857, #059669);
+  box-shadow: 0 4px 12px rgba(16,185,129,0.35);
+  transform: translateY(-1px);
 }
 .paid-stamp {
   display: flex;
@@ -1553,61 +1642,65 @@ export default defineComponent({
   color: #16a34a;
   font-weight: 700;
   font-size: 13px;
-  padding: 8px;
+  padding: 10px;
   background: #f0fdf4;
-  border-radius: 6px;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
 }
 
 /* Sidebar tabs */
 .sidebar-tabs-card { padding: 0; overflow: hidden; }
 .stabs {
   display: flex;
+  background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
+  padding: 4px;
+  gap: 4px;
 }
 .stab {
   flex: 1;
   background: none;
   border: none;
-  border-bottom: 2px solid transparent;
-  padding: 11px 8px;
+  padding: 8px 6px;
   font-size: 12px;
   font-weight: 600;
   color: #64748b;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.12s;
-  margin-bottom: -1px;
+  transition: all 0.15s ease;
+  border-radius: 8px;
 }
-.stab:hover { color: #334155; }
-.stab.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+.stab:hover { color: #1e293b; }
+.stab.active { background: #fff; color: #4f46e5; font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
 
 .side-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 30px 16px;
+  padding: 32px 16px;
   gap: 8px;
   color: #94a3b8;
-  font-size: 12.5px;
+  font-size: 12px;
+  font-weight: 500;
 }
 .side-empty p { margin: 0; }
 
 /* Payment history */
-.pay-history { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.pay-history { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .pay-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 7px;
   padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 10px;
 }
-.pay-item-mode { font-weight: 700; color: #1e293b; font-size: 12.5px; margin-bottom: 2px; }
+.pay-item-mode { font-weight: 700; font-size: 12px; color: #0f172a; }
 .pay-item-date { font-size: 11px; color: #64748b; }
-.pay-item-txn  { font-size: 10.5px; color: #94a3b8; margin-top: 2px; }
-.pay-item-amount { font-size: 14px; font-weight: 800; color: #16a34a; white-space: nowrap; }
+.pay-item-txn { font-size: 10px; color: #94a3b8; font-family: monospace; }
+.pay-item-amount { font-weight: 800; font-size: 12.5px; color: #0f172a; }
 
 /* Notes */
 .note-content { padding: 14px 16px; font-size: 13px; color: #374151; line-height: 1.6; }

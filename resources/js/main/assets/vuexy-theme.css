@@ -1,0 +1,1566 @@
+/* ==========================================================================
+   VUEXY MODERN ENTERPRISE DESIGN SYSTEM
+   Pixel-perfect styling matching official Vuexy Admin Dashboard
+   ========================================================================== */
+
+:root {
+  --vuexy-primary: #7367F0;
+  --vuexy-primary-rgb: 115, 103, 240;
+  --vuexy-success: #28C76F;
+  --vuexy-danger: #EA5455;
+  --vuexy-warning: #FF9F43;
+  --vuexy-info: #00CFE8;
+  --vuexy-secondary: #A8AAAE;
+  --vuexy-bg: #F8F7FA;
+  --vuexy-card-bg: #FFFFFF;
+  --vuexy-sidebar-bg: #FFFFFF;
+  --vuexy-text: #5D596C;
+  --vuexy-text-heading: #4B465C;
+  --vuexy-text-muted: #82808C;
+  --vuexy-border: #EBE9F1;
+  --vuexy-card-shadow: 0 2px 9px 0 rgba(47, 43, 61, 0.06);
+  --vuexy-floating-shadow: 0 4px 18px 0 rgba(47, 43, 61, 0.1);
+  --vuexy-radius: 8px;
+  --vuexy-radius-sm: 6px;
+  --vuexy-radius-lg: 12px;
+}
+
+/* Base Body in Vuexy Mode */
+body.theme-template-vuexy {
+  background-color: #F8F7FA !important;
+  color: #5D596C !important;
+  font-family: 'Public Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Hide Organic claymorphic waves */
+body.theme-template-vuexy .organic-bg-decor {
+  display: none !important;
+}
+
+/* App Shell Reset */
+.crm-app-shell.theme-template-vuexy {
+  background-color: #F8F7FA !important;
+  background-image: none !important;
+  display: flex !important;
+  height: 100vh !important;
+  width: 100vw !important;
+  overflow: hidden !important;
+  font-family: 'Public Sans', 'Inter', -apple-system, sans-serif !important;
+}
+
+/* ==========================================================================
+   VUEXY SIDEBAR NAVIGATION
+   ========================================================================== */
+
+.vuexy-sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  width: 260px !important;
+  background: #FFFFFF !important;
+  border-right: 1px solid #EBE9F1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  z-index: 1040 !important;
+  transition: width 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  box-shadow: 0 2px 10px 0 rgba(47, 43, 61, 0.04) !important;
+}
+
+.vuexy-sidebar--collapsed {
+  width: 80px !important;
+}
+
+/* Sidebar Brand Header */
+.vuexy-sidebar__header {
+  height: 64px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 18px !important;
+  border-bottom: 1px solid #F1F0F2 !important;
+}
+
+.vuexy-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  max-width: 190px !important;
+  overflow: hidden !important;
+}
+
+.vuexy-brand__logo {
+  width: 32px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.vuexy-brand__logo-img {
+  display: block !important;
+  object-fit: contain !important;
+  transition: all 0.25s ease !important;
+  max-height: 38px !important;
+}
+
+.vuexy-sidebar--collapsed .vuexy-brand__logo-img {
+  max-width: 32px !important;
+  max-height: 32px !important;
+}
+
+.vuexy-brand__text {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #4B465C !important;
+  letter-spacing: -0.3px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.skin-dark .vuexy-brand__text,
+.skin-semi-dark .vuexy-brand__text {
+  color: #CFCCE4 !important;
+}
+
+.vuexy-sidebar__toggle {
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  padding: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #A8AAAE !important;
+  border-radius: 50% !important;
+  transition: all 0.2s !important;
+}
+
+.vuexy-sidebar__toggle:hover {
+  background: rgba(115, 103, 240, 0.08) !important;
+  color: #7367F0 !important;
+}
+
+/* Sidebar Navigation Scroll Area */
+.vuexy-sidebar__nav {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding: 12px 0 24px 0 !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #DBDADE transparent !important;
+}
+
+.vuexy-sidebar__nav::-webkit-scrollbar {
+  width: 4px !important;
+}
+.vuexy-sidebar__nav::-webkit-scrollbar-thumb {
+  background: #DBDADE !important;
+  border-radius: 4px !important;
+}
+
+/* Menu Category Header */
+.vuexy-menu-header {
+  padding: 16px 20px 6px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.vuexy-menu-header__text {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.8px !important;
+  color: #A8AAAE !important;
+}
+
+.vuexy-menu-header__line {
+  display: none !important;
+}
+
+.vuexy-sidebar--collapsed .vuexy-menu-header {
+  padding: 16px 0 6px 0 !important;
+  justify-content: center !important;
+}
+.vuexy-sidebar--collapsed .vuexy-menu-header__text {
+  display: none !important;
+}
+.vuexy-sidebar--collapsed .vuexy-menu-header__line {
+  display: block !important;
+  width: 20px !important;
+  height: 1px !important;
+  background: #DBDADE !important;
+}
+
+/* Menu Items */
+.vuexy-menu-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  height: 42px !important;
+  margin: 2px 14px !important;
+  padding: 0 14px !important;
+  border-radius: 6px !important;
+  color: #5D596C !important;
+  text-decoration: none !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  border: none !important;
+  background: transparent !important;
+  width: calc(100% - 28px) !important;
+}
+
+.vuexy-menu-item:hover {
+  background: rgba(115, 103, 240, 0.08) !important;
+  color: var(--vuexy-primary, #7367F0) !important;
+}
+
+.vuexy-menu-item--active {
+  background: linear-gradient(72.47deg, var(--vuexy-primary, #7367F0) 22.16%, rgba(var(--vuexy-primary-rgb, 115, 103, 240), 0.8) 76.47%) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 6px 0 rgba(var(--vuexy-primary-rgb, 115, 103, 240), 0.48) !important;
+}
+
+.vuexy-menu-item--active .vuexy-menu-item__icon,
+.vuexy-menu-item--active .vuexy-menu-item__label,
+.vuexy-menu-item--active .vuexy-menu-item__chevron,
+.vuexy-menu-item--active span {
+  color: #FFFFFF !important;
+}
+
+.vuexy-menu-item__inner {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  overflow: hidden !important;
+}
+
+.vuexy-menu-item__icon {
+  width: 20px !important;
+  height: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #5D596C !important;
+  flex-shrink: 0 !important;
+}
+
+.vuexy-menu-item:hover .vuexy-menu-item__icon {
+  color: var(--vuexy-primary, #7367F0) !important;
+}
+
+.vuexy-menu-item__label {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-size: 14px !important;
+  color: inherit !important;
+}
+
+.vuexy-menu-item__badge {
+  padding: 2px 7px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  border-radius: 20px !important;
+  background: #EA5455 !important;
+  color: #FFFFFF !important;
+}
+
+.vuexy-menu-item__chevron {
+  width: 16px !important;
+  height: 16px !important;
+  color: #A8AAAE !important;
+  transition: transform 0.2s !important;
+  flex-shrink: 0 !important;
+}
+
+.vuexy-menu-item__chevron--open {
+  transform: rotate(90deg) !important;
+}
+
+/* Submenu */
+.vuexy-submenu {
+  margin: 2px 0 6px 0 !important;
+}
+
+.vuexy-submenu-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  height: 38px !important;
+  margin: 1px 14px 1px 24px !important;
+  padding: 0 14px !important;
+  border-radius: 6px !important;
+  color: #5D596C !important;
+  text-decoration: none !important;
+  font-size: 13.5px !important;
+  font-weight: 400 !important;
+  transition: all 0.2s !important;
+}
+
+.vuexy-submenu-bullet {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  border: 1.5px solid #A8AAAE !important;
+  background: transparent !important;
+  flex-shrink: 0 !important;
+  transition: all 0.2s !important;
+}
+
+.vuexy-submenu-item:hover {
+  color: var(--vuexy-primary, #7367F0) !important;
+}
+.vuexy-submenu-item:hover .vuexy-submenu-bullet {
+  border-color: var(--vuexy-primary, #7367F0) !important;
+  background: var(--vuexy-primary, #7367F0) !important;
+}
+
+.vuexy-submenu-item--active {
+  color: var(--vuexy-primary, #7367F0) !important;
+  font-weight: 600 !important;
+  background: rgba(var(--vuexy-primary-rgb, 115, 103, 240), 0.08) !important;
+}
+.vuexy-submenu-item--active .vuexy-submenu-bullet {
+  border-color: var(--vuexy-primary, #7367F0) !important;
+  background: var(--vuexy-primary, #7367F0) !important;
+  box-shadow: 0 0 0 3px rgba(var(--vuexy-primary-rgb, 115, 103, 240), 0.2) !important;
+}
+
+/* ==========================================================================
+   VUEXY MAIN WRAPPER & FLOATING NAVBAR
+   ========================================================================== */
+
+.vuexy-main-wrapper {
+  margin-left: 260px !important;
+  width: calc(100% - 260px) !important;
+  height: 100vh !important;
+  overflow-y: auto !important;
+  background: #F8F7FA !important;
+  display: flex !important;
+  flex-direction: column !important;
+  transition: margin-left 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), width 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.vuexy-main-wrapper--collapsed {
+  margin-left: 80px !important;
+  width: calc(100% - 80px) !important;
+}
+
+.vuexy-navbar-container {
+  padding: 16px 24px 0 24px !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1020 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.vuexy-navbar {
+  height: 58px !important;
+  background: #FFFFFF !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 9px 0 rgba(47, 43, 61, 0.08) !important;
+  border: 1px solid #EBE9F1 !important;
+  padding: 0 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.vuexy-navbar__left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex: 1 !important;
+}
+
+.vuexy-search-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  color: #A8AAAE !important;
+  font-size: 14px !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 6px 10px !important;
+  border-radius: 6px !important;
+  max-width: 320px !important;
+  width: 100% !important;
+}
+
+.vuexy-search-btn input {
+  color: #4B465C !important;
+}
+.vuexy-search-btn input::placeholder {
+  color: #A8AAAE !important;
+}
+
+.vuexy-search-btn__key {
+  padding: 2px 6px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  background: #F1F0F2 !important;
+  border-radius: 4px !important;
+  border: 1px solid #DBDADE !important;
+  color: #7B7887 !important;
+  margin-left: auto !important;
+}
+
+.vuexy-navbar__right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.vuexy-nav-icon-btn {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 50% !important;
+  border: none !important;
+  background: transparent !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #5D596C !important;
+  cursor: pointer !important;
+  position: relative !important;
+  transition: all 0.2s !important;
+}
+
+.vuexy-nav-icon-btn:hover {
+  background: rgba(115, 103, 240, 0.08) !important;
+  color: var(--vuexy-primary, #7367F0) !important;
+}
+
+.vuexy-nav-icon-btn__badge {
+  position: absolute !important;
+  top: 7px !important;
+  right: 7px !important;
+  width: 7px !important;
+  height: 7px !important;
+  background: #EA5455 !important;
+  border-radius: 50% !important;
+  border: 1.5px solid #FFFFFF !important;
+}
+
+.vuexy-avatar-wrap {
+  position: relative !important;
+  cursor: pointer !important;
+  margin-left: 8px !important;
+}
+
+.vuexy-avatar {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  border: 2px solid #FFFFFF !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.vuexy-avatar-status {
+  position: absolute !important;
+  bottom: 0 !important;
+  right: 0 !important;
+  width: 10px !important;
+  height: 10px !important;
+  background: #28C76F !important;
+  border: 2px solid #FFFFFF !important;
+  border-radius: 50% !important;
+}
+
+/* ==========================================================================
+   VUEXY CONTENT & CARDS
+   ========================================================================== */
+
+.vuexy-content {
+  padding: 24px !important;
+  flex: 1 !important;
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+}
+
+.vuexy-card,
+.theme-template-vuexy .card,
+.theme-template-vuexy .summary-card,
+.theme-template-vuexy .stat-card,
+.theme-template-vuexy .overview-col,
+.theme-template-vuexy .donut-card,
+.theme-template-vuexy .chart-card,
+.theme-template-vuexy .progress-card,
+.theme-template-vuexy .activity-panel,
+.theme-template-vuexy .goals-panel,
+.theme-template-vuexy .events-card,
+.theme-template-vuexy .ant-card,
+.theme-template-vuexy .ant-card-bordered,
+.theme-template-vuexy .ant-card-body {
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 9px 0 rgba(47, 43, 61, 0.06) !important;
+  border: 1px solid #EBE9F1 !important;
+  padding: 20px !important;
+  position: relative !important;
+  transition: box-shadow 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+
+.vuexy-card:hover,
+.theme-template-vuexy .card:hover,
+.theme-template-vuexy .summary-card:hover,
+.theme-template-vuexy .stat-card:hover,
+.theme-template-vuexy .overview-col:hover {
+  box-shadow: 0 4px 16px 0 rgba(47, 43, 61, 0.09) !important;
+}
+
+.vuexy-card__header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 14px !important;
+}
+
+.vuexy-card__title {
+  font-size: 15.5px !important;
+  font-weight: 600 !important;
+  color: #4B465C !important;
+  margin: 0 !important;
+}
+
+.vuexy-card__subtitle {
+  font-size: 12px !important;
+  color: #A8AAAE !important;
+  margin-top: 2px !important;
+}
+
+.vuexy-card__action-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #A8AAAE !important;
+  cursor: pointer !important;
+  padding: 4px !important;
+  border-radius: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s !important;
+}
+
+.vuexy-card__action-btn:hover {
+  background: rgba(115, 103, 240, 0.08) !important;
+  color: #7367F0 !important;
+}
+
+/* Status Pills */
+.vuexy-badge-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  text-transform: capitalize !important;
+}
+
+/* ========================================================================= */
+/* VUEXY UNIVERSAL FORM CONTROLS & INPUT BOXES                               */
+/* ========================================================================= */
+.theme-template-vuexy .ant-form-item-label > label,
+body.theme-template-vuexy label {
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: #4B465C !important;
+  height: auto !important;
+  margin-bottom: 4px !important;
+}
+
+.theme-template-vuexy .ant-input,
+.theme-template-vuexy .ant-input-affix-wrapper,
+.theme-template-vuexy .ant-input-password,
+.theme-template-vuexy .ant-input-number,
+.theme-template-vuexy .ant-select:not(.ant-select-customize-input) .ant-select-selector,
+.theme-template-vuexy .ant-picker,
+body.theme-template-vuexy input[type="text"]:not(.vuexy-checkbox),
+body.theme-template-vuexy input[type="email"],
+body.theme-template-vuexy input[type="password"],
+body.theme-template-vuexy textarea,
+body.theme-template-vuexy select {
+  background-color: #FFFFFF !important;
+  border: 1px solid #DBDADE !important;
+  border-radius: 6px !important;
+  color: #4B465C !important;
+  font-size: 13.5px !important;
+  font-family: inherit !important;
+  box-shadow: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.theme-template-vuexy .ant-input {
+  min-height: 38px !important;
+  padding: 7px 12px !important;
+}
+
+.theme-template-vuexy .ant-input-affix-wrapper {
+  min-height: 38px !important;
+  padding: 0 12px !important;
+}
+
+.theme-template-vuexy .ant-input-affix-wrapper input.ant-input {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.theme-template-vuexy .ant-input:focus,
+.theme-template-vuexy .ant-input-focused,
+.theme-template-vuexy .ant-input-affix-wrapper:focus,
+.theme-template-vuexy .ant-input-affix-wrapper-focused,
+.theme-template-vuexy .ant-input-number:focus,
+.theme-template-vuexy .ant-input-number-focused,
+.theme-template-vuexy .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector,
+.theme-template-vuexy .ant-picker-focused,
+body.theme-template-vuexy input[type="text"]:focus,
+body.theme-template-vuexy input[type="email"]:focus,
+body.theme-template-vuexy input[type="password"]:focus,
+body.theme-template-vuexy textarea:focus,
+body.theme-template-vuexy select:focus {
+  border-color: #7367F0 !important;
+  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.16) !important;
+  outline: 0 !important;
+}
+
+.theme-template-vuexy .ant-input::placeholder,
+.theme-template-vuexy .ant-select-selection-placeholder,
+body.theme-template-vuexy input::placeholder,
+body.theme-template-vuexy textarea::placeholder {
+  color: #A8AAAE !important;
+  font-size: 13px !important;
+}
+
+/* Ant Select Single Mode */
+.theme-template-vuexy .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+  min-height: 38px !important;
+  height: 38px !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 12px !important;
+}
+
+.theme-template-vuexy .ant-select-single .ant-select-selection-item,
+.theme-template-vuexy .ant-select-single .ant-select-selection-placeholder {
+  line-height: 36px !important;
+  font-size: 13.5px !important;
+  color: #4B465C !important;
+}
+
+.theme-template-vuexy .ant-select-single .ant-select-selection-placeholder {
+  color: #A8AAAE !important;
+}
+
+/* Ant Select Multiple & Tags Mode */
+.theme-template-vuexy .ant-select-multiple:not(.ant-select-customize-input) .ant-select-selector {
+  min-height: 38px !important;
+  height: auto !important;
+  padding: 3px 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+}
+
+.theme-template-vuexy .ant-select-multiple .ant-select-selection-item {
+  height: 26px !important;
+  line-height: 24px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  background: rgba(115, 103, 240, 0.1) !important;
+  color: #7367F0 !important;
+  border: 1px solid rgba(115, 103, 240, 0.2) !important;
+  border-radius: 4px !important;
+  padding: 0 8px !important;
+  margin: 2px 4px 2px 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.theme-template-vuexy .ant-select-multiple .ant-select-selection-item-content {
+  font-size: 12px !important;
+  line-height: 24px !important;
+  color: #7367F0 !important;
+  display: inline-block !important;
+}
+
+.theme-template-vuexy .ant-select-multiple .ant-select-selection-item-remove {
+  display: inline-flex !important;
+  align-items: center !important;
+  color: #7367F0 !important;
+  font-size: 12px !important;
+  margin-left: 2px !important;
+  cursor: pointer !important;
+}
+
+.theme-template-vuexy .ant-select-multiple .ant-select-selection-item-remove:hover {
+  color: #EA5455 !important;
+}
+
+.theme-template-vuexy .ant-select-multiple .ant-select-selection-placeholder {
+  line-height: 30px !important;
+  padding: 0 4px !important;
+  font-size: 13px !important;
+  color: #A8AAAE !important;
+}
+
+.theme-template-vuexy .ant-select-multiple .ant-select-selection-search {
+  margin-inline-start: 2px !important;
+}
+
+.vuexy-badge-pill--current,
+.vuexy-badge-pill--primary {
+  background: rgba(115, 103, 240, 0.12) !important;
+  color: #7367F0 !important;
+}
+
+.vuexy-badge-pill--professional,
+.vuexy-badge-pill--success {
+  background: rgba(40, 199, 111, 0.12) !important;
+  color: #28C76F !important;
+}
+
+.vuexy-badge-pill--rejected,
+.vuexy-badge-pill--danger {
+  background: rgba(234, 84, 85, 0.12) !important;
+  color: #EA5455 !important;
+}
+
+.vuexy-badge-pill--resigned,
+.vuexy-badge-pill--warning {
+  background: rgba(255, 159, 67, 0.12) !important;
+  color: #FF9F43 !important;
+}
+
+.vuexy-badge-pill--applied,
+.vuexy-badge-pill--info {
+  background: rgba(0, 207, 232, 0.12) !important;
+  color: #00CFE8 !important;
+}
+
+.vuexy-badge-pill--secondary {
+  background: rgba(168, 170, 174, 0.12) !important;
+  color: #A8AAAE !important;
+}
+
+/* ========================================================================= */
+/* VUEXY MODERN DATA TABLES & UNIVERSAL APPLICATION TABLE OVERRIDES          */
+/* ========================================================================= */
+.vuexy-table-card,
+.theme-template-vuexy .table-card,
+.theme-template-vuexy .list-pane,
+.theme-template-vuexy .list-table-wrapper,
+.theme-template-vuexy .table-wrap,
+.theme-template-vuexy .table-responsive,
+.theme-template-vuexy .card.tabs-panel,
+.theme-template-vuexy .card.contracts-panel,
+.theme-template-vuexy .card.tickets-panel,
+.theme-template-vuexy .card.staff-report-panel,
+.theme-template-vuexy .ant-table-wrapper,
+.theme-template-vuexy .ant-table,
+.theme-template-vuexy .ant-table-container,
+.theme-template-vuexy .ant-table-content {
+  border-radius: 10px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #EBE9F1 !important;
+  box-shadow: 0 2px 9px rgba(47, 43, 61, 0.06) !important;
+  overflow: hidden !important;
+}
+
+.skin-dark .vuexy-table-card,
+.skin-dark .theme-template-vuexy .table-card,
+.skin-dark .theme-template-vuexy .list-pane,
+.skin-dark .theme-template-vuexy .list-table-wrapper,
+.skin-dark .theme-template-vuexy .table-wrap,
+.skin-dark .theme-template-vuexy .ant-table,
+.skin-dark .theme-template-vuexy .ant-table-wrapper {
+  background: #2F3349 !important;
+  border-color: #3B4056 !important;
+}
+
+/* Universal Table Elements in Vuexy Mode */
+.vuexy-table,
+.theme-template-vuexy table,
+.theme-template-vuexy .data-table,
+.theme-template-vuexy .inv-table,
+.theme-template-vuexy .est-table,
+.theme-template-vuexy .prop-table,
+.theme-template-vuexy .contracts-table,
+.theme-template-vuexy .tasks-table,
+.theme-template-vuexy .projects-table,
+.theme-template-vuexy .tickets-table,
+.theme-template-vuexy .expenses-table,
+.theme-template-vuexy .timesheets-table,
+.theme-template-vuexy .payments-table,
+.theme-template-vuexy .ant-table table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Public Sans', 'Inter', -apple-system, sans-serif !important;
+  font-size: 13.5px !important;
+}
+
+/* Universal Table Headers */
+.vuexy-table thead th,
+.vuexy-table__th,
+.theme-template-vuexy table thead th,
+.theme-template-vuexy .data-table thead th,
+.theme-template-vuexy .inv-table thead th,
+.theme-template-vuexy .est-table thead th,
+.theme-template-vuexy .prop-table thead th,
+.theme-template-vuexy .ant-table-thead > tr > th {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #6F6B7D !important;
+  letter-spacing: 0.8px !important;
+  text-transform: uppercase !important;
+  background: #F8F7FA !important;
+  border-top: none !important;
+  border-bottom: 1px solid #EBE9F1 !important;
+  padding: 12px 18px !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+.skin-dark .vuexy-table thead th,
+.skin-dark .vuexy-table__th,
+.skin-dark.theme-template-vuexy table thead th,
+.skin-dark .theme-template-vuexy .ant-table-thead > tr > th {
+  background: #25293C !important;
+  color: #A8AAAE !important;
+  border-bottom-color: #3B4056 !important;
+}
+
+/* Universal Table Rows */
+.vuexy-table tbody tr,
+.vuexy-table__row,
+.theme-template-vuexy table tbody tr,
+.theme-template-vuexy .data-table tbody tr,
+.theme-template-vuexy .inv-table tbody tr,
+.theme-template-vuexy .est-table tbody tr,
+.theme-template-vuexy .prop-table tbody tr,
+.theme-template-vuexy .ant-table-tbody > tr {
+  transition: background-color 0.15s ease !important;
+  border-bottom: 1px solid #F1F0F2 !important;
+  background: #FFFFFF !important;
+}
+
+.skin-dark .vuexy-table tbody tr,
+.skin-dark .vuexy-table__row,
+.skin-dark.theme-template-vuexy table tbody tr,
+.skin-dark .theme-template-vuexy .ant-table-tbody > tr {
+  border-bottom-color: #3B4056 !important;
+  background: #2F3349 !important;
+}
+
+.vuexy-table tbody tr:hover,
+.vuexy-table__row:hover,
+.theme-template-vuexy table tbody tr:hover,
+.theme-template-vuexy .data-table tbody tr:hover,
+.theme-template-vuexy .inv-table tbody tr:hover,
+.theme-template-vuexy .est-table tbody tr:hover,
+.theme-template-vuexy .prop-table tbody tr:hover,
+.theme-template-vuexy .ant-table-tbody > tr:hover > td,
+.theme-template-vuexy .ant-table-tbody > tr.ant-table-row-hover > td {
+  background-color: #F8F7FA !important;
+}
+
+.skin-dark .vuexy-table tbody tr:hover,
+.skin-dark .vuexy-table__row:hover,
+.skin-dark.theme-template-vuexy table tbody tr:hover,
+.skin-dark .theme-template-vuexy .ant-table-tbody > tr:hover > td {
+  background-color: #34384E !important;
+}
+
+/* Row Selection Active State */
+.vuexy-table tbody tr.row-selected,
+.vuexy-table tbody tr.ant-table-row-selected > td,
+.theme-template-vuexy .ant-table-tbody > tr.ant-table-row-selected > td {
+  background-color: #F4F3FB !important;
+}
+
+.skin-dark .vuexy-table tbody tr.row-selected,
+.skin-dark .theme-template-vuexy .ant-table-tbody > tr.ant-table-row-selected > td {
+  background-color: #383262 !important;
+}
+
+/* Universal Table Cells */
+.vuexy-table tbody td,
+.vuexy-table__td,
+.theme-template-vuexy table tbody td,
+.theme-template-vuexy .data-table tbody td,
+.theme-template-vuexy .inv-table tbody td,
+.theme-template-vuexy .est-table tbody td,
+.theme-template-vuexy .prop-table tbody td,
+.theme-template-vuexy .ant-table-tbody > tr > td {
+  padding: 14px 18px !important;
+  font-size: 13.5px !important;
+  color: #5D596C !important;
+  vertical-align: middle !important;
+  border-bottom: 1px solid #F1F0F2 !important;
+}
+
+.skin-dark .vuexy-table tbody td,
+.skin-dark .vuexy-table__td,
+.skin-dark.theme-template-vuexy table tbody td,
+.skin-dark .theme-template-vuexy .ant-table-tbody > tr > td {
+  color: #B6B1D0 !important;
+  border-bottom-color: #3B4056 !important;
+}
+
+/* Universal Table Links */
+.theme-template-vuexy table td a,
+.theme-template-vuexy .link-blue,
+.theme-template-vuexy .inv-number-link,
+.theme-template-vuexy .client-link {
+  color: var(--vuexy-primary, #7367F0) !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+}
+
+.theme-template-vuexy table td a:hover,
+.theme-template-vuexy .link-blue:hover,
+.theme-template-vuexy .inv-number-link:hover,
+.theme-template-vuexy .client-link:hover {
+  text-decoration: underline !important;
+}
+
+/* Vuexy Rounded Checkbox */
+.vuexy-checkbox,
+.theme-template-vuexy input[type="checkbox"],
+.theme-template-vuexy .ant-checkbox-inner {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 18px !important;
+  height: 18px !important;
+  border: 1.5px solid #DBDADE !important;
+  border-radius: 4px !important;
+  outline: none !important;
+  cursor: pointer !important;
+  position: relative !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  background-color: transparent !important;
+  transition: all 0.15s ease !important;
+}
+
+.skin-dark .vuexy-checkbox,
+.skin-dark.theme-template-vuexy input[type="checkbox"],
+.skin-dark.theme-template-vuexy .ant-checkbox-inner {
+  border-color: #4B465C !important;
+}
+
+.vuexy-checkbox:checked,
+.theme-template-vuexy input[type="checkbox"]:checked,
+.theme-template-vuexy .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: var(--vuexy-primary, #7367F0) !important;
+  border-color: var(--vuexy-primary, #7367F0) !important;
+}
+
+.vuexy-checkbox:checked::after,
+.theme-template-vuexy input[type="checkbox"]:checked::after {
+  content: '' !important;
+  position: absolute !important;
+  left: 5px !important;
+  top: 2px !important;
+  width: 4px !important;
+  height: 8px !important;
+  border: solid white !important;
+  border-width: 0 2px 2px 0 !important;
+  transform: rotate(45deg) !important;
+}
+
+.vuexy-checkbox:indeterminate,
+.theme-template-vuexy input[type="checkbox"]:indeterminate,
+.theme-template-vuexy .ant-checkbox-indeterminate .ant-checkbox-inner {
+  background-color: var(--vuexy-primary, #7367F0) !important;
+  border-color: var(--vuexy-primary, #7367F0) !important;
+}
+
+.vuexy-checkbox:indeterminate::after,
+.theme-template-vuexy input[type="checkbox"]:indeterminate::after {
+  content: '' !important;
+  position: absolute !important;
+  left: 3px !important;
+  top: 7px !important;
+  width: 10px !important;
+  height: 2px !important;
+  background-color: white !important;
+}
+
+/* Universal Status Badge Overrides across the whole app */
+.theme-template-vuexy .status-badge,
+.theme-template-vuexy .badge,
+.theme-template-vuexy .tag-chip,
+.theme-template-vuexy .ant-tag {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  text-transform: capitalize !important;
+  border: none !important;
+}
+
+.theme-template-vuexy .status-paid,
+.theme-template-vuexy .status-completed,
+.theme-template-vuexy .status-accepted,
+.theme-template-vuexy .badge-green,
+.theme-template-vuexy .badge-success {
+  background: rgba(40, 199, 111, 0.12) !important;
+  color: #28C76F !important;
+}
+
+.theme-template-vuexy .status-unpaid,
+.theme-template-vuexy .status-overdue,
+.theme-template-vuexy .status-declined,
+.theme-template-vuexy .badge-red,
+.theme-template-vuexy .badge-danger {
+  background: rgba(234, 84, 85, 0.12) !important;
+  color: #EA5455 !important;
+}
+
+.theme-template-vuexy .status-partially_paid,
+.theme-template-vuexy .status-on-hold,
+.theme-template-vuexy .status-expired,
+.theme-template-vuexy .badge-yellow,
+.theme-template-vuexy .badge-warning {
+  background: rgba(255, 159, 67, 0.12) !important;
+  color: #FF9F43 !important;
+}
+
+.theme-template-vuexy .status-draft,
+.theme-template-vuexy .status-cancelled,
+.theme-template-vuexy .badge-default,
+.theme-template-vuexy .badge-secondary {
+  background: rgba(168, 170, 174, 0.12) !important;
+  color: #A8AAAE !important;
+}
+
+.theme-template-vuexy .status-sent,
+.theme-template-vuexy .status-in-progress,
+.theme-template-vuexy .status-open,
+.theme-template-vuexy .badge-blue,
+.theme-template-vuexy .badge-info,
+.theme-template-vuexy .badge-primary {
+  background: rgba(115, 103, 240, 0.12) !important;
+  color: var(--vuexy-primary, #7367F0) !important;
+}
+
+/* Universal Pagination Overrides */
+.theme-template-vuexy .ant-pagination,
+.theme-template-vuexy .pagination-wrapper,
+.theme-template-vuexy .table-footer-pagination,
+body.theme-template-vuexy .ant-pagination {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 6px !important;
+  padding: 16px 20px !important;
+  font-size: 13px !important;
+  color: #6F6B7D !important;
+  background: #FFFFFF !important;
+}
+
+.theme-template-vuexy .ant-pagination-item,
+body.theme-template-vuexy .ant-pagination-item {
+  border-radius: 6px !important;
+  border: 1px solid #DBDADE !important;
+  background: #FFFFFF !important;
+  color: #6F6B7D !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  line-height: 30px !important;
+  text-align: center !important;
+  font-weight: 500 !important;
+}
+
+.theme-template-vuexy .ant-pagination-item-active,
+body.theme-template-vuexy .ant-pagination-item-active {
+  background: var(--vuexy-primary, #7367F0) !important;
+  border-color: var(--vuexy-primary, #7367F0) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 6px rgba(115, 103, 240, 0.4) !important;
+}
+
+.theme-template-vuexy .ant-pagination-item-active a,
+body.theme-template-vuexy .ant-pagination-item-active a {
+  color: #FFFFFF !important;
+}
+
+.theme-template-vuexy .ant-pagination-prev .ant-pagination-item-link,
+.theme-template-vuexy .ant-pagination-next .ant-pagination-item-link,
+body.theme-template-vuexy .ant-pagination-prev .ant-pagination-item-link,
+body.theme-template-vuexy .ant-pagination-next .ant-pagination-item-link {
+  border-radius: 6px !important;
+  border: 1px solid #DBDADE !important;
+  background: #FFFFFF !important;
+  color: #6F6B7D !important;
+  height: 32px !important;
+  line-height: 30px !important;
+}
+
+/* Universal Page Toolbars, Filters & Top Widgets in Vuexy Mode */
+body.theme-template-vuexy .toolbar,
+body.theme-template-vuexy .table-toolbar {
+  background: #FFFFFF !important;
+  border: 1px solid #EBE9F1 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 9px rgba(47, 43, 61, 0.04) !important;
+  padding: 12px 18px !important;
+}
+
+body.theme-template-vuexy .filters-row {
+  background: #FFFFFF !important;
+  border: 1px solid #EBE9F1 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 9px rgba(47, 43, 61, 0.04) !important;
+  padding: 12px 18px !important;
+}
+
+body.theme-template-vuexy .status-widgets {
+  gap: 12px !important;
+}
+
+body.theme-template-vuexy .status-widget {
+  background: #FFFFFF !important;
+  border: 1px solid #EBE9F1 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 9px rgba(47, 43, 61, 0.04) !important;
+}
+
+body.theme-template-vuexy .btn-create,
+body.theme-template-vuexy .btn-primary {
+  background: var(--vuexy-primary, #7367F0) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 6px rgba(115, 103, 240, 0.4) !important;
+  padding: 8px 16px !important;
+  font-weight: 600 !important;
+}
+
+body.theme-template-vuexy .btn-batch,
+body.theme-template-vuexy .btn-filters,
+body.theme-template-vuexy .btn-outline,
+body.theme-template-vuexy .btn-summary-premium,
+body.theme-template-vuexy .btn-contacts-premium {
+  background: #FFFFFF !important;
+  border: 1px solid #DBDADE !important;
+  border-radius: 6px !important;
+  color: #6F6B7D !important;
+  box-shadow: none !important;
+  font-weight: 600 !important;
+}
+
+body.theme-template-vuexy .btn-batch:hover,
+body.theme-template-vuexy .btn-filters:hover,
+body.theme-template-vuexy .btn-outline:hover,
+body.theme-template-vuexy .btn-summary-premium:hover,
+body.theme-template-vuexy .btn-contacts-premium:hover {
+  background: #F8F7FA !important;
+  border-color: var(--vuexy-primary, #7367F0) !important;
+  color: var(--vuexy-primary, #7367F0) !important;
+}
+
+/* Footer */
+.vuexy-footer {
+  padding: 16px 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  font-size: 13px !important;
+  color: #A8AAAE !important;
+  border-top: 1px solid #EBE9F1 !important;
+  background: transparent !important;
+  box-sizing: border-box !important;
+}
+
+.vuexy-footer a {
+  color: var(--vuexy-primary, #7367F0) !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+}
+
+.vuexy-footer__links {
+  display: flex !important;
+  gap: 16px !important;
+}
+
+/* Scroll To Top Button */
+.vuexy-scroll-top {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 6px !important;
+  background: var(--vuexy-primary, #7367F0) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 4px 12px 0 rgba(115, 103, 240, 0.4) !important;
+  z-index: 1000 !important;
+  transition: all 0.2s !important;
+}
+
+.vuexy-scroll-top:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 6px 16px 0 rgba(115, 103, 240, 0.5) !important;
+}
+
+/* Theme Customizer Gear Button */
+.vuexy-customizer-toggle {
+  position: fixed !important;
+  right: 0 !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 40px !important;
+  height: 40px !important;
+  background: var(--vuexy-primary, #7367F0) !important;
+  color: #FFFFFF !important;
+  border-radius: 8px 0 0 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-shadow: -2px 4px 14px 0 rgba(115, 103, 240, 0.45) !important;
+  z-index: 1050 !important;
+  transition: all 0.2s !important;
+  border: none !important;
+}
+
+.vuexy-customizer-toggle:hover {
+  width: 46px !important;
+}
+
+.vuexy-customizer-toggle svg {
+  animation: vuexy-spin 4s linear infinite !important;
+}
+
+@keyframes vuexy-spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========================================================================= */
+/* VUEXY UNIVERSAL DRAWER & MODAL OVERRIDES (Above Navbar, Sidebar & Toggles)*/
+/* ========================================================================= */
+.ant-drawer,
+.ant-drawer-root,
+.ant-drawer-mask,
+.ant-drawer-content-wrapper,
+.drawer-overlay,
+.ant-modal-root,
+.ant-modal-mask,
+.ant-modal-wrap {
+  z-index: 2050 !important;
+}
+
+.ant-drawer-content-wrapper {
+  box-shadow: -4px 0 24px rgba(47, 43, 61, 0.16) !important;
+}
+
+.ant-drawer-content {
+  background-color: #FFFFFF !important;
+  color: #5D596C !important;
+}
+
+.skin-dark .ant-drawer-content {
+  background-color: #2F3349 !important;
+  color: #CFCCE4 !important;
+}
+
+.ant-drawer-header {
+  background-color: #FFFFFF !important;
+  border-bottom: 1px solid #F1F0F2 !important;
+  padding: 18px 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.skin-dark .ant-drawer-header {
+  background-color: #2F3349 !important;
+  border-bottom-color: #3B4056 !important;
+}
+
+.ant-drawer-title {
+  color: #4B465C !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  font-family: 'Public Sans', 'Inter', -apple-system, sans-serif !important;
+}
+
+.skin-dark .ant-drawer-title {
+  color: #E6E5E8 !important;
+}
+
+.ant-drawer-body {
+  padding: 24px !important;
+  background-color: #FFFFFF !important;
+  color: #5D596C !important;
+}
+
+.skin-dark .ant-drawer-body {
+  background-color: #2F3349 !important;
+  color: #B6B1D0 !important;
+}
+
+.ant-drawer-footer,
+.drawer-footer {
+  border-top: 1px solid #F1F0F2 !important;
+  padding: 16px 24px !important;
+  background-color: #FFFFFF !important;
+}
+
+.skin-dark .ant-drawer-footer,
+.skin-dark .drawer-footer {
+  background-color: #2F3349 !important;
+  border-top-color: #3B4056 !important;
+}
+
+/* Universal Drawer & Modal Form Item & Input Boxes (All Crisp Rectangular) */
+.ant-drawer .ant-form-item,
+.drawer .form-group,
+.drawer-body .form-group,
+.ant-modal .ant-form-item {
+  margin-bottom: 16px !important;
+}
+
+.ant-drawer .ant-form-item-label > label,
+.drawer .ant-form-item-label > label,
+.drawer label,
+.drawer-panel label,
+.ant-modal .ant-form-item-label > label,
+.ant-modal label {
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: #4B465C !important;
+  margin-bottom: 5px !important;
+  height: auto !important;
+  display: inline-block !important;
+}
+
+.skin-dark .ant-drawer .ant-form-item-label > label,
+.skin-dark .drawer .ant-form-item-label > label,
+.skin-dark .drawer label,
+.skin-dark .ant-modal .ant-form-item-label > label {
+  color: #CFCCE4 !important;
+}
+
+/* Crisp Rectangular Input Boxes Across All Drawers & Modals */
+.ant-drawer input,
+.ant-drawer textarea,
+.ant-drawer select,
+.ant-drawer .ant-input,
+.ant-drawer .ant-input-password,
+.ant-drawer .ant-input-affix-wrapper,
+.ant-drawer .ant-input-number,
+.ant-drawer .ant-select:not(.ant-select-customize-input) .ant-select-selector,
+.ant-drawer .ant-select-selection-search-input,
+.ant-drawer .ant-picker,
+.ant-modal input,
+.ant-modal textarea,
+.ant-modal select,
+.ant-modal .ant-input,
+.ant-modal .ant-input-password,
+.ant-modal .ant-input-affix-wrapper,
+.ant-modal .ant-input-number,
+.ant-modal .ant-select:not(.ant-select-customize-input) .ant-select-selector,
+.ant-modal .ant-picker,
+.drawer input,
+.drawer textarea,
+.drawer select,
+.drawer .ant-input,
+.drawer .form-ctrl,
+.drawer-panel input,
+.drawer-panel textarea,
+.drawer-panel select,
+.drawer-overlay input,
+.drawer-overlay textarea,
+.drawer-overlay select {
+  background-color: #FFFFFF !important;
+  border: 1px solid #DBDADE !important;
+  border-radius: 6px !important;
+  color: #4B465C !important;
+  font-size: 13.5px !important;
+  font-family: inherit !important;
+  box-shadow: none !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+
+.skin-dark .ant-drawer input,
+.skin-dark .ant-drawer textarea,
+.skin-dark .ant-drawer select,
+.skin-dark .ant-drawer .ant-input,
+.skin-dark .ant-drawer .ant-input-password,
+.skin-dark .ant-drawer .ant-input-affix-wrapper,
+.skin-dark .ant-drawer .ant-select:not(.ant-select-customize-input) .ant-select-selector,
+.skin-dark .drawer input,
+.skin-dark .drawer select,
+.skin-dark .drawer textarea {
+  background-color: #2F3349 !important;
+  border-color: #4B465C !important;
+  color: #CFCCE4 !important;
+}
+
+/* Single line input heights & padding */
+.ant-drawer .ant-input:not(textarea),
+.ant-drawer .ant-input-password,
+.ant-drawer .ant-input-affix-wrapper,
+.ant-drawer .ant-input-number,
+.ant-drawer .ant-select-single:not(.ant-select-customize-input) .ant-select-selector,
+.ant-drawer .ant-picker,
+.ant-modal .ant-input:not(textarea),
+.ant-modal .ant-input-password,
+.ant-modal .ant-input-affix-wrapper,
+.ant-modal .ant-select-single:not(.ant-select-customize-input) .ant-select-selector,
+.drawer input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]),
+.drawer select,
+.drawer .form-ctrl:not(textarea),
+.drawer-panel input:not([type="checkbox"]):not([type="radio"]) {
+  min-height: 38px !important;
+  height: 38px !important;
+  padding: 0 12px !important;
+  border-radius: 6px !important;
+}
+
+.ant-drawer .ant-input-affix-wrapper input.ant-input,
+.ant-modal .ant-input-affix-wrapper input.ant-input {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  height: auto !important;
+  min-height: auto !important;
+  background: transparent !important;
+}
+
+/* Multiple select & tags in drawers */
+.ant-drawer .ant-select-multiple .ant-select-selector,
+.ant-modal .ant-select-multiple .ant-select-selector {
+  min-height: 38px !important;
+  padding: 2px 6px !important;
+  border-radius: 6px !important;
+}
+
+.ant-drawer .ant-select-multiple .ant-select-selection-item,
+.ant-modal .ant-select-multiple .ant-select-selection-item {
+  background: #F1F0F2 !important;
+  border: 1px solid #DBDADE !important;
+  border-radius: 4px !important;
+  color: #4B465C !important;
+  font-size: 12px !important;
+  height: 26px !important;
+  line-height: 24px !important;
+}
+
+/* Focus states */
+.ant-drawer input:focus,
+.ant-drawer .ant-input:focus,
+.ant-drawer .ant-input-focused,
+.ant-drawer .ant-input-password:focus,
+.ant-drawer .ant-input-affix-wrapper-focused,
+.ant-drawer .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector,
+.ant-modal input:focus,
+.ant-modal .ant-input:focus,
+.ant-modal .ant-input-focused,
+.ant-modal .ant-input-affix-wrapper-focused,
+.ant-modal .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector,
+.drawer input:focus,
+.drawer select:focus,
+.drawer textarea:focus,
+.drawer .form-ctrl:focus,
+.drawer-panel input:focus,
+.drawer-panel select:focus,
+.drawer-panel textarea:focus {
+  border-color: #7367F0 !important;
+  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.16) !important;
+  outline: 0 !important;
+}
+
+/* Textareas */
+.ant-drawer textarea.ant-input,
+.ant-drawer textarea,
+.ant-modal textarea.ant-input,
+.ant-modal textarea,
+.drawer textarea,
+.drawer textarea.form-ctrl,
+.drawer-panel textarea {
+  min-height: 72px !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+}
+
+/* Checkbox and Radio in drawers */
+.ant-drawer .ant-checkbox-inner,
+.ant-modal .ant-checkbox-inner {
+  border-radius: 4px !important;
+  border: 1.5px solid #DBDADE !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.ant-drawer .ant-checkbox-checked .ant-checkbox-inner,
+.ant-modal .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #7367F0 !important;
+  border-color: #7367F0 !important;
+}
+
+/* Ant Drawer & Modal Action Buttons */
+.ant-drawer .ant-btn,
+.drawer .btn,
+.drawer .btn-primary,
+.drawer .btn-ghost,
+.ant-modal .ant-btn {
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  height: 38px !important;
+  padding: 0 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+}
+
+.ant-drawer .ant-btn-primary,
+.ant-modal .ant-btn-primary {
+  background: #7367F0 !important;
+  border-color: #7367F0 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 6px rgba(115, 103, 240, 0.4) !important;
+}
+
+.ant-drawer .ant-btn-primary:hover,
+.ant-modal .ant-btn-primary:hover {
+  background: #685DD8 !important;
+  border-color: #685DD8 !important;
+}
+
+
+

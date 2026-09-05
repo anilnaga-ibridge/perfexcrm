@@ -13,7 +13,7 @@ class MigrateLegacyModule extends Command
 
     protected $aliases = ['plugin:migrate-legacy'];
 
-    protected $description = 'Analyse and migrate a legacy CodeIgniter Perfex module to the new platform format';
+    protected $description = 'Analyse and migrate a legacy CodeIgniter iBridge module to the new platform format';
 
     public function handle(LegacyModuleMigrationService $migrator): int
     {

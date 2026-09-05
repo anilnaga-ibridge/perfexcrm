@@ -40,6 +40,7 @@
         </div>
       </div>
 
+      <!-- Table -->
       <a-table
         :dataSource="backups"
         :columns="columns"
@@ -89,6 +90,37 @@
           </div>
         </template>
       </a-table>
+
+      <!-- Mobile Responsive Card View -->
+      <div class="mobile-cards-list" v-if="!loading">
+        <div 
+          v-for="record in backups" 
+          :key="'m-bk-' + record.id"
+          class="mobile-row-card"
+        >
+          <div class="flex items-center justify-between">
+            <span class="font-extrabold text-xs text-sky-600 bg-sky-50 px-2 py-0.5 rounded">
+              💾 {{ record.backup_size || '—' }}
+            </span>
+            <div class="flex items-center gap-2">
+              <button @click="downloadBackup(record.id)" class="text-xs font-semibold text-indigo-600">Download</button>
+              <button @click="deleteBackup(record.id)" class="text-xs font-semibold text-rose-600">Delete</button>
+            </div>
+          </div>
+
+          <div class="font-bold text-xs text-slate-800 pt-1 truncate">
+            {{ record.filename }}
+          </div>
+
+          <div class="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100">
+            <span>📅 {{ formatDateTime(record.created_at) }}</span>
+          </div>
+        </div>
+
+        <div v-if="!backups.length" class="text-center p-6 text-slate-400 text-xs font-semibold">
+          No backups yet
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -292,5 +324,32 @@ export default defineComponent({
   gap: 8px;
   color: #94a3b8;
   font-size: 13px;
+}
+
+/* Mobile Cards List Hidden by Default on Desktop */
+.mobile-cards-list {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .table-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .toolbar-left, .toolbar-right {
+    width: 100% !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+  }
+  :deep(.ant-table-wrapper) {
+    display: none !important;
+  }
+  .mobile-cards-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
 }
 </style>

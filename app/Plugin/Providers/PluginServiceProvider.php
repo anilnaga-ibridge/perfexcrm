@@ -34,13 +34,18 @@ abstract class PluginServiceProvider extends ServiceProvider
     /**
      * Register any plugin services.
      */
-    abstract public function register(): void;
+    public function register(): void
+    {
+        // Override in plugins
+    }
 
     /**
      * Bootstrap any plugin services.
      */
-    abstract public function boot(): void;
-
+    public function boot(): void
+    {
+        // Override in plugins
+    }
     /**
      * Register dynamic Web/API routes.
      */

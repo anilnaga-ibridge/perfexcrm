@@ -11,6 +11,10 @@ class ProjectController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Projects.view')) {
+            abort(403, 'Unauthorized. Missing required permission: Projects.view');
+        }
+
         $query = Project::with('client:id,company', 'members:id,name');
 
         if ($request->filled('client_id')) {
@@ -31,7 +35,7 @@ class ProjectController extends Controller
             $query->where('status', $request->status);
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $projects = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         // Scope stats query to client_id if present
@@ -54,6 +58,10 @@ class ProjectController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Projects.create')) {
+            abort(403, 'Unauthorized. Missing required permission: Projects.create');
+        }
+
         $validated = $request->validate([
             'name'                => 'required|string|max:255',
             'description'         => 'nullable|string',
@@ -95,6 +103,10 @@ class ProjectController extends Controller
 
     public function update(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Projects.edit')) {
+            abort(403, 'Unauthorized. Missing required permission: Projects.edit');
+        }
+
         $project = Project::find($id);
         if (!$project) return response()->json(['message' => 'Not found'], 404);
 
@@ -129,8 +141,12 @@ class ProjectController extends Controller
         return response()->json($project->load('client', 'members'));
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Projects.delete')) {
+            abort(403, 'Unauthorized. Missing required permission: Projects.delete');
+        }
+
         $project = Project::find($id);
         if (!$project) return response()->json(['message' => 'Not found'], 404);
         $project->delete();

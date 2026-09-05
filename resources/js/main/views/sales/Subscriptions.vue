@@ -61,7 +61,7 @@
         @change="handleTableChange"
         row-key="id"
         size="small"
-        :scroll="{ x: 1000 }"
+        :scroll="{ x: 'max-content' }"
       >
         <template #bodyCell="{ column, record, index }">
           <template v-if="column.key === 'index'">

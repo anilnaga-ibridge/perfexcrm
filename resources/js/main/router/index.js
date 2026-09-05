@@ -60,10 +60,15 @@ import EstimateRequestsPage from '../views/support/EstimateRequests.vue';
 import KnowledgeBasePage from '../views/support/KnowledgeBase.vue';
 import KnowledgeBaseGroupsPage from '../views/support/Groups.vue';
 import TicketsPage from '../views/support/Tickets.vue';
+import WeeklyTicketsAnalyticsPage from '../views/support/WeeklyAnalytics.vue';
+
+// Vuexy Data Tables
+import VuexyDataTable from '../views/tables/VuexyDataTable.vue';
 import SeoOptimisation from '../views/SeoOptimisation.vue';
 
 // Staff Members
 import StaffMembersPage from '../views/StaffMembers.vue';
+import StaffDetailPage from '../views/StaffDetail.vue';
 
 // Profile
 import ProfileLayout from '../views/Profile.vue';
@@ -78,6 +83,7 @@ import MyTodosPage from '../views/MyTodos.vue';
 
 // Notifications
 import NotificationsPage from '../views/Notifications.vue';
+import FeatureUpdatesPage from '../views/FeatureUpdates.vue';
 
 // Phase 5: Reports
 import ReportsPage from '../views/reports/Reports.vue';
@@ -145,18 +151,29 @@ const routes = [
     children: [
       { path: '', redirect: '/admin/dashboard' },
       { path: 'dashboard',        name: 'admin.dashboard',        component: Dashboard },
-      { path: 'customers',        name: 'admin.customers',        component: CustomersList },
-      { path: 'customers/client', name: 'admin.customers.create', component: CustomerCreate },
-      { path: 'customers/all-contacts', name: 'admin.customers.all_contacts', component: ContactsList },
-      { path: 'customers/:id',    name: 'admin.customers.view',   component: CustomerView },
-      { path: 'leads',            name: 'admin.leads',            component: LeadsBoard },
-      { path: 'invoices',            name: 'admin.invoices',           component: InvoicesPage },
-      { path: 'invoices/recurring',  name: 'admin.invoices.recurring', component: RecurringInvoicesPage },
-      { path: 'invoices/create',     name: 'admin.invoices.create',    component: InvoiceForm },
-      { path: 'invoices/:id',        name: 'admin.invoices.view',      component: InvoiceView  },
-      { path: 'invoices/:id/edit',   name: 'admin.invoices.edit',      component: InvoiceForm  },
-      { path: 'setup/:section?/:subsection?', name: 'admin.setup',            component: SetupPage },
-      { path: 'staff',            name: 'admin.staff',            component: StaffMembersPage },
+      { path: 'customers',        name: 'admin.customers',        component: CustomersList, meta: { permission: 'Customers' } },
+      { path: 'customers/client', name: 'admin.customers.create', component: CustomerCreate, meta: { permission: 'Customers' } },
+      { path: 'customers/all-contacts', name: 'admin.customers.all_contacts', component: ContactsList, meta: { permission: 'Customers' } },
+      { path: 'customers/:id',    name: 'admin.customers.view',   component: CustomerView, meta: { permission: 'Customers' } },
+      { path: 'leads',            name: 'admin.leads',            component: LeadsBoard, meta: { permission: 'Leads' } },
+      { path: 'invoices',            name: 'admin.invoices',           component: InvoicesPage, meta: { permission: 'Invoices' } },
+      { path: 'invoices/recurring',  name: 'admin.invoices.recurring', component: RecurringInvoicesPage, meta: { permission: 'Invoices' } },
+      { path: 'invoices/create',     name: 'admin.invoices.create',    component: InvoiceForm, meta: { permission: 'Invoices' } },
+      { path: 'invoices/:id',        name: 'admin.invoices.view',      component: InvoiceView, meta: { permission: 'Invoices' }  },
+      { path: 'invoices/:id/edit',   name: 'admin.invoices.edit',      component: InvoiceForm, meta: { permission: 'Invoices' }  },
+      { path: 'setup/:section?/:subsection?', name: 'admin.setup',            component: SetupPage, meta: { permission: 'Settings' } },
+      { path: 'settings/email', redirect: '/admin/setup/email-templates' },
+      { path: 'settings/email-templates', redirect: '/admin/setup/email-templates' },
+      { path: 'modules',          name: 'admin.modules',          component: SetupPage, beforeEnter: (to, from, next) => { to.params.section = 'plugins'; next(); }, meta: { permission: 'Settings' } },
+      { path: 'staff',            name: 'admin.staff',            component: StaffMembersPage, meta: { permission: 'Staff' } },
+      { path: 'staff/create',     name: 'admin.staff.create',     component: StaffDetailPage, meta: { permission: 'Staff' } },
+      { path: 'staff/member',     name: 'admin.staff.member.create', component: StaffDetailPage, meta: { permission: 'Staff' } },
+      { path: 'staff/:id',        name: 'admin.staff.view',       component: StaffDetailPage, meta: { permission: 'Staff' } },
+      { path: 'staff/member/:id', name: 'admin.staff.member.view',component: StaffDetailPage, meta: { permission: 'Staff' } },
+      { path: 'setup/staff/create', name: 'admin.setup.staff.create', component: StaffDetailPage, meta: { permission: 'Staff' } },
+      { path: 'setup/staff/member', name: 'admin.setup.staff.member.create', component: StaffDetailPage, meta: { permission: 'Staff' } },
+      { path: 'setup/staff/:id',  name: 'admin.setup.staff.view', component: StaffDetailPage, meta: { permission: 'Staff' } },
+      { path: 'setup/staff/member/:id', name: 'admin.setup.staff.member.view', component: StaffDetailPage, meta: { permission: 'Staff' } },
 
       // Profile
       {
@@ -169,62 +186,70 @@ const routes = [
       },
 
       // Timesheets
-      { path: 'timesheets', name: 'admin.timesheets', component: TimesheetsPage },
+      { path: 'timesheets', name: 'admin.timesheets', component: TimesheetsPage, meta: { permission: 'Projects' } },
       { path: 'my-todos', name: 'admin.my-todos', component: MyTodosPage },
       { path: 'notifications', name: 'admin.notifications', component: NotificationsPage },
+      { path: 'feature-updates', name: 'admin.feature-updates', component: FeatureUpdatesPage },
 
       // Sales sub-items
-      { path: 'estimates',        name: 'admin.estimates',        component: EstimatesPage },
-      { path: 'estimates/estimate', name: 'admin.estimates.create', component: EstimateForm },
-      { path: 'estimates/estimate/:id', name: 'admin.estimates.edit', component: EstimateForm },
-      { path: 'proposals',        name: 'admin.proposals',        component: ProposalsPage },
-      { path: 'proposals/proposal', name: 'admin.proposals.create', component: ProposalForm },
-      { path: 'proposals/proposal/:id', name: 'admin.proposals.edit', component: ProposalForm },
-      { path: 'payments',           name: 'admin.payments',        component: PaymentsPage },
-      { path: 'payments/create',     name: 'admin.payments.create', component: PaymentForm  },
-      { path: 'payments/:id',        name: 'admin.payments.view',   component: PaymentView  },
-      { path: 'payments/:id/edit',   name: 'admin.payments.edit',   component: PaymentForm  },
-      { path: 'credit-notes',     name: 'admin.credit-notes',     component: CreditNotesPage },
-      { path: 'credit-notes/create', name: 'admin.credit-notes.create', component: CreditNoteForm },
-      { path: 'credit-notes/:id/edit', name: 'admin.credit-notes.edit', component: CreditNoteForm },
-      { path: 'items',            name: 'admin.items',            component: ItemsCatalogPage },
+      { path: 'estimates',        name: 'admin.estimates',        component: EstimatesPage, meta: { permission: 'Estimates' } },
+      { path: 'estimates/estimate', name: 'admin.estimates.create', component: EstimateForm, meta: { permission: 'Estimates' } },
+      { path: 'estimates/estimate/:id', name: 'admin.estimates.edit', component: EstimateForm, meta: { permission: 'Estimates' } },
+      { path: 'proposals',        name: 'admin.proposals',        component: ProposalsPage, meta: { permission: 'Proposals' } },
+      { path: 'proposals/proposal', name: 'admin.proposals.create', component: ProposalForm, meta: { permission: 'Proposals' } },
+      { path: 'proposals/proposal/:id', name: 'admin.proposals.edit', component: ProposalForm, meta: { permission: 'Proposals' } },
+      { path: 'payments',           name: 'admin.payments',        component: PaymentsPage, meta: { permission: 'Payments' } },
+      { path: 'payments/create',     name: 'admin.payments.create', component: PaymentForm, meta: { permission: 'Payments' }  },
+      { path: 'payments/:id',        name: 'admin.payments.view',   component: PaymentView, meta: { permission: 'Payments' }  },
+      { path: 'payments/:id/edit',   name: 'admin.payments.edit',   component: PaymentForm, meta: { permission: 'Payments' }  },
+      { path: 'credit-notes',     name: 'admin.credit-notes',     component: CreditNotesPage, meta: { permission: 'Credit Notes' } },
+      { path: 'credit-notes/create', name: 'admin.credit-notes.create', component: CreditNoteForm, meta: { permission: 'Credit Notes' } },
+      { path: 'credit-notes/:id/edit', name: 'admin.credit-notes.edit', component: CreditNoteForm, meta: { permission: 'Credit Notes' } },
+      { path: 'items',            name: 'admin.items',            component: ItemsCatalogPage, meta: { permission: 'Items' } },
 
       // Main modules
-      { path: 'subscriptions',    name: 'admin.subscriptions',    component: SubscriptionsPage },
-      { path: 'expenses',         name: 'admin.expenses',         component: ExpensesPage },
-      { path: 'contracts',        name: 'admin.contracts',        component: ContractsPage },
-      { path: 'projects',         name: 'admin.projects',         component: ProjectsPage },
-      { path: 'tasks',            name: 'admin.tasks',            component: TasksPage },
-      { path: 'tasks/overview',   name: 'admin.tasks.overview',   component: TasksOverviewPage },
-      { path: 'support',          name: 'admin.support',          component: TicketsPage },
-      { path: 'estimate-request', name: 'admin.estimate-request', component: EstimateRequestsPage },
-      { path: 'knowledge-base',         name: 'admin.knowledge-base',        component: KnowledgeBasePage },
-      { path: 'knowledge-base/groups',  name: 'admin.knowledge-base.groups', component: KnowledgeBaseGroupsPage },
-      { path: 'seo', name: 'admin.seo', component: SeoOptimisation },
+      { path: 'subscriptions',    name: 'admin.subscriptions',    component: SubscriptionsPage, meta: { permission: 'Subscriptions' } },
+      { path: 'expenses',         name: 'admin.expenses',         component: ExpensesPage, meta: { permission: 'Expenses' } },
+      { path: 'contracts',        name: 'admin.contracts',        component: ContractsPage, meta: { permission: 'Contracts' } },
+      { path: 'projects',         name: 'admin.projects',         component: ProjectsPage, meta: { permission: 'Projects' } },
+      { path: 'tasks',            name: 'admin.tasks',            component: TasksPage, meta: { permission: 'Tasks' } },
+      { path: 'tasks/overview',   name: 'admin.tasks.overview',   component: TasksOverviewPage, meta: { permission: 'Tasks' } },
+      { path: 'support',          name: 'admin.support',          component: TicketsPage, meta: { permission: 'Support' } },
+      { path: 'support/weekly-analytics', name: 'admin.support.weekly_analytics', component: WeeklyTicketsAnalyticsPage, meta: { permission: 'Support' } },
+      { path: 'estimate-request', name: 'admin.estimate-request', component: EstimateRequestsPage, meta: { permission: 'Estimate Request' } },
+      { path: 'knowledge-base',         name: 'admin.knowledge-base',        component: KnowledgeBasePage, meta: { permission: 'Knowledge Base' } },
+      { path: 'knowledge-base/groups',  name: 'admin.knowledge-base.groups', component: KnowledgeBaseGroupsPage, meta: { permission: 'Knowledge Base' } },
+      { path: 'seo', name: 'admin.seo', component: SeoOptimisation, meta: { permission: 'Settings' } },
+
+      // Vuexy Data Tables
+      { path: 'tables', name: 'admin.tables', component: VuexyDataTable },
+      { path: 'tables/data-tables', name: 'admin.tables.data_tables', component: VuexyDataTable },
 
       // Utilities sub-items
-      { path: 'media',            name: 'admin.media',            component: MediaPage },
-      { path: 'utilities/bulk-pdf-export',    name: 'admin.utilities.bulk-pdf-export',    component: BulkPdfExportPage },
-      { path: 'utilities/e-invoice-export',   name: 'admin.utilities.e-invoice-export',   component: EInvoiceExportPage },
-      { path: 'utilities/csv-export',         name: 'admin.utilities.csv-export',          component: CsvExportPage },
-      { path: 'calendar',         name: 'admin.calendar',         component: CalendarPage },
-      { path: 'announcements',    name: 'admin.announcements',    component: AnnouncementsPage },
-      { path: 'goals',            name: 'admin.goals',            component: GoalsPage },
-      { path: 'activity',         name: 'admin.activity',         component: ActivityLogPage },
-      { path: 'utilities/surveys',            name: 'admin.utilities.surveys',            component: SurveysPage },
-      { path: 'utilities/mail-lists',        name: 'admin.utilities.mail-lists',        component: MailListsPage },
-      { path: 'utilities/database-backup',    name: 'admin.utilities.database-backup',    component: DatabaseBackupPage },
-      { path: 'utilities/ticket-pipe-log',    name: 'admin.utilities.ticket-pipe-log',    component: TicketPipeLogPage },
+      { path: 'media',            name: 'admin.media',            component: MediaPage, meta: { permission: 'Media' } },
+      { path: 'utilities/bulk-pdf-export',    name: 'admin.utilities.bulk-pdf-export',    component: BulkPdfExportPage, meta: { permission: 'Bulk PDF Export' } },
+      { path: 'utilities/e-invoice-export',   name: 'admin.utilities.e-invoice-export',   component: EInvoiceExportPage, meta: { permission: 'e-Invoice' } },
+      { path: 'utilities/csv-export',         name: 'admin.utilities.csv-export',          component: CsvExportPage, meta: { permission: 'CSV Export' } },
+      { path: 'utilities/exports',            name: 'admin.utilities.exports',             component: BulkPdfExportPage, meta: { permission: 'Bulk PDF Export' } },
+      { path: 'bulk-export',                  name: 'admin.bulk-export',                   component: BulkPdfExportPage, meta: { permission: 'Bulk PDF Export' } },
+      { path: 'calendar',         name: 'admin.calendar',         component: CalendarPage, meta: { permission: 'Calendar' } },
+      { path: 'announcements',    name: 'admin.announcements',    component: AnnouncementsPage, meta: { permission: 'Announcements' } },
+      { path: 'goals',            name: 'admin.goals',            component: GoalsPage, meta: { permission: 'Goals' } },
+      { path: 'activity',         name: 'admin.activity',         component: ActivityLogPage, meta: { permission: 'Activity Log' } },
+      { path: 'utilities/surveys',            name: 'admin.utilities.surveys',            component: SurveysPage, meta: { permission: 'Surveys' } },
+      { path: 'utilities/mail-lists',        name: 'admin.utilities.mail-lists',        component: MailListsPage, meta: { permission: 'Mail Lists' } },
+      { path: 'utilities/database-backup',    name: 'admin.utilities.database-backup',    component: DatabaseBackupPage, meta: { permission: 'Settings' } },
+      { path: 'utilities/ticket-pipe-log',    name: 'admin.utilities.ticket-pipe-log',    component: TicketPipeLogPage, meta: { permission: 'Support' } },
 
       // Reports
-      { path: 'reports',                name: 'admin.reports',             component: ReportsPage },
-      { path: 'reports/sales',          name: 'admin.reports.sales',       component: ReportsPage },
-      { path: 'reports/expenses',       name: 'admin.reports.expenses',    component: ReportsPage },
-      { path: 'reports/timesheets',     name: 'admin.reports.timesheets',  component: ReportsPage },
-      { path: 'reports/finance',        name: 'admin.reports.finance',     component: ReportsPage },
-      { path: 'reports/leads',          name: 'admin.reports.leads',       component: ReportsPage },
-      { path: 'reports/kb-articles',    name: 'admin.reports.kb-articles', component: ReportsPage },
-      { path: 'reports/team',           name: 'admin.reports.team',        component: ReportsPage },
+      { path: 'reports',                name: 'admin.reports',             component: ReportsPage, meta: { permission: 'Reports' } },
+      { path: 'reports/sales',          name: 'admin.reports.sales',       component: ReportsPage, meta: { permission: 'Reports' } },
+      { path: 'reports/expenses',       name: 'admin.reports.expenses',    component: ReportsPage, meta: { permission: 'Reports' } },
+      { path: 'reports/timesheets',     name: 'admin.reports.timesheets',  component: ReportsPage, meta: { permission: 'Reports' } },
+      { path: 'reports/finance',        name: 'admin.reports.finance',     component: ReportsPage, meta: { permission: 'Reports' } },
+      { path: 'reports/leads',          name: 'admin.reports.leads',       component: ReportsPage, meta: { permission: 'Reports' } },
+      { path: 'reports/kb-articles',    name: 'admin.reports.kb-articles', component: ReportsPage, meta: { permission: 'Knowledge Base' } },
+      { path: 'reports/team',           name: 'admin.reports.team',        component: ReportsPage, meta: { permission: 'Reports' } },
 
       // Dynamic module pages (captures full path for native Vue rendering)
       { path: 'module/:slug/:pathMatch(.*)*', name: 'admin.module.dynamic', component: ModuleView },
@@ -234,9 +259,10 @@ const routes = [
   { path: '/:catchAll(.*)', redirect: '/admin/dashboard' }
 ];
 
-const basePath = window.config.path.startsWith('http')
-  ? new URL(window.config.path).pathname
-  : window.config.path;
+const rawConfigPath = window.config?.path || '/';
+const basePath = rawConfigPath.startsWith('http')
+  ? new URL(rawConfigPath).pathname
+  : rawConfigPath;
 
 const router = createRouter({
   history: createWebHistory(basePath),
@@ -253,7 +279,33 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requireUnauth && authStore.isLoggedIn) {
     return next({ name: 'admin.dashboard' });
   }
+
+  if (to.meta.permission && authStore.isLoggedIn) {
+    const hasViewPerm = authStore.hasPermission(to.meta.permission, 'view') || authStore.hasPermission(to.meta.permission, 'view_global') || authStore.hasPermission(to.meta.permission, 'view_own');
+    if (!hasViewPerm) {
+      return next({ name: 'admin.dashboard' });
+    }
+  }
+
   next();
+});
+
+router.afterEach((to) => {
+  let pageTitleStr = (to.meta && to.meta.title) ? to.meta.title : '';
+  if (!pageTitleStr) {
+    let rawName = to.name ? String(to.name).replace('admin.', '').replace(/\./g, ' ') : 'Dashboard';
+    pageTitleStr = rawName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  }
+  
+  let appName = 'iBRIDGE CRM';
+  const savedSettings = localStorage.getItem('crm_theme_style_settings');
+  if (savedSettings) {
+    try {
+      const parsed = JSON.parse(savedSettings);
+      if (parsed.app_page_title) appName = parsed.app_page_title;
+    } catch(e) {}
+  }
+  document.title = `${pageTitleStr} - ${appName}`;
 });
 
 export default router;

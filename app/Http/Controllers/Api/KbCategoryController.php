@@ -21,7 +21,7 @@ class KbCategoryController extends Controller
             });
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $categories = $query->withCount('articles')->orderBy('order_num')->orderBy('name')->paginate($perPage);
 
         return response()->json(['categories' => $categories]);

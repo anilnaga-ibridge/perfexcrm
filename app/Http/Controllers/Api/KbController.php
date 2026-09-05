@@ -30,7 +30,7 @@ class KbController extends Controller
             $query->where('category_id', $request->input('category_id'));
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $articles = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         $stats = [

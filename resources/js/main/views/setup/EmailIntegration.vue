@@ -222,7 +222,7 @@ export default defineComponent({
     const integrationForm = reactive({
       active: true,
       imap_host: 'imap.mailtrap.io',
-      imap_email: 'leads-inbox@perfexcrm.com',
+      imap_email: 'leads-inbox@ibridgecrm.com',
       imap_password: '•••••••••••••',
       encryption: 'ssl',
       folder: 'INBOX',

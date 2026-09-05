@@ -1,852 +1,709 @@
 <template>
-  <div>
-    <!-- HEADER & TOOLBAR -->
-    <div class="section-toolbar">
-      <h2 class="section-title">Theme Style</h2>
+  <div class="theme-style-page p-6 max-w-[1600px] mx-auto min-h-screen bg-[#F8F7FA] font-['Public_Sans',sans-serif]">
+    <!-- PAGE HEADER -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="p-2 bg-[#7367F0]/10 text-[#7367F0] rounded-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
+          </span>
+          <div>
+            <h1 class="text-2xl font-bold text-[#4B465C] tracking-tight m-0">Theme Style &amp; Brand Customizer</h1>
+            <span class="text-xs text-[#82868B] font-medium">Customize global CRM branding, palettes, sidebar, buttons, logos, and custom CSS</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button 
+          type="button" 
+          class="px-4 py-2 bg-white border border-[#DBDADE] hover:bg-[#F8F7FA] text-[#4B465C] rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer"
+          @click="resetDynamicThemeDefaults"
+        >
+          Reset Defaults
+        </button>
+        <button 
+          type="button" 
+          class="flex items-center gap-2 px-5 py-2 bg-[#7367F0] hover:bg-[#685dd8] text-white rounded-lg text-xs font-bold transition-all shadow-sm shadow-[#7367F0]/30 cursor-pointer border-none"
+          :disabled="saving"
+          @click="saveThemeSettings"
+        >
+          <svg v-if="!saving" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+          <div v-else class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          {{ saving ? 'Saving Changes...' : 'Save & Apply Theme' }}
+        </button>
+      </div>
     </div>
 
-    <!-- MAIN CARD / TABS CONTAINER -->
-    <div class="settings-card">
-      <a-tabs v-model:activeKey="activeTab" class="theme-tabs">
-        
-        <!-- 1. ADMIN AREA -->
-        <a-tab-pane key="admin_area" tab="Admin Area">
-          <div class="tab-content-wrap">
-            <h3 class="tab-title">Admin Area Styling</h3>
+    <!-- MAIN TABS CONTAINER -->
+    <div class="bg-white border border-[#EBE9F1] rounded-lg shadow-sm overflow-hidden mb-6">
+      <!-- Tabs Header Navigation -->
+      <div class="flex flex-wrap border-b border-[#EBE9F1] bg-[#F8F7FA] px-2 pt-2 gap-1 overflow-x-auto">
+        <button 
+          v-for="tab in tabList" 
+          :key="tab.key" 
+          class="flex items-center gap-2 px-4 py-3 rounded-t-lg text-xs font-bold transition-all border-b-2 whitespace-nowrap cursor-pointer"
+          :class="activeTab === tab.key ? 'bg-white text-[#7367F0] border-[#7367F0] shadow-sm' : 'border-transparent text-[#82868B] hover:text-[#4B465C] hover:bg-white/60'"
+          @click="activeTab = tab.key"
+        >
+          <span>{{ tab.icon }}</span>
+          <span>{{ tab.label }}</span>
+        </button>
+      </div>
+
+      <div class="p-6">
+        <!-- ========================================== -->
+        <!-- 0. DYNAMIC THEME & COLOR PALETTE           -->
+        <!-- ========================================== -->
+        <div v-if="activeTab === 'dynamic_theme'" class="space-y-6">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#EBE9F1]">
+            <div>
+              <h3 class="text-base font-bold text-[#4B465C] m-0">Admin Dynamic Theme &amp; Branding Customizer</h3>
+              <p class="text-xs text-[#82868B] m-0 mt-1">Manage live colors, page backgrounds, primary buttons, navbar gradients, and branding logos across the CRM.</p>
+            </div>
+            <button
+              type="button"
+              class="px-4 py-2 bg-[#7367F0] hover:bg-[#685dd8] text-white text-xs font-bold rounded-lg shadow-sm transition-all cursor-pointer border-none flex items-center gap-1.5"
+              @click="saveDynamicTheme"
+            >
+              <span>Save &amp; Apply Dynamic Theme</span>
+            </button>
+          </div>
+
+          <!-- Preset Color Theme Picker -->
+          <div class="p-5 rounded-lg border border-[#EBE9F1] bg-white">
+            <h4 class="text-xs font-bold text-[#82868B] uppercase tracking-wider mb-3">Preset Color Themes</h4>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+              <button
+                v-for="(tObj, tKey) in themeStore.themes"
+                :key="tKey"
+                type="button"
+                class="p-3 rounded-lg text-xs font-bold transition-all border cursor-pointer flex flex-col items-center gap-2"
+                :class="themeStore.currentTheme === tKey ? 'bg-[#7367F0]/10 border-[#7367F0] text-[#7367F0] ring-2 ring-[#7367F0]/20' : 'bg-[#F8F7FA] border-[#EBE9F1] text-[#4B465C] hover:bg-[#F8F7FA]/70'"
+                @click="applyThemePreset(tKey)"
+              >
+                <div class="w-8 h-8 rounded-full border border-[#DBDADE] shadow-xs" :style="{ backgroundColor: tObj.primary }"></div>
+                <span class="capitalize text-xs font-bold">{{ tKey }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Custom Color Pickers Grid -->
+          <div class="p-5 rounded-lg border border-[#EBE9F1] bg-white space-y-4">
+            <div class="flex items-center justify-between border-b border-[#EBE9F1] pb-3">
+              <h4 class="text-xs font-bold text-[#82868B] uppercase tracking-wider m-0">Custom Color Palette (Hex &amp; Pickers)</h4>
+              <span class="text-xs text-[#82868B] font-medium">Real-time CSS variable injection</span>
+            </div>
             
-            <div class="split-preview-layout">
-              <div class="color-pickers-grid" style="flex: 1;">
-                <div class="color-picker-item">
-                  <span class="picker-label">Sidebar Menu/Setup Menu Background Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('admin_sidebar_bg')" v-model="settings.admin_sidebar_bg" class="color-picker-box" />
-                    <a-input v-model:value="settings.admin_sidebar_bg" size="small" style="width: 110px" />
-                  </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <!-- Primary Theme Color -->
+              <div class="p-3 rounded-lg border border-[#EBE9F1] bg-[#F8F7FA]">
+                <label class="block text-xs font-bold text-[#4B465C] mb-2">Primary Color (Buttons &amp; Active Items)</label>
+                <div class="flex items-center gap-2">
+                  <input type="color" v-model="customThemeForm.primary" class="w-9 h-9 rounded border border-[#DBDADE] cursor-pointer p-0 bg-transparent overflow-hidden shrink-0" />
+                  <input type="text" v-model="customThemeForm.primary" class="w-full h-9 px-2 text-xs font-mono font-bold bg-white border border-[#DBDADE] rounded text-[#4B465C]" />
+                </div>
+              </div>
+
+              <!-- Primary Hover Color -->
+              <div class="p-3 rounded-lg border border-[#EBE9F1] bg-[#F8F7FA]">
+                <label class="block text-xs font-bold text-[#4B465C] mb-2">Primary Hover State Color</label>
+                <div class="flex items-center gap-2">
+                  <input type="color" v-model="customThemeForm.primaryHover" class="w-9 h-9 rounded border border-[#DBDADE] cursor-pointer p-0 bg-transparent overflow-hidden shrink-0" />
+                  <input type="text" v-model="customThemeForm.primaryHover" class="w-full h-9 px-2 text-xs font-mono font-bold bg-white border border-[#DBDADE] rounded text-[#4B465C]" />
+                </div>
+              </div>
+
+              <!-- Dark Text / Header Dark Color -->
+              <div class="p-3 rounded-lg border border-[#EBE9F1] bg-[#F8F7FA]">
+                <label class="block text-xs font-bold text-[#4B465C] mb-2">Navbar &amp; Heading Dark Text</label>
+                <div class="flex items-center gap-2">
+                  <input type="color" v-model="customThemeForm.textDark" class="w-9 h-9 rounded border border-[#DBDADE] cursor-pointer p-0 bg-transparent overflow-hidden shrink-0" />
+                  <input type="text" v-model="customThemeForm.textDark" class="w-full h-9 px-2 text-xs font-mono font-bold bg-white border border-[#DBDADE] rounded text-[#4B465C]" />
+                </div>
+              </div>
+
+              <!-- Outer Page Background Color -->
+              <div class="p-3 rounded-lg border border-[#EBE9F1] bg-[#F8F7FA]">
+                <label class="block text-xs font-bold text-[#4B465C] mb-2">Outer Page Background</label>
+                <div class="flex items-center gap-2">
+                  <input type="color" v-model="customThemeForm.bg" class="w-9 h-9 rounded border border-[#DBDADE] cursor-pointer p-0 bg-transparent overflow-hidden shrink-0" />
+                  <input type="text" v-model="customThemeForm.bg" class="w-full h-9 px-2 text-xs font-mono font-bold bg-white border border-[#DBDADE] rounded text-[#4B465C]" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Custom Branding & Background Images -->
+          <div class="p-5 rounded-lg border border-[#EBE9F1] bg-white space-y-4">
+            <h4 class="text-xs font-bold text-[#82868B] uppercase tracking-wider border-b border-[#EBE9F1] pb-3 m-0">Application Background &amp; Branding Image Uploads</h4>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- 1. Main Background Image -->
+              <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white flex flex-col justify-between">
+                <div>
+                  <label class="block text-xs font-bold text-[#4B465C] mb-1">Outer Application Background</label>
+                  <p class="text-[11px] text-[#82868B] mb-3">Wallpaper image applied behind CRM workspace</p>
                 </div>
 
-                <div class="color-picker-item">
-                  <span class="picker-label">Sidebar Menu/Setup Menu Links Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('admin_sidebar_link')" v-model="settings.admin_sidebar_link" class="color-picker-box" />
-                    <a-input v-model:value="settings.admin_sidebar_link" size="small" style="width: 110px" />
+                <div class="border-2 border-dashed border-[#DBDADE] hover:border-[#7367F0] rounded-lg p-4 text-center flex flex-col items-center justify-center min-h-[120px] bg-[#F8F7FA]">
+                  <div v-if="customThemeForm.bgImage" class="mb-3 p-2 bg-white rounded border border-[#EBE9F1] flex items-center justify-center max-h-16">
+                    <img :src="customThemeForm.bgImage" alt="App Background Preview" class="max-h-12 object-contain" />
                   </div>
-                </div>
+                  
+                  <div class="flex items-center gap-2 flex-wrap justify-center">
+                    <label class="px-3 py-1.5 bg-[#7367F0] hover:bg-[#685dd8] text-white text-xs font-bold rounded cursor-pointer transition-all flex items-center gap-1.5 shadow-sm">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                      <span>{{ customThemeForm.bgImage ? 'Change Image' : 'Upload Image' }}</span>
+                      <input type="file" accept="image/*" class="hidden" @change="handleDynamicFileUpload($event, 'bgImage')" />
+                    </label>
 
-                <div class="color-picker-item">
-                  <span class="picker-label">Sidebar Menu/Setup Active Item Background Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('admin_sidebar_active_bg')" v-model="settings.admin_sidebar_active_bg" class="color-picker-box" />
-                    <a-input v-model:value="settings.admin_sidebar_active_bg" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Sidebar Menu/Setup Active Item Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('admin_sidebar_active_link')" v-model="settings.admin_sidebar_active_link" class="color-picker-box" />
-                    <a-input v-model:value="settings.admin_sidebar_active_link" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Top Header Background Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('admin_header_bg')" v-model="settings.admin_header_bg" class="color-picker-box" />
-                    <a-input v-model:value="settings.admin_header_bg" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Top Header Links Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('admin_header_link')" v-model="settings.admin_header_link" class="color-picker-box" />
-                    <a-input v-model:value="settings.admin_header_link" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Main Content Background Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('admin_content_bg')" v-model="settings.admin_content_bg" class="color-picker-box" />
-                    <a-input v-model:value="settings.admin_content_bg" size="small" style="width: 110px" />
+                    <button v-if="customThemeForm.bgImage" type="button" class="px-2.5 py-1.5 text-xs font-bold text-[#EA5455] hover:bg-[#EA5455]/10 rounded border border-[#EA5455]/30 cursor-pointer" @click="removeDynamicFile('bgImage')">
+                      Remove
+                    </button>
                   </div>
                 </div>
               </div>
 
-              <!-- Sidebar Preview Panel -->
-              <div class="preview-panel" style="flex: 1;">
-                <span class="preview-title">Sidebar Visual Preview (Click to Customize)</span>
-                <div class="sidebar-preview-box" :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.admin_sidebar_bg} 50%, #0b579f 100%)` }" style="cursor: pointer" @click.self="triggerPicker('admin_sidebar_bg')">
-                  <div class="sidebar-preview-logo" style="cursor: pointer" @click="triggerPicker('admin_sidebar_bg')">
-                    <span style="color:#fff;font-weight:700;letter-spacing:0.5px">iBRIDGE CRM</span>
+              <!-- 2. Header Image -->
+              <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white flex flex-col justify-between">
+                <div>
+                  <label class="block text-xs font-bold text-[#4B465C] mb-1">Header Navbar Pattern</label>
+                  <p class="text-[11px] text-[#82868B] mb-3">Pattern or banner for the top navbar</p>
+                </div>
+
+                <div class="border-2 border-dashed border-[#DBDADE] hover:border-[#7367F0] rounded-lg p-4 text-center flex flex-col items-center justify-center min-h-[120px] bg-[#F8F7FA]">
+                  <div v-if="customThemeForm.headerImage" class="mb-3 p-2 bg-white rounded border border-[#EBE9F1] flex items-center justify-center max-h-16">
+                    <img :src="customThemeForm.headerImage" alt="Header Preview" class="max-h-12 object-contain" />
                   </div>
-                  <div class="sidebar-preview-menu">
-                    <div class="sidebar-preview-item active" :style="{ backgroundColor: settings.admin_sidebar_active_bg, color: settings.admin_sidebar_active_link }" style="cursor: pointer" @click.stop="triggerPicker('admin_sidebar_active_bg')">
-                      <span>Dashboard</span>
-                    </div>
-                    <div class="sidebar-preview-item" :style="{ color: settings.admin_sidebar_link }" style="cursor: pointer" @click.stop="triggerPicker('admin_sidebar_link')">
-                      <span>Customers</span>
-                    </div>
-                    <div class="sidebar-preview-item" :style="{ color: settings.admin_sidebar_link }" style="cursor: pointer" @click.stop="triggerPicker('admin_sidebar_link')">
-                      <span>Invoices</span>
-                    </div>
+                  
+                  <div class="flex items-center gap-2 flex-wrap justify-center">
+                    <label class="px-3 py-1.5 bg-[#7367F0] hover:bg-[#685dd8] text-white text-xs font-bold rounded cursor-pointer transition-all flex items-center gap-1.5 shadow-sm">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                      <span>{{ customThemeForm.headerImage ? 'Change Image' : 'Upload Pattern' }}</span>
+                      <input type="file" accept="image/*" class="hidden" @change="handleDynamicFileUpload($event, 'headerImage')" />
+                    </label>
+
+                    <button v-if="customThemeForm.headerImage" type="button" class="px-2.5 py-1.5 text-xs font-bold text-[#EA5455] hover:bg-[#EA5455]/10 rounded border border-[#EA5455]/30 cursor-pointer" @click="removeDynamicFile('headerImage')">
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3. Sidebar Logo -->
+              <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white flex flex-col justify-between">
+                <div>
+                  <label class="block text-xs font-bold text-[#4B465C] mb-1">Custom Sidebar Branding Logo</label>
+                  <p class="text-[11px] text-[#82868B] mb-3">Replaces top-left sidebar brand logo</p>
+                </div>
+
+                <div class="border-2 border-dashed border-[#DBDADE] hover:border-[#7367F0] rounded-lg p-4 text-center flex flex-col items-center justify-center min-h-[120px] bg-[#F8F7FA]">
+                  <div v-if="customThemeForm.sidebarLogo" class="mb-3 p-2 bg-white rounded border border-[#EBE9F1] flex items-center justify-center max-h-16">
+                    <img :src="customThemeForm.sidebarLogo" alt="Sidebar Logo Preview" class="max-h-12 object-contain" />
+                  </div>
+
+                  <div class="flex items-center gap-2 flex-wrap justify-center">
+                    <label class="px-3 py-1.5 bg-[#7367F0] hover:bg-[#685dd8] text-white text-xs font-bold rounded cursor-pointer transition-all flex items-center gap-1.5 shadow-sm">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                      <span>{{ customThemeForm.sidebarLogo ? 'Change Logo' : 'Upload Logo' }}</span>
+                      <input type="file" accept="image/*" class="hidden" @change="handleDynamicFileUpload($event, 'sidebarLogo')" />
+                    </label>
+
+                    <button v-if="customThemeForm.sidebarLogo" type="button" class="px-2.5 py-1.5 text-xs font-bold text-[#EA5455] hover:bg-[#EA5455]/10 rounded border border-[#EA5455]/30 cursor-pointer" @click="removeDynamicFile('sidebarLogo')">
+                      Remove
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </a-tab-pane>
 
-        <!-- 2. CUSTOMERS AREA -->
-        <a-tab-pane key="customers_area" tab="Customers Area">
-          <div class="tab-content-wrap">
-            <h3 class="tab-title">Customers Area Styling</h3>
-            
-            <div class="split-preview-layout">
-              <div class="color-pickers-grid" style="flex: 1;">
-                <div class="color-picker-item">
-                  <span class="picker-label">Navigation Background Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('cust_nav_bg')" v-model="settings.cust_nav_bg" class="color-picker-box" />
-                    <a-input v-model:value="settings.cust_nav_bg" size="small" style="width: 110px" />
-                  </div>
+          <!-- Live Theme Preview Canvas -->
+          <div class="p-5 rounded-lg border border-[#EBE9F1] bg-white space-y-3">
+            <div class="flex items-center justify-between border-b border-[#EBE9F1] pb-3">
+              <span class="text-xs font-bold text-[#82868B] uppercase tracking-wider">Live Dynamic Theme Canvas Preview</span>
+              <span class="px-2.5 py-0.5 text-[10px] font-bold bg-[#7367F0]/10 text-[#7367F0] rounded">Real-Time</span>
+            </div>
+            <div class="p-6 rounded-lg text-white shadow-sm transition-all" :style="{ background: 'linear-gradient(135deg, ' + (customThemeForm.textDark || '#2F3349') + ' 0%, ' + (customThemeForm.primary || '#7367F0') + ' 100%)' }">
+              <h4 class="text-sm font-bold text-white m-0 mb-1">Interactive Theme Preview</h4>
+              <p class="text-xs text-white/80 m-0 max-w-lg mb-4">Demonstrating active header gradient, contrast levels, and primary button hover states.</p>
+              <div class="flex items-center gap-3">
+                <button type="button" class="px-4 py-2 rounded-md font-bold text-xs shadow-sm border-none cursor-pointer" :style="{ background: customThemeForm.primary || '#7367F0', color: '#fff' }">Primary Action</button>
+                <button type="button" class="px-4 py-2 rounded-md font-bold text-xs bg-white/20 hover:bg-white/30 text-white border-none cursor-pointer">Secondary Action</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- 1. LOGO & BRAND IDENTITY                   -->
+        <!-- ========================================== -->
+        <div v-if="activeTab === 'logo_management'" class="space-y-6">
+          <div class="pb-4 border-b border-[#EBE9F1]">
+            <h3 class="text-base font-bold text-[#4B465C] m-0">Brand Logo &amp; Favicon Studio</h3>
+            <p class="text-xs text-[#82868B] m-0 mt-1">Manage brand identity, sidebar logos, login page graphics, mascot controls, and browser favicon.</p>
+          </div>
+
+          <!-- Company Brand Name -->
+          <div class="p-5 rounded-lg border border-[#EBE9F1] bg-white space-y-4">
+            <h4 class="text-xs font-bold text-[#82868B] uppercase tracking-wider border-b border-[#EBE9F1] pb-2 m-0">Company Brand Identity</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-[#4B465C] mb-1">Company Name *</label>
+                <input type="text" v-model="settings.company_name" class="w-full px-3 py-2 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] text-[#4B465C] font-semibold" placeholder="e.g. Ibridge Digital" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-[#4B465C] mb-1">Page Title Prefix</label>
+                <input type="text" v-model="settings.app_page_title" class="w-full px-3 py-2 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] text-[#4B465C] font-semibold" placeholder="e.g. Ibridge Digital CRM" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-[#4B465C] mb-1">Sidebar Brand Text</label>
+                <input type="text" v-model="settings.sidebar_logo_text" class="w-full px-3 py-2 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] text-[#4B465C] font-semibold" placeholder="e.g. Ibridge Digital" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-[#4B465C] mb-1">Login Screen Title</label>
+                <input type="text" v-model="settings.login_logo_text" class="w-full px-3 py-2 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] text-[#4B465C] font-semibold" placeholder="e.g. Ibridge Digital CRM" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Logo Dropzones Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Sidebar Logo -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white space-y-3">
+              <h4 class="text-xs font-bold text-[#4B465C] m-0">Sidebar Navigation Logo</h4>
+              <div class="border-2 border-dashed border-[#DBDADE] rounded-lg p-4 text-center bg-[#F8F7FA]">
+                <div v-if="settings.sidebar_logo_url" class="mb-3 p-2 bg-white rounded border border-[#EBE9F1] flex items-center justify-center max-h-16">
+                  <img :src="settings.sidebar_logo_url" alt="Sidebar Logo" class="max-h-12 object-contain" />
                 </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Navigation Links Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('cust_nav_link')" v-model="settings.cust_nav_link" class="color-picker-box" />
-                    <a-input v-model:value="settings.cust_nav_link" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Footer Background</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('cust_footer_bg')" v-model="settings.cust_footer_bg" class="color-picker-box" />
-                    <a-input v-model:value="settings.cust_footer_bg" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Footer Text Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('cust_footer_text')" v-model="settings.cust_footer_text" class="color-picker-box" />
-                    <a-input v-model:value="settings.cust_footer_text" size="small" style="width: 110px" />
-                  </div>
+                <div class="flex items-center justify-center gap-2">
+                  <label class="px-3 py-1.5 bg-[#7367F0] hover:bg-[#685dd8] text-white text-xs font-bold rounded cursor-pointer transition-all flex items-center gap-1">
+                    <span>Upload Logo</span>
+                    <input type="file" accept="image/*" class="hidden" @change="handleFileUpload($event, 'sidebar_logo_url')" />
+                  </label>
+                  <button v-if="settings.sidebar_logo_url" type="button" class="px-2.5 py-1.5 text-xs text-[#82868B] hover:text-[#4B465C] bg-white border border-[#DBDADE] rounded" @click="resetSidebarLogo">Reset</button>
                 </div>
               </div>
+            </div>
 
-              <!-- Portal Navigation Preview -->
-              <div class="preview-panel" style="flex: 1;">
-                <span class="preview-title">Portal Navigation Preview (Click to Customize)</span>
-                <div class="nav-preview-box" :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.cust_nav_bg} 50%, #0b579f 100%)` }" style="cursor: pointer" @click.self="triggerPicker('cust_nav_bg')">
-                  <span class="nav-preview-brand" style="color: #fff; font-weight: 600; cursor: pointer" @click.stop="triggerPicker('cust_nav_bg')">Customer Portal</span>
-                  <div class="nav-preview-links" :style="{ color: settings.cust_nav_link }">
-                    <span style="border-bottom: 2px solid #fff; padding-bottom: 2px; cursor: pointer" @click.stop="triggerPicker('cust_nav_link')">Invoices</span>
-                    <span style="opacity: 0.8; margin-left: 12px; cursor: pointer" @click.stop="triggerPicker('cust_nav_link')">Estimates</span>
-                  </div>
+            <!-- Login Logo -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white space-y-3">
+              <h4 class="text-xs font-bold text-[#4B465C] m-0">Login Screen Brand Logo</h4>
+              <div class="border-2 border-dashed border-[#DBDADE] rounded-lg p-4 text-center bg-[#F8F7FA]">
+                <div v-if="settings.login_logo_url" class="mb-3 p-2 bg-white rounded border border-[#EBE9F1] flex items-center justify-center max-h-16">
+                  <img :src="settings.login_logo_url" alt="Login Logo" class="max-h-12 object-contain" />
                 </div>
-                <div class="footer-preview-box" :style="{ backgroundColor: settings.cust_footer_bg, color: settings.cust_footer_text }" style="cursor: pointer" @click="triggerPicker('cust_footer_bg')">
-                  <span style="cursor: pointer" @click.stop="triggerPicker('cust_footer_text')">© 2026 iBRIDGE CRM. All rights reserved.</span>
+                <div class="flex items-center justify-center gap-2">
+                  <label class="px-3 py-1.5 bg-[#7367F0] hover:bg-[#685dd8] text-white text-xs font-bold rounded cursor-pointer transition-all flex items-center gap-1">
+                    <span>Upload Logo</span>
+                    <input type="file" accept="image/*" class="hidden" @change="handleFileUpload($event, 'login_logo_url')" />
+                  </label>
+                  <button v-if="settings.login_logo_url" type="button" class="px-2.5 py-1.5 text-xs text-[#82868B] hover:text-[#4B465C] bg-white border border-[#DBDADE] rounded" @click="resetLoginLogo">Reset</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Favicon -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white space-y-3">
+              <h4 class="text-xs font-bold text-[#4B465C] m-0">Website Favicon (.ico / .png)</h4>
+              <div class="border-2 border-dashed border-[#DBDADE] rounded-lg p-4 text-center bg-[#F8F7FA]">
+                <div v-if="settings.favicon_url" class="mb-3 p-2 bg-white rounded border border-[#EBE9F1] flex items-center justify-center max-h-16">
+                  <img :src="resolveFaviconUrl(settings.favicon_url)" alt="Favicon" class="w-8 h-8 object-contain" />
+                </div>
+                <div class="flex items-center justify-center gap-2">
+                  <label class="px-3 py-1.5 bg-[#7367F0] hover:bg-[#685dd8] text-white text-xs font-bold rounded cursor-pointer transition-all flex items-center gap-1">
+                    <span>Upload Favicon</span>
+                    <input type="file" accept="image/*" class="hidden" @change="handleFileUpload($event, 'favicon_url')" />
+                  </label>
+                  <button v-if="settings.favicon_url" type="button" class="px-2.5 py-1.5 text-xs text-[#82868B] hover:text-[#4B465C] bg-white border border-[#DBDADE] rounded" @click="resetFavicon">Reset</button>
                 </div>
               </div>
             </div>
           </div>
-        </a-tab-pane>
+        </div>
 
-        <!-- 3. BUTTONS -->
-        <a-tab-pane key="buttons" tab="Buttons">
-          <div class="tab-content-wrap">
-            <h3 class="tab-title">Button Styling</h3>
-            
-            <div class="split-preview-layout">
-              <div class="color-pickers-grid" style="flex: 1;">
-                <div class="color-picker-item">
-                  <span class="picker-label">Button Default</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('btn_default')" v-model="settings.btn_default" class="color-picker-box" />
-                    <a-input v-model:value="settings.btn_default" size="small" style="width: 110px" />
-                  </div>
-                </div>
+        <!-- ========================================== -->
+        <!-- 2. ADMIN MENU & NAVBAR                     -->
+        <!-- ========================================== -->
+        <div v-if="activeTab === 'admin_menu'" class="space-y-6">
+          <div class="pb-4 border-b border-[#EBE9F1]">
+            <h3 class="text-base font-bold text-[#4B465C] m-0">Admin Menu &amp; Navbar Styling</h3>
+            <p class="text-xs text-[#82868B] m-0 mt-1">Configure sidebar menu background, active pills, text colors, and navbar styling.</p>
+          </div>
 
-                <div class="color-picker-item">
-                  <span class="picker-label">Button Primary</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('btn_primary')" v-model="settings.btn_primary" class="color-picker-box" />
-                    <a-input v-model:value="settings.btn_primary" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Button Info</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('btn_info')" v-model="settings.btn_info" class="color-picker-box" />
-                    <a-input v-model:value="settings.btn_info" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Button Success</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('btn_success')" v-model="settings.btn_success" class="color-picker-box" />
-                    <a-input v-model:value="settings.btn_success" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Button Danger</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('btn_danger')" v-model="settings.btn_danger" class="color-picker-box" />
-                    <a-input v-model:value="settings.btn_danger" size="small" style="width: 110px" />
-                  </div>
-                </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="p-3 rounded-lg border border-[#EBE9F1] bg-[#F8F7FA]">
+              <label class="block text-xs font-bold text-[#4B465C] mb-2">Admin Sidebar Background</label>
+              <div class="flex items-center gap-2">
+                <input type="color" v-model="settings.admin_sidebar_bg" class="w-9 h-9 rounded border border-[#DBDADE] cursor-pointer p-0 bg-transparent shrink-0" />
+                <input type="text" v-model="settings.admin_sidebar_bg" class="w-full h-9 px-2 text-xs font-mono font-bold bg-white border border-[#DBDADE] rounded text-[#4B465C]" />
               </div>
+            </div>
 
-              <!-- Buttons Preview Panel -->
-              <div class="preview-panel" style="flex: 1;">
-                <span class="preview-title">Buttons Visual Preview (Click to Customize)</span>
-                <div class="buttons-preview-list">
-                  <button type="button" class="preview-btn" :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.btn_default} 50%, #0b579f 100%)`, color: '#fff', border: 'none' }" style="cursor: pointer" @click="triggerPicker('btn_default')">Default Button</button>
-                  <button type="button" class="preview-btn" :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.btn_primary} 50%, #0b579f 100%)`, color: '#fff', border: 'none', boxShadow: `0px 4px 14px 0px rgba(126, 30, 142, 0.2)` }" style="cursor: pointer" @click="triggerPicker('btn_primary')">Primary Button</button>
-                  <button type="button" class="preview-btn" :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.btn_info} 50%, #0b579f 100%)`, color: '#fff', border: 'none' }" style="cursor: pointer" @click="triggerPicker('btn_info')">Info Button</button>
-                  <button type="button" class="preview-btn" :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.btn_success} 50%, #0b579f 100%)`, color: '#fff', border: 'none' }" style="cursor: pointer" @click="triggerPicker('btn_success')">Success Button</button>
-                  <button type="button" class="preview-btn" :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.btn_danger} 50%, #0b579f 100%)`, color: '#fff', border: 'none' }" style="cursor: pointer" @click="triggerPicker('btn_danger')">Danger Button</button>
-                </div>
+            <div class="p-3 rounded-lg border border-[#EBE9F1] bg-[#F8F7FA]">
+              <label class="block text-xs font-bold text-[#4B465C] mb-2">Sidebar Links Text Color</label>
+              <div class="flex items-center gap-2">
+                <input type="color" v-model="settings.admin_sidebar_link" class="w-9 h-9 rounded border border-[#DBDADE] cursor-pointer p-0 bg-transparent shrink-0" />
+                <input type="text" v-model="settings.admin_sidebar_link" class="w-full h-9 px-2 text-xs font-mono font-bold bg-white border border-[#DBDADE] rounded text-[#4B465C]" />
+              </div>
+            </div>
+
+            <div class="p-3 rounded-lg border border-[#EBE9F1] bg-[#F8F7FA]">
+              <label class="block text-xs font-bold text-[#4B465C] mb-2">Sidebar Active Item Background</label>
+              <div class="flex items-center gap-2">
+                <input type="color" v-model="settings.admin_sidebar_active_bg" class="w-9 h-9 rounded border border-[#DBDADE] cursor-pointer p-0 bg-transparent shrink-0" />
+                <input type="text" v-model="settings.admin_sidebar_active_bg" class="w-full h-9 px-2 text-xs font-mono font-bold bg-white border border-[#DBDADE] rounded text-[#4B465C]" />
+              </div>
+            </div>
+
+            <div class="p-3 rounded-lg border border-[#EBE9F1] bg-[#F8F7FA]">
+              <label class="block text-xs font-bold text-[#4B465C] mb-2">Sidebar Active Link Text Color</label>
+              <div class="flex items-center gap-2">
+                <input type="color" v-model="settings.admin_sidebar_active_link" class="w-9 h-9 rounded border border-[#DBDADE] cursor-pointer p-0 bg-transparent shrink-0" />
+                <input type="text" v-model="settings.admin_sidebar_active_link" class="w-full h-9 px-2 text-xs font-mono font-bold bg-white border border-[#DBDADE] rounded text-[#4B465C]" />
+              </div>
+            </div>
+
+            <div class="p-3 rounded-lg border border-[#EBE9F1] bg-[#F8F7FA]">
+              <label class="block text-xs font-bold text-[#4B465C] mb-2">Top Navbar Background</label>
+              <div class="flex items-center gap-2">
+                <input type="color" v-model="settings.admin_header_bg" class="w-9 h-9 rounded border border-[#DBDADE] cursor-pointer p-0 bg-transparent shrink-0" />
+                <input type="text" v-model="settings.admin_header_bg" class="w-full h-9 px-2 text-xs font-mono font-bold bg-white border border-[#DBDADE] rounded text-[#4B465C]" />
+              </div>
+            </div>
+
+            <div class="p-3 rounded-lg border border-[#EBE9F1] bg-[#F8F7FA]">
+              <label class="block text-xs font-bold text-[#4B465C] mb-2">Workspace Content Background</label>
+              <div class="flex items-center gap-2">
+                <input type="color" v-model="settings.admin_content_bg" class="w-9 h-9 rounded border border-[#DBDADE] cursor-pointer p-0 bg-transparent shrink-0" />
+                <input type="text" v-model="settings.admin_content_bg" class="w-full h-9 px-2 text-xs font-mono font-bold bg-white border border-[#DBDADE] rounded text-[#4B465C]" />
               </div>
             </div>
           </div>
-        </a-tab-pane>
+        </div>
 
-        <!-- 4. MODALS -->
-        <a-tab-pane key="modals" tab="Modals">
-          <div class="tab-content-wrap">
-            <h3 class="tab-title">Modal Styling</h3>
-            
-            <div class="split-preview-layout">
-              <div class="color-pickers-grid" style="flex: 1;">
-                <div class="color-picker-item">
-                  <span class="picker-label">Heading Background</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('modal_heading_bg')" v-model="settings.modal_heading_bg" class="color-picker-box" />
-                    <a-input v-model:value="settings.modal_heading_bg" size="small" style="width: 110px" />
-                  </div>
-                </div>
+        <!-- ========================================== -->
+        <!-- 3. BUTTON STYLES & ACCENTS                 -->
+        <!-- ========================================== -->
+        <div v-if="activeTab === 'buttons'" class="space-y-6">
+          <div class="pb-4 border-b border-[#EBE9F1]">
+            <h3 class="text-base font-bold text-[#4B465C] m-0">Buttons &amp; UI Accent Styling</h3>
+            <p class="text-xs text-[#82868B] m-0 mt-1">Configure action buttons and live feedback pills across all modules.</p>
+          </div>
 
-                <div class="color-picker-item">
-                  <span class="picker-label">Heading Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('modal_heading_color')" v-model="settings.modal_heading_color" class="color-picker-box" />
-                    <a-input v-model:value="settings.modal_heading_color" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Close Button Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('modal_close_color')" v-model="settings.modal_close_color" class="color-picker-box" />
-                    <a-input v-model:value="settings.modal_close_color" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Modal Header Text Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('modal_header_text_color')" v-model="settings.modal_header_text_color" class="color-picker-box" />
-                    <a-input v-model:value="settings.modal_header_text_color" size="small" style="width: 110px" />
-                  </div>
-                </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white space-y-3">
+              <label class="block text-xs font-bold text-[#4B465C]">Primary Action Button</label>
+              <div class="flex items-center gap-2">
+                <input type="color" v-model="settings.btn_primary" class="w-9 h-9 rounded border border-[#DBDADE] cursor-pointer p-0 bg-transparent shrink-0" />
+                <input type="text" v-model="settings.btn_primary" class="w-full h-9 px-2 text-xs font-mono font-bold bg-[#F8F7FA] border border-[#DBDADE] rounded text-[#4B465C]" />
               </div>
+              <button type="button" class="w-full py-2 text-white text-xs font-bold rounded-md shadow-sm border-none cursor-pointer" :style="{ background: settings.btn_primary }">
+                Primary Button Sample
+              </button>
+            </div>
 
-              <!-- Modal Preview Frame -->
-              <div class="preview-panel" style="flex: 1;">
-                <span class="preview-title">Visual Preview (Click to Customize)</span>
-                <div class="modal-preview-box">
-                  <div class="modal-preview-header" :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.modal_heading_bg} 50%, #0b579f 100%)` }" style="cursor: pointer" @click.self="triggerPicker('modal_heading_bg')">
-                    <span class="modal-preview-heading-text" :style="{ color: '#fff' }" style="cursor: pointer" @click.stop="triggerPicker('modal_heading_bg')">Example Modal Heading</span>
-                    <span class="modal-preview-close" :style="{ color: settings.modal_close_color }" style="cursor: pointer" @click.stop="triggerPicker('modal_close_color')">×</span>
-                  </div>
-                  <div class="modal-preview-body">
-                    <span class="sample-text-header" :style="{ color: settings.modal_heading_color }" style="cursor: pointer" @click="triggerPicker('modal_heading_color')">Sample Text</span>
-                    <p class="sample-body-text">Modal Body</p>
-                  </div>
-                </div>
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white space-y-3">
+              <label class="block text-xs font-bold text-[#4B465C]">Success Action Button</label>
+              <div class="flex items-center gap-2">
+                <input type="color" v-model="settings.btn_success" class="w-9 h-9 rounded border border-[#DBDADE] cursor-pointer p-0 bg-transparent shrink-0" />
+                <input type="text" v-model="settings.btn_success" class="w-full h-9 px-2 text-xs font-mono font-bold bg-[#F8F7FA] border border-[#DBDADE] rounded text-[#4B465C]" />
               </div>
+              <button type="button" class="w-full py-2 text-white text-xs font-bold rounded-md shadow-sm border-none cursor-pointer" :style="{ background: settings.btn_success }">
+                Success Button Sample
+              </button>
+            </div>
+
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white space-y-3">
+              <label class="block text-xs font-bold text-[#4B465C]">Info Action Button</label>
+              <div class="flex items-center gap-2">
+                <input type="color" v-model="settings.btn_info" class="w-9 h-9 rounded border border-[#DBDADE] cursor-pointer p-0 bg-transparent shrink-0" />
+                <input type="text" v-model="settings.btn_info" class="w-full h-9 px-2 text-xs font-mono font-bold bg-[#F8F7FA] border border-[#DBDADE] rounded text-[#4B465C]" />
+              </div>
+              <button type="button" class="w-full py-2 text-white text-xs font-bold rounded-md shadow-sm border-none cursor-pointer" :style="{ background: settings.btn_info }">
+                Info Button Sample
+              </button>
+            </div>
+
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white space-y-3">
+              <label class="block text-xs font-bold text-[#4B465C]">Danger Action Button</label>
+              <div class="flex items-center gap-2">
+                <input type="color" v-model="settings.btn_danger" class="w-9 h-9 rounded border border-[#DBDADE] cursor-pointer p-0 bg-transparent shrink-0" />
+                <input type="text" v-model="settings.btn_danger" class="w-full h-9 px-2 text-xs font-mono font-bold bg-[#F8F7FA] border border-[#DBDADE] rounded text-[#4B465C]" />
+              </div>
+              <button type="button" class="w-full py-2 text-white text-xs font-bold rounded-md shadow-sm border-none cursor-pointer" :style="{ background: settings.btn_danger }">
+                Danger Button Sample
+              </button>
             </div>
           </div>
-        </a-tab-pane>
+        </div>
 
-        <!-- 5. TABLES -->
-        <a-tab-pane key="tables" tab="Tables">
-          <div class="tab-content-wrap">
-            <h3 class="tab-title">Table Styling</h3>
-            
-            <div class="split-preview-layout">
-              <div class="color-pickers-grid" style="flex: 1;">
-                <div class="color-picker-item">
-                  <span class="picker-label">Table Links Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('table_link')" v-model="settings.table_link" class="color-picker-box" />
-                    <a-input v-model:value="settings.table_link" size="small" style="width: 110px" />
-                  </div>
-                </div>
+        <!-- ========================================== -->
+        <!-- 4. CUSTOM CSS EDITOR                       -->
+        <!-- ========================================== -->
+        <div v-if="activeTab === 'custom_css'" class="space-y-6">
+          <div class="pb-4 border-b border-[#EBE9F1]">
+            <h3 class="text-base font-bold text-[#4B465C] m-0">Custom CSS Code Editor</h3>
+            <p class="text-xs text-[#82868B] m-0 mt-1">Inject custom CSS overrides directly into Admin and Customer portals.</p>
+          </div>
 
-                <div class="color-picker-item">
-                  <span class="picker-label">Table Links Hover/Focus Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('table_link_hover')" v-model="settings.table_link_hover" class="color-picker-box" />
-                    <a-input v-model:value="settings.table_link_hover" size="small" style="width: 110px" />
-                  </div>
-                </div>
+          <div class="space-y-4">
+            <div class="flex items-center gap-2 bg-[#F8F7FA] p-1 rounded-lg border border-[#EBE9F1] w-fit">
+              <button 
+                type="button" 
+                class="px-3 py-1.5 rounded-md text-xs font-bold transition-all border-none cursor-pointer"
+                :class="settings.custom_css_tab === 'admin' ? 'bg-white text-[#7367F0] shadow-sm' : 'text-[#82868B] hover:text-[#4B465C]'"
+                @click="settings.custom_css_tab = 'admin'"
+              >
+                Admin Area CSS
+              </button>
+              <button 
+                type="button" 
+                class="px-3 py-1.5 rounded-md text-xs font-bold transition-all border-none cursor-pointer"
+                :class="settings.custom_css_tab === 'customer' ? 'bg-white text-[#7367F0] shadow-sm' : 'text-[#82868B] hover:text-[#4B465C]'"
+                @click="settings.custom_css_tab = 'customer'"
+              >
+                Customers Area CSS
+              </button>
+            </div>
 
-                <div class="color-picker-item">
-                  <span class="picker-label">Table Headings Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('table_heading')" v-model="settings.table_heading" class="color-picker-box" />
-                    <a-input v-model:value="settings.table_heading" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Items Table Headings Background Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('table_items_heading_bg')" v-model="settings.table_items_heading_bg" class="color-picker-box" />
-                    <a-input v-model:value="settings.table_items_heading_bg" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Items Table Headings Text Color</span>
-                  <div class="picker-controls">
-                    <input type="color" :ref="setPickerRef('table_items_heading_text')" v-model="settings.table_items_heading_text" class="color-picker-box" />
-                    <a-input v-model:value="settings.table_items_heading_text" size="small" style="width: 110px" />
-                  </div>
-                </div>
+            <div class="rounded-lg overflow-hidden border border-[#2F3349]">
+              <div class="bg-[#2F3349] px-4 py-2 text-xs text-[#A5A2AD] font-mono flex items-center justify-between">
+                <span>{{ settings.custom_css_tab === 'admin' ? 'admin-custom.css' : 'customers-custom.css' }}</span>
+                <span>CSS</span>
               </div>
-
-              <!-- Table Preview Frame -->
-              <div class="preview-panel" style="flex: 1;">
-                <span class="preview-title">Visual Preview (Click to Customize)</span>
-                <table class="table-preview-control">
-                  <thead :style="{ background: `linear-gradient(135deg, #d35400 0%, ${settings.table_items_heading_bg} 50%, #0b579f 100%)`, color: settings.table_items_heading_text }" style="cursor: pointer" @click="triggerPicker('table_items_heading_bg')">
-                    <tr>
-                      <th style="color:#fff; cursor: pointer" @click.stop="triggerPicker('table_items_heading_text')">Example Heading 1</th>
-                      <th style="color:#fff; cursor: pointer" @click.stop="triggerPicker('table_items_heading_text')">Example Heading 2</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <a href="#" :style="{ color: settings.table_link }" style="cursor: pointer" @click.stop.prevent="triggerPicker('table_link')">Table Link</a>
-                      </td>
-                      <td :style="{ color: settings.table_heading }" style="cursor: pointer" @click.stop="triggerPicker('table_heading')">Heading Text</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <textarea 
+                v-if="settings.custom_css_tab === 'admin'"
+                v-model="settings.custom_css_admin"
+                rows="14"
+                class="w-full p-4 bg-[#1E1E2D] text-[#56CA00] font-mono text-xs focus:outline-none leading-relaxed resize-y border-none"
+                placeholder="/* Add custom admin CSS rules here */"
+              ></textarea>
+              <textarea 
+                v-else
+                v-model="settings.custom_css_customer"
+                rows="14"
+                class="w-full p-4 bg-[#1E1E2D] text-[#56CA00] font-mono text-xs focus:outline-none leading-relaxed resize-y border-none"
+                placeholder="/* Add custom customers portal CSS rules here */"
+              ></textarea>
             </div>
           </div>
-        </a-tab-pane>
-
-        <!-- 6. GENERAL -->
-        <a-tab-pane key="general" tab="General">
-          <div class="tab-content-wrap">
-            <h3 class="tab-title">General Layout Styling</h3>
-            
-            <div class="split-preview-layout">
-              <div class="color-pickers-grid" style="flex: 1;">
-                <div class="color-picker-item">
-                  <span class="picker-label">Links Color (href)</span>
-                  <div class="picker-controls">
-                    <input type="color" v-model="settings.gen_link" class="color-picker-box" />
-                    <a-input v-model:value="settings.gen_link" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Links Hover/Focus Color</span>
-                  <div class="picker-controls">
-                    <input type="color" v-model="settings.gen_link_hover" class="color-picker-box" />
-                    <a-input v-model:value="settings.gen_link_hover" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Admin Login Background</span>
-                  <div class="picker-controls">
-                    <input type="color" v-model="settings.gen_login_bg" class="color-picker-box" />
-                    <a-input v-model:value="settings.gen_login_bg" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Text Muted</span>
-                  <div class="picker-controls">
-                    <input type="color" v-model="settings.gen_text_muted" class="color-picker-box" />
-                    <a-input v-model:value="settings.gen_text_muted" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Text Danger</span>
-                  <div class="picker-controls">
-                    <input type="color" v-model="settings.gen_text_danger" class="color-picker-box" />
-                    <a-input v-model:value="settings.gen_text_danger" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Text Warning</span>
-                  <div class="picker-controls">
-                    <input type="color" v-model="settings.gen_text_warning" class="color-picker-box" />
-                    <a-input v-model:value="settings.gen_text_warning" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Text Info</span>
-                  <div class="picker-controls">
-                    <input type="color" v-model="settings.gen_text_info" class="color-picker-box" />
-                    <a-input v-model:value="settings.gen_text_info" size="small" style="width: 110px" />
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Text Success</span>
-                  <div class="picker-controls">
-                    <input type="color" v-model="settings.gen_text_success" class="color-picker-box" />
-                    <a-input v-model:value="settings.gen_text_success" size="small" style="width: 110px" />
-                  </div>
-                </div>
-              </div>
-
-              <!-- General Text Preview Panel -->
-              <div class="preview-panel" style="flex: 1;">
-                <span class="preview-title">Alert Text Previews</span>
-                <div class="alert-previews">
-                  <div class="alert-preview-row">
-                    <a href="#" :style="{ color: settings.gen_link }">General Link</a>
-                  </div>
-                  <div class="alert-preview-row">
-                    <span :style="{ color: settings.gen_text_muted }">Example Text Muted</span>
-                  </div>
-                  <div class="alert-preview-row">
-                    <span :style="{ color: settings.gen_text_danger }">Example Text Danger</span>
-                  </div>
-                  <div class="alert-preview-row">
-                    <span :style="{ color: settings.gen_text_warning }">Example Text Warning</span>
-                  </div>
-                  <div class="alert-preview-row">
-                    <span :style="{ color: settings.gen_text_info }">Example Text Info</span>
-                  </div>
-                  <div class="alert-preview-row">
-                    <span :style="{ color: settings.gen_text_success }">Example Text Success</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </a-tab-pane>
-
-        <!-- 7. TAGS -->
-        <a-tab-pane key="tags" tab="Tags">
-          <div class="tab-content-wrap">
-            <h3 class="tab-title">Tag Badge Colors</h3>
-            
-            <div class="tags-picker-grid">
-              <div v-for="tag in tags" :key="tag.name" class="tag-picker-item">
-                <span class="tag-name">{{ tag.name }}</span>
-                <div class="tag-color-controls">
-                  <input type="color" v-model="tag.color" class="color-picker-box" />
-                  <span
-                    class="tag-badge-preview"
-                    :style="{ backgroundColor: tag.color + '18', color: tag.color, borderColor: tag.color }"
-                  >
-                    {{ tag.name }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </a-tab-pane>
-
-        <!-- 8. CUSTOM CSS -->
-        <a-tab-pane key="custom_css" tab="Custom CSS">
-          <div class="tab-content-wrap">
-            <h3 class="tab-title">Custom CSS Styling</h3>
-            
-            <div class="css-tab-selector">
-              <a-radio-group v-model:value="settings.custom_css_tab" button-style="solid" style="margin-bottom: 16px;">
-                <a-radio-button value="admin">Admin Area</a-radio-button>
-                <a-radio-button value="customers">Customers Area</a-radio-button>
-              </a-radio-group>
-            </div>
-
-            <div v-if="settings.custom_css_tab === 'admin'">
-              <span class="picker-label" style="display: block; margin-bottom: 6px;">Admin Area Custom CSS</span>
-              <a-textarea v-model:value="settings.custom_css_admin" :rows="12" class="code-textarea" />
-            </div>
-
-            <div v-if="settings.custom_css_tab === 'customers'">
-              <span class="picker-label" style="display: block; margin-bottom: 6px;">Customers Area Custom CSS</span>
-              <a-textarea v-model:value="settings.custom_css_customer" :rows="12" class="code-textarea" />
-            </div>
-          </div>
-        </a-tab-pane>
-
-      </a-tabs>
-
-      <!-- SAVE FOOTER -->
-      <div class="settings-actions">
-        <a-button type="primary" :loading="saving" @click="saveThemeSettings">
-          Save Settings
-        </a-button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { defineComponent, ref, reactive, watch } from 'vue';
+import { defineComponent, ref, reactive, onMounted } from 'vue';
 import { message } from 'ant-design-vue';
-import { applyThemeStyles } from '../../utils.js';
+import defaultLogoUrl from '@/main/assets/logo.png';
+import defaultMascotUrl from '@/main/assets/robot_hologram.png';
+import { useThemeStore } from '@/main/store/themeStore';
+import { applyThemeStyles } from '@/main/utils';
 
 export default defineComponent({
   name: 'ThemeStyleView',
   setup() {
-    const activeTab = ref('admin_area');
+    const activeTab = ref('dynamic_theme');
     const saving = ref(false);
+    const themeStore = useThemeStore();
+
+    const tabList = [
+      { key: 'dynamic_theme',   label: 'Dynamic Theme & Colors',  icon: '🎨' },
+      { key: 'logo_management', label: 'Logo & Brand Identity',    icon: '🖼️' },
+      { key: 'admin_menu',      label: 'Admin Menu & Navbar',     icon: '🖥️' },
+      { key: 'buttons',         label: 'Buttons & Accents',        icon: '🔘' },
+      { key: 'custom_css',      label: 'Custom CSS Editor',        icon: '💻' },
+    ];
+
+    const customThemeForm = reactive({
+      bg: '',
+      primary: '',
+      primaryHover: '',
+      textDark: '',
+      accent: '',
+      bgImage: '',
+      headerImage: '',
+      sidebarLogo: '',
+    });
+
+    const initDynamicTheme = () => {
+      const activeObj = themeStore.customTheme || themeStore.themes[themeStore.currentTheme] || themeStore.themes['purple'] || {};
+      customThemeForm.bg = activeObj.bg || '#F8F7FA';
+      customThemeForm.primary = activeObj.primary || '#7367F0';
+      customThemeForm.primaryHover = activeObj.primaryHover || '#685dd8';
+      customThemeForm.textDark = activeObj.textDark || '#2F3349';
+      customThemeForm.accent = activeObj.accent || '#00CFE8';
+      customThemeForm.bgImage = activeObj.bgImage || '';
+      customThemeForm.headerImage = activeObj.headerImage || '';
+      customThemeForm.sidebarLogo = activeObj.sidebarLogo || '';
+    };
+
+    onMounted(() => {
+      themeStore.applyTheme();
+      initDynamicTheme();
+    });
+
+    const applyThemePreset = (presetKey) => {
+      themeStore.setTheme(presetKey);
+      const activeObj = themeStore.themes[presetKey];
+      if (activeObj) {
+        customThemeForm.bg = activeObj.bg || '#F8F7FA';
+        customThemeForm.primary = activeObj.primary || '#7367F0';
+        customThemeForm.primaryHover = activeObj.primaryHover || '#685dd8';
+        customThemeForm.textDark = activeObj.textDark || '#2F3349';
+        customThemeForm.accent = activeObj.accent || '#00CFE8';
+      }
+    };
+
+    const saveDynamicTheme = () => {
+      themeStore.saveCustomTheme({ ...customThemeForm });
+      message.success('Dynamic theme, colors, and branding applied across the CRM!');
+    };
+
+    const resetDynamicThemeDefaults = () => {
+      applyThemePreset('purple');
+      message.info('Reset theme colors to default');
+    };
+
+    const handleDynamicFileUpload = (e, key) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 50 * 1024 * 1024) {
+        message.error('File size must be less than 50MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        customThemeForm[key] = evt.target.result;
+        themeStore.saveCustomTheme({ ...customThemeForm });
+        message.success(`Uploaded ${key === 'sidebarLogo' ? 'Sidebar Logo' : 'Background image'}!`);
+      };
+      reader.readAsDataURL(file);
+    };
+
+    const removeDynamicFile = (key) => {
+      customThemeForm[key] = '';
+      themeStore.saveCustomTheme({ ...customThemeForm });
+      message.info(`Cleared ${key === 'sidebarLogo' ? 'Sidebar Logo' : 'Header Background'}`);
+    };
+
+    const getAppBasePath = () => {
+      return (typeof window !== 'undefined' && window.config && window.config.path) ? window.config.path : '';
+    };
+
+    const defaultFaviconUrl = getAppBasePath() ? `${getAppBasePath()}/favicon.ico` : '/favicon.ico';
 
     const defaultSettings = {
-      admin_sidebar_bg: '#7e1e8e',
-      admin_sidebar_link: '#e2e8f0',
-      admin_sidebar_active_bg: '#6366f1',
-      admin_sidebar_active_link: '#ffffff',
-      admin_header_bg: '#ffffff',
-      admin_header_link: '#4F4B5E',
+      company_name: 'Ibridge Digital',
+      sidebar_logo_url: defaultLogoUrl,
+      sidebar_logo_text: 'Ibridge Digital',
+      login_logo_show: true,
+      login_logo_url: defaultLogoUrl,
+      login_logo_text: 'Ibridge Digital CRM',
+      favicon_url: defaultFaviconUrl,
+      app_page_title: 'Ibridge Digital CRM',
+
+      admin_sidebar_bg: '#FFFFFF',
+      admin_sidebar_link: '#82868B',
+      admin_sidebar_active_bg: '#7367F0',
+      admin_sidebar_active_link: '#FFFFFF',
+      admin_header_bg: '#FFFFFF',
       admin_content_bg: '#F8F7FA',
 
-      cust_nav_bg: '#7e1e8e',
-      cust_nav_link: '#ffffff',
-      cust_footer_bg: '#2F3349',
-      cust_footer_text: '#A5A2AD',
-
-      btn_default: '#F1F0F2',
-      btn_primary: '#7e1e8e',
-      btn_info: '#00CFE8',
+      btn_primary: '#7367F0',
       btn_success: '#28C76F',
+      btn_info: '#00CFE8',
       btn_danger: '#EA5455',
-
-      modal_heading_bg: '#7e1e8e',
-      modal_heading_color: '#4F4B5E',
-      modal_close_color: '#A5A2AD',
-      modal_header_text_color: '#4F4B5E',
-
-      table_link: '#7e1e8e',
-      table_link_hover: '#671675',
-      table_heading: '#4F4B5E',
-      table_items_heading_bg: '#7e1e8e',
-      table_items_heading_text: '#ffffff',
-
-      gen_link: '#7e1e8e',
-      gen_link_hover: '#671675',
-      gen_login_bg: '#F8F7FA',
-      gen_text_muted: '#A5A2AD',
-      gen_text_danger: '#EA5455',
-      gen_text_warning: '#FF9F43',
-      gen_text_info: '#00CFE8',
-      gen_text_success: '#28C76F',
 
       custom_css_tab: 'admin',
       custom_css_admin: '/* Custom Admin CSS Rules */\nbody {\n  font-family: "Public Sans", sans-serif;\n}',
-      custom_css_customer: '/* Custom Customers CSS Rules */\n.btn-custom {\n  border-radius: 6px;\n}'
+      custom_css_customer: '/* Custom Customers CSS Rules */'
     };
 
     const savedSettings = localStorage.getItem('crm_theme_style_settings');
-    const settings = reactive(savedSettings ? JSON.parse(savedSettings) : defaultSettings);
+    const settings = reactive(savedSettings ? { ...defaultSettings, ...JSON.parse(savedSettings) } : defaultSettings);
 
-    const defaultTags = [
-      { name: 'bug', color: '#EA5455' },
-      { name: 'follow up', color: '#7e1e8e' },
-      { name: 'important', color: '#FF9F43' },
-      { name: 'logo', color: '#00CFE8' },
-      { name: 'review', color: '#8F00FF' },
-      { name: 'todo', color: '#A5A2AD' },
-      { name: 'tomorrow', color: '#28C76F' },
-      { name: 'wordpress', color: '#00CFE8' }
-    ];
-    const savedTags = localStorage.getItem('crm_theme_style_tags');
-    const tags = ref(savedTags ? JSON.parse(savedTags) : defaultTags);
+    const handleFileUpload = (e, key) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        settings[key] = evt.target.result;
+        message.success('Image uploaded! Click Save to persist settings.');
+      };
+      reader.readAsDataURL(file);
+    };
+
+    const resetSidebarLogo = () => {
+      settings.sidebar_logo_url = defaultLogoUrl;
+      settings.sidebar_logo_text = 'Ibridge Digital';
+    };
+
+    const resetLoginLogo = () => {
+      settings.login_logo_url = defaultLogoUrl;
+      settings.login_logo_text = 'Ibridge Digital CRM';
+    };
+
+    const resetFavicon = () => {
+      settings.favicon_url = defaultFaviconUrl;
+    };
 
     const saveThemeSettings = () => {
       saving.value = true;
       setTimeout(() => {
         saving.value = false;
         localStorage.setItem('crm_theme_style_settings', JSON.stringify(settings));
-        localStorage.setItem('crm_theme_style_tags', JSON.stringify(tags.value));
         applyThemeStyles(settings);
-        message.success('Theme Style settings saved successfully');
+        if (typeof window !== 'undefined' && window.dispatchEvent) {
+          window.dispatchEvent(new CustomEvent('crm-theme-settings-updated', { detail: settings }));
+        }
+        message.success('Theme styles and branding saved successfully!');
       }, 600);
     };
 
-    const pickerRefs = {};
-    const setPickerRef = (key) => (el) => {
-      if (el) pickerRefs[key] = el;
-    };
-    const triggerPicker = (key) => {
-      const el = pickerRefs[key];
-      if (el) {
-        el.click();
+    const resolveFaviconUrl = (url) => {
+      if (!url) return defaultFaviconUrl;
+      if (url.startsWith('data:') || url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
       }
+      const basePath = getAppBasePath();
+      return basePath ? (basePath + '/' + url.replace(/^\//, '')) : url;
     };
-
-    // Watcher to sync all button colors together when any button color is updated
-    watch(
-      () => [settings.btn_primary, settings.btn_default, settings.btn_info, settings.btn_success, settings.btn_danger],
-      (newVals, oldVals) => {
-        let changedVal = null;
-        for (let i = 0; i < newVals.length; i++) {
-          if (newVals[i] !== oldVals[i]) {
-            changedVal = newVals[i];
-            break;
-          }
-        }
-        if (changedVal) {
-          if (settings.btn_primary !== changedVal) settings.btn_primary = changedVal;
-          if (settings.btn_default !== changedVal) settings.btn_default = changedVal;
-          if (settings.btn_info !== changedVal) settings.btn_info = changedVal;
-          if (settings.btn_success !== changedVal) settings.btn_success = changedVal;
-          if (settings.btn_danger !== changedVal) settings.btn_danger = changedVal;
-        }
-      }
-    );
 
     return {
       activeTab,
       saving,
+      tabList,
       settings,
-      tags,
-      saveThemeSettings,
-      setPickerRef,
-      triggerPicker
+      themeStore,
+      customThemeForm,
+      defaultFaviconUrl,
+      defaultMascotUrl,
+      resolveFaviconUrl,
+      applyThemePreset,
+      saveDynamicTheme,
+      resetDynamicThemeDefaults,
+      handleDynamicFileUpload,
+      removeDynamicFile,
+      handleFileUpload,
+      resetSidebarLogo,
+      resetLoginLogo,
+      resetFavicon,
+      saveThemeSettings
     };
   }
 });
 </script>
 
 <style scoped>
-.section-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
+:deep(.ant-input) {
+  border-radius: 6px !important;
+  border-color: #DBDADE !important;
 }
-.section-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0;
-}
-.settings-card {
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #f1f5f9;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-.theme-tabs :deep(.ant-tabs-nav) {
-  margin-bottom: 24px;
-}
-.tab-content-wrap {
-  min-height: 320px;
-}
-.tab-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 20px;
-}
-.color-pickers-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px 32px;
-}
-.color-picker-item {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.picker-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #334155;
-}
-.picker-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.color-picker-box {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  width: 38px;
-  height: 38px;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-}
-.color-picker-box::-webkit-color-swatch {
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-}
-.preview-btn {
-  margin-top: 8px;
-  align-self: flex-start;
-  padding: 6px 16px;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.split-preview-layout {
-  display: flex;
-  gap: 32px;
-}
-.preview-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 16px;
-}
-.preview-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.modal-preview-box {
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-}
-.modal-preview-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-}
-.modal-preview-heading-text {
-  font-weight: 700;
-  font-size: 13px;
-}
-.modal-preview-close {
-  font-size: 18px;
-  cursor: pointer;
-}
-.modal-preview-body {
-  padding: 16px;
-}
-.sample-text-header {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-.sample-body-text {
-  font-size: 13px;
-  color: #475569;
-  margin: 0;
-}
-.table-preview-control {
-  width: 100%;
-  border-collapse: collapse;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  overflow: hidden;
-}
-.table-preview-control th {
-  padding: 10px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  text-align: left;
-}
-.table-preview-control td {
-  padding: 10px 14px;
-  font-size: 12px;
-  border-top: 1px solid #e2e8f0;
-}
-.alert-previews {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.alert-preview-row {
-  font-size: 13px;
-  font-weight: 600;
-}
-.tags-picker-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-.tag-picker-item {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 12px 16px;
-}
-.tag-name {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #475569;
-  text-transform: capitalize;
-}
-.tag-color-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.tag-badge-preview {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 10px;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 600;
-  border: 1px solid;
-}
-.code-textarea {
-  font-family: monospace;
-  font-size: 12px;
-  line-height: 1.5;
-  background: #0f172a;
-  color: #e2e8f0;
-  border-radius: 8px;
-  padding: 16px;
-  border: none;
-}
-.code-textarea:focus {
-  background: #0f172a;
-  color: #e2e8f0;
-  box-shadow: none;
-}
-.settings-actions {
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
-  display: flex;
-  justify-content: flex-end;
+:deep(.ant-input:focus) {
+  border-color: #7367F0 !important;
+  box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.2) !important;
 }
 </style>

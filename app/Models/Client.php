@@ -48,6 +48,16 @@ class Client extends Model
         'longitude' => 'decimal:7',
     ];
 
+    protected static function booted(): void
+    {
+        static::deleting(function (Client $client) {
+            $client->contacts()->delete();
+            $client->files()->delete();
+            $client->vaults()->delete();
+            $client->invoices()->delete();
+        });
+    }
+
     /**
      * Get the contacts for the client.
      */

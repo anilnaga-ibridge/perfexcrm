@@ -86,7 +86,7 @@
           <div class="po-field">
             <span class="po-field-label">Role</span>
             <span class="po-field-value">
-              <span class="po-badge">{{ user?.role || '-' }}</span>
+              <span class="po-badge">{{ getRoleName(user) }}</span>
             </span>
           </div>
           <div class="po-field">
@@ -115,6 +115,7 @@
 <script>
 import { defineComponent, computed } from 'vue';
 import { useAuthStore } from '../../store/authStore';
+import { getRoleName } from '../../utils/permissions';
 
 export default defineComponent({
   name: 'ProfileOverview',
@@ -134,7 +135,7 @@ export default defineComponent({
       });
     };
 
-    return { user, formatDate };
+    return { user, formatDate, getRoleName };
   },
 });
 </script>

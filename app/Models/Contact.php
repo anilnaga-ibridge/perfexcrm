@@ -18,7 +18,8 @@ class Contact extends Model
         'title',
         'password',
         'active',
-        'is_primary'
+        'is_primary',
+        'last_login',
     ];
 
     protected $hidden = [
@@ -28,6 +29,7 @@ class Contact extends Model
     protected $casts = [
         'active' => 'boolean',
         'is_primary' => 'boolean',
+        'last_login' => 'datetime',
     ];
 
     /**

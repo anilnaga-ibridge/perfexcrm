@@ -51,7 +51,7 @@
           </svg>
         </button>
 
-        <button class="btn-primary" @click="goToCreatePage">
+        <button v-if="canCreate" class="btn-primary" @click="goToCreatePage">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New Estimate
         </button>
@@ -174,17 +174,18 @@
             </div>
           </div>
 
+          <!-- Desktop Table View -->
           <table class="data-table">
             <thead>
               <tr>
-                <th class="chk-th"><input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" class="cursor-pointer" /></th>
-                <th>#</th>
-                <th>Client</th>
-                <th>Status</th>
-                <th class="text-right">Amount</th>
-                <th>Date</th>
-                <th>Expiry</th>
-                <th class="actions-th"></th>
+                <th style="width: 44px; min-width: 44px;" class="col-checkbox"><input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" class="cursor-pointer" /></th>
+                <th style="width: 10%;">#</th>
+                <th style="width: 26%;">Client</th>
+                <th style="width: 10%;">Status</th>
+                <th style="width: 12%;" class="text-right">Amount</th>
+                <th style="width: 10%;">Date</th>
+                <th style="width: 10%;">Expiry</th>
+                <th style="width: 4%;"></th>
               </tr>
             </thead>
             <tbody>
@@ -193,9 +194,9 @@
                 :key="row.id"
                 :class="['table-row', { 'table-row--selected': selectedIds.includes(row.id), 'table-row--active': activeEstimate && activeEstimate.id === row.id }]"
               >
-                <td class="chk-td"><input type="checkbox" :value="row.id" v-model="selectedIds" class="cursor-pointer" /></td>
+                <td class="col-checkbox chk-td"><input type="checkbox" :value="row.id" v-model="selectedIds" class="cursor-pointer" /></td>
                 <td><a class="estimate-link" @click="selectEstimate(row)">{{ row.number }}</a></td>
-                <td><span class="client-link" @click="selectEstimate(row)">{{ row.client }}</span></td>
+                <td class="cell-truncate" :title="row.client"><span class="client-link block truncate" @click="selectEstimate(row)">{{ row.client }}</span></td>
                 <td><span class="badge" :class="statusClass(row.status)">{{ row.status }}</span></td>
                 <td class="text-right amount-cell">{{ fmtCur(row.amount) }}</td>
                 <td class="date-cell">{{ row.date }}</td>
@@ -211,6 +212,47 @@
               </tr>
             </tbody>
           </table>
+
+          <!-- Mobile Responsive Card View -->
+          <div class="mobile-cards-list">
+            <div 
+              v-for="row in filteredRows" 
+              :key="'m-est-' + row.id"
+              class="mobile-row-card"
+              @click="selectEstimate(row)"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" :value="row.id" v-model="selectedIds" @click.stop />
+                  <span class="font-extrabold text-sm text-indigo-600">{{ row.number }}</span>
+                </div>
+                <span class="badge" :class="statusClass(row.status)">{{ row.status }}</span>
+              </div>
+
+              <div class="font-bold text-sm text-slate-800 line-clamp-2">
+                👤 {{ row.client }}
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100">
+                <div class="flex items-center gap-1.5 text-slate-500">
+                  <span class="text-slate-400">📅</span>
+                  <span>{{ row.date }}</span>
+                </div>
+                <div class="flex items-center justify-end gap-1.5 font-extrabold text-slate-900 text-sm">
+                  <span class="text-slate-400 font-normal">💰</span>
+                  <span>{{ fmtCur(row.amount) }}</span>
+                </div>
+                <div class="flex items-center justify-start gap-1.5 text-slate-400">
+                  <span>Exp: {{ row.expiry }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="filteredRows.length === 0" class="text-center p-6 text-slate-400 text-xs font-semibold">
+              No estimates found
+            </div>
+          </div>
+
           <div class="table-footer">{{ filteredRows.length }} of {{ rows.length }} estimates</div>
         </div>
       </div>
@@ -260,11 +302,11 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m4-5l5 5 5-5m-5 5V3"/></svg>
                 PDF Preview
               </button>
-              <button class="btn-action btn-action--secondary" @click="editEstimate(activeEstimate)">
+              <button v-if="canEdit" class="btn-action btn-action--secondary" @click="editEstimate(activeEstimate)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 Edit Estimate
               </button>
-              <button class="btn-action btn-action--danger" @click="deleteSingleEstimate(activeEstimate.id)">
+              <button v-if="canDelete" class="btn-action btn-action--danger" @click="deleteSingleEstimate(activeEstimate.id)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 Delete
               </button>
@@ -281,6 +323,7 @@
 import { defineComponent, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useEstimatesStore } from '../store/estimatesStore';
+import { useAuthStore } from '../store/authStore';
 import { message } from 'ant-design-vue';
 
 export default defineComponent({
@@ -288,6 +331,11 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const estimatesStore = useEstimatesStore();
+    const authStore = useAuthStore();
+
+    const canCreate = computed(() => authStore.hasPermission('Estimates', 'create'));
+    const canEdit   = computed(() => authStore.hasPermission('Estimates', 'edit'));
+    const canDelete = computed(() => authStore.hasPermission('Estimates', 'delete'));
 
     const perPage = ref('25');
     const search = ref('');
@@ -544,15 +592,22 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 100%;
   align-items: stretch;
   transition: all 0.2s ease;
+}
+.left-pane {
+  width: 100%;
+  max-width: 100%;
+  flex: 1 1 100%;
+  min-width: 0;
 }
 @media (min-width: 1024px) {
   .layout-grid.split-active {
     flex-direction: row;
   }
-  .layout-grid.split-active .left-pane { max-width: 55%; }
-  .layout-grid.split-active .right-pane { width: 45%; }
+  .layout-grid.split-active .left-pane { width: 55%; max-width: 55%; flex: 0 0 55%; }
+  .layout-grid.split-active .right-pane { width: 45%; max-width: 45%; flex: 0 0 45%; }
 }
 
 /* ── Pipeline ── */

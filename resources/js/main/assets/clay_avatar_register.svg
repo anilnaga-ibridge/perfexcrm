@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" width="220" height="220">
+  <defs>
+    <radialGradient id="skin" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#fce4d6"/>
+      <stop offset="100%" stop-color="#f0d0b8"/>
+    </radialGradient>
+    <radialGradient id="cheek" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f5b8b8"/>
+      <stop offset="100%" stop-color="#e8a0a0"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#5a3d7a" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Body / Shirt -->
+  <ellipse cx="110" cy="175" rx="52" ry="40" fill="#6c8ceb" filter="url(#shadow)"/>
+  <ellipse cx="110" cy="168" rx="48" ry="35" fill="#7e9bf0"/>
+
+  <!-- Neck -->
+  <rect x="98" y="138" width="24" height="18" rx="10" fill="url(#skin)"/>
+
+  <!-- Head -->
+  <ellipse cx="110" cy="95" rx="55" ry="58" fill="url(#skin)" filter="url(#shadow)"/>
+
+  <!-- Hair - short boy style -->
+  <path d="M55 80 Q55 35 110 30 Q165 35 165 80 Q160 55 140 48 Q120 42 100 48 Q75 55 60 72 Z" fill="#5a3a2a"/>
+  <!-- Hair spikes -->
+  <path d="M68 68 Q72 45 88 42 Q78 55 72 65 Z" fill="#4a2e1e"/>
+  <path d="M90 50 Q95 32 112 30 Q100 40 92 48 Z" fill="#4a2e1e"/>
+  <path d="M120 42 Q130 30 145 38 Q135 42 125 48 Z" fill="#4a2e1e"/>
+  <path d="M145 50 Q158 40 162 58 Q155 48 148 52 Z" fill="#4a2e1e"/>
+
+  <!-- Left Ear -->
+  <ellipse cx="56" cy="95" rx="8" ry="10" fill="url(#skin)"/>
+  <ellipse cx="57" cy="95" rx="5" ry="6" fill="#e8b8a0"/>
+
+  <!-- Right Ear -->
+  <ellipse cx="164" cy="95" rx="8" ry="10" fill="url(#skin)"/>
+  <ellipse cx="163" cy="95" rx="5" ry="6" fill="#e8b8a0"/>
+
+  <!-- Left Eye -->
+  <ellipse cx="88" cy="95" rx="9" ry="11" fill="#2d244f"/>
+  <ellipse cx="86" cy="92" rx="3.5" ry="4" fill="#ffffff"/>
+  <ellipse cx="90" cy="97" rx="1.5" ry="1.5" fill="#ffffff" opacity="0.5"/>
+
+  <!-- Right Eye -->
+  <ellipse cx="132" cy="95" rx="9" ry="11" fill="#2d244f"/>
+  <ellipse cx="130" cy="92" rx="3.5" ry="4" fill="#ffffff"/>
+  <ellipse cx="134" cy="97" rx="1.5" ry="1.5" fill="#ffffff" opacity="0.5"/>
+
+  <!-- Eyebrows -->
+  <path d="M76 78 Q86 72 96 78" fill="none" stroke="#4a2e1e" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M124 78 Q134 72 144 78" fill="none" stroke="#4a2e1e" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Nose -->
+  <ellipse cx="110" cy="108" rx="4" ry="3" fill="#e8b8a0"/>
+
+  <!-- Smile -->
+  <path d="M92 120 Q110 136 128 120" fill="none" stroke="#2d244f" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Cheeks -->
+  <ellipse cx="72" cy="112" rx="11" ry="7" fill="url(#cheek)" opacity="0.45"/>
+  <ellipse cx="148" cy="112" rx="11" ry="7" fill="url(#cheek)" opacity="0.45"/>
+
+  <!-- Left Arm -->
+  <ellipse cx="55" cy="168" rx="18" ry="12" fill="#7e9bf0" transform="rotate(-10 55 168)"/>
+  <ellipse cx="42" cy="170" rx="10" ry="8" fill="url(#skin)"/>
+
+  <!-- Right Arm waving -->
+  <ellipse cx="165" cy="155" rx="18" ry="12" fill="#7e9bf0" transform="rotate(25 165 155)"/>
+  <ellipse cx="178" cy="145" rx="10" ry="8" fill="url(#skin)" transform="rotate(10 178 145)"/>
+</svg>

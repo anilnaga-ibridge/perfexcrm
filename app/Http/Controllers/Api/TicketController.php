@@ -40,7 +40,7 @@ class TicketController extends Controller
         if ($request->filled('priority'))      $query->where('priority',      $request->input('priority'));
         if ($request->filled('department_id')) $query->where('department_id', $request->integer('department_id'));
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $tickets = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         // Stats scoped to client if applicable

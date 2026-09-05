@@ -2,61 +2,169 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Module;
+use App\Plugin\Kernel\PluginDescriptor;
+use App\Plugin\Kernel\RuntimeKernel;
 use Illuminate\Console\Command;
-use App\Plugin\Health\HealthMonitor;
-use App\Plugin\Registries\PluginRegistry;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
-/**
- * Class PluginDoctorCommand
- * 
- * Artisan CLI command performing runtime checks, permission diagnostics,
- * and database connection audits for all active plugins.
- */
 class PluginDoctorCommand extends Command
 {
-    protected $signature = 'plugin:doctor';
-    protected $description = 'Perform diagnostic health checks and audits on all registered plugins';
+    protected $signature = 'plugin:doctor {alias?}';
+    protected $description = 'Perform diagnostic health, signature, and dependency verification checks on installed modules';
 
-    public function handle(): int
+    protected $kernel;
+
+    public function __construct(RuntimeKernel $kernel)
     {
-        $this->info("=================================================");
-        $this->info("iBridge Plugin SDK - System Doctor Diagnostics");
-        $this->info("=================================================");
+        parent::__construct();
+        $this->kernel = $kernel;
+    }
 
-        $registry = app(PluginRegistry::class);
-        $healthMonitor = app(HealthMonitor::class);
+    public function handle()
+    {
+        $aliasFilter = $this->argument('alias');
+        $this->info("==============================================");
+        $this->info("         iBRIDGE PLUGIN DIAGNOSTIC DOCTOR     ");
+        $this->info("==============================================");
 
-        $plugins = $registry->getPlugins();
-        if (empty($plugins)) {
-            $this->comment("No plugins detected in the system.");
-            return Command::SUCCESS;
+        $activeModules = Module::where('status', 'active');
+        if ($aliasFilter) {
+            $activeModules->where('alias', $aliasFilter);
+        }
+        $modules = $activeModules->get();
+
+        if ($modules->isEmpty()) {
+            $this->warn('No active modules found to check.');
+            return 0;
         }
 
-        $allHealthy = true;
-        foreach ($plugins as $plugin) {
-            $this->line("\nDiagnosing Plugin: {$plugin->getName()} ({$plugin->getAlias()})");
-            $this->line(str_repeat('-', 50));
+        $totalErrors = 0;
+        $totalWarnings = 0;
 
-            $report = $healthMonitor->checkPlugin($plugin->getAlias());
-            
-            if ($report['status'] !== 'healthy') {
-                $allHealthy = false;
+        foreach ($modules as $module) {
+            $alias = $module->alias;
+            $this->line("\nChecking module: [{$module->name}] ({$alias})");
+            $this->line("----------------------------------------------");
+
+            $moduleErrors = 0;
+            $moduleWarnings = 0;
+
+            // 1. Check folder existence
+            $modulePath = base_path("Modules/{$alias}");
+            if (!File::isDirectory($modulePath)) {
+                $this->error("  ✖ Codebase folder does not exist at [Modules/{$alias}]");
+                $moduleErrors++;
+                $totalErrors++;
+                continue;
             }
 
-            foreach ($report['checks'] as $checkKey => $check) {
-                $statusColor = $check['status'] === 'ok' ? 'info' : ($check['status'] === 'warning' ? 'comment' : 'error');
-                $statusIcon = $check['status'] === 'ok' ? '✔' : ($check['status'] === 'warning' ? '⚠' : '✘');
-                $this->$statusColor("  {$statusIcon} [" . ucfirst($checkKey) . "]: {$check['message']}");
+            // 2. Manifest check
+            $manifestPath = "{$modulePath}/manifest.json";
+            if (!File::exists($manifestPath)) {
+                $manifestPath = "{$modulePath}/module.json";
             }
+
+            if (!File::exists($manifestPath)) {
+                $this->error("  ✖ Manifest file (manifest.json or module.json) is missing.");
+                $moduleErrors++;
+            } else {
+                $this->line("  ✔ Manifest file detected.");
+                
+                try {
+                    $manifest = json_decode(File::get($manifestPath), true);
+                    if (!$manifest) {
+                        $this->error("  ✖ Manifest could not be parsed as valid JSON.");
+                        $moduleErrors++;
+                    } else {
+                        $this->line("  ✔ Manifest JSON structure is valid.");
+                    }
+                } catch (\Throwable $e) {
+                    $this->error("  ✖ Manifest read error: " . $e->getMessage());
+                    $moduleErrors++;
+                }
+            }
+
+            // 3. Digital Signature check
+            $sigPath = "{$modulePath}/signature.pem";
+            if (!File::exists($sigPath)) {
+                $this->warn("  ⚠ Digital signature (signature.pem) is missing. Running in unsigned developer mode.");
+                $moduleWarnings++;
+            } else {
+                $this->line("  ✔ Digital signature file detected.");
+            }
+
+            // 4. Descriptor & Context validation
+            $descriptor = $this->kernel->getDescriptor($alias);
+            $context = $this->kernel->getContext($alias);
+
+            if (!$descriptor) {
+                $this->error("  ✖ Kernel failed to build PluginDescriptor. Plugin is skipped in runtime.");
+                $moduleErrors++;
+            } else {
+                $this->line("  ✔ PluginDescriptor successfully mapped.");
+                
+                // Validate SDK and API version declarations
+                $this->line("    - SDK Version: {$descriptor->sdkVersion}");
+                $this->line("    - API Version: {$descriptor->apiVersion}");
+            }
+
+            if (!$context) {
+                $this->error("  ✖ Kernel failed to build isolated PluginContext.");
+                $moduleErrors++;
+            } else {
+                $this->line("  ✔ PluginContext build successful.");
+                
+                // Write access check
+                try {
+                    $storage = $context->storage();
+                    $storage->put('.doctor_test', '1');
+                    $storage->delete('.doctor_test');
+                    $this->line("  ✔ Sandboxed storage directory is writable.");
+                } catch (\Throwable $e) {
+                    $this->error("  ✖ Sandboxed storage directory write test failed: " . $e->getMessage());
+                    $moduleErrors++;
+                }
+            }
+
+            // 5. Database Table Migration Status
+            $tableName = str_replace('-', '_', $alias) . 's';
+            if (Schema::hasTable($tableName)) {
+                $this->line("  ✔ Custom database table [{$tableName}] exists.");
+            } else {
+                // If it is test-auto-module we generated, table is test_auto_modules (plural translation)
+                $altName = str_replace('-', '_', $alias);
+                if (Schema::hasTable($altName)) {
+                    $this->line("  ✔ Custom database table [{$altName}] exists.");
+                } else {
+                    $this->warn("  ⚠ Custom database table for plugin was not detected. Ensure migrations have run.");
+                    $moduleWarnings++;
+                }
+            }
+
+            // Print summary for this module
+            if ($moduleErrors === 0 && $moduleWarnings === 0) {
+                $this->info("  STATUS: HEALTHY");
+            } elseif ($moduleErrors === 0) {
+                $this->comment("  STATUS: HEALTHY WITH WARNINGS ({$moduleWarnings} warnings)");
+            } else {
+                $this->error("  STATUS: UNHEALTHY ({$moduleErrors} errors, {$moduleWarnings} warnings)");
+            }
+
+            $totalErrors += $moduleErrors;
+            $totalWarnings += $moduleWarnings;
         }
 
-        $this->line(str_repeat('=', 50));
-        if ($allHealthy) {
-            $this->info("Doctor Report: ALL PLUGINS ARE HEALTHY AND RUNNING CORRECTLY.");
+        $this->line("\n==============================================");
+        if ($totalErrors === 0) {
+            $this->info("DIAGNOSTICS COMPLETED: SUCCESS (0 errors, {$totalWarnings} warnings)");
         } else {
-            $this->error("Doctor Report: COMPLIANCE ISSUES OR UNHEALTHY TRANSITIONS ENCOUNTERED.");
+            $this->error("DIAGNOSTICS COMPLETED: FAILED ({$totalErrors} errors, {$totalWarnings} warnings)");
         }
+        $this->line("==============================================");
 
-        return Command::SUCCESS;
+        return $totalErrors === 0 ? 0 : 1;
     }
 }

@@ -15,7 +15,12 @@ class Role extends Model
         ];
     }
 
-    public function permissions()
+    public function getPermissionsAttribute($value)
+    {
+        return User::normalizePermissionsArray(User::decodePermissionsJson($value));
+    }
+
+    public function permissionRecords()
     {
         return $this->belongsToMany(Permission::class, 'role_permissions');
     }

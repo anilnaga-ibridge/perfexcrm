@@ -64,6 +64,9 @@ class PluginPublishCommand extends Command
                         public function getSourcePath(): string {
                             return $this->path;
                         }
+                        public function getInjectableAssets(): array {
+                            return [];
+                        }
                     };
                     $pipeline->publish($assetClass);
                     $this->line("  ✔ Published static assets to public/modules/" . strtolower($plugin->getAlias()));

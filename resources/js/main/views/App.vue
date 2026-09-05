@@ -5,11 +5,17 @@
 <script>
 import { onMounted } from 'vue';
 import { applyThemeStyles } from '../utils.js';
+import { useThemeStore } from '../store/themeStore';
 
 export default {
   name: 'App',
   setup() {
+    const themeStore = useThemeStore();
+
     onMounted(() => {
+      // Initialize Multi-Theme System
+      themeStore.applyAllStyles();
+
       try {
         const savedSettings = localStorage.getItem('crm_theme_style_settings');
         if (savedSettings) {

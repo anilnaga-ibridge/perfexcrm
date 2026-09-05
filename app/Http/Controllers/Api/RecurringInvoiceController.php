@@ -21,7 +21,7 @@ class RecurringInvoiceController extends Controller
             $query->whereHas('client', fn($q) => $q->where('company', 'like', '%' . $request->search . '%'));
         }
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $data    = $query->latest()->paginate($perPage);
 
         $stats = [

@@ -1,529 +1,907 @@
 <template>
-  <div class="tk-page">
-    <!-- HEADER -->
-    <div class="tk-header">
+  <div class="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto min-h-screen bg-[#F8F7FA]">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <h1 class="tk-title">Support Tickets</h1>
-        <p class="tk-subtitle">Manage customer support requests</p>
+        <div class="flex items-center space-x-2">
+          <div class="w-2.5 h-6 rounded-full bg-gradient-to-b from-[#7367F0] to-[#9F8ED6]"></div>
+          <h1 class="text-xl md:text-2xl font-bold text-[#4B465C] tracking-tight m-0">Support Tickets</h1>
+        </div>
+        <p class="text-xs text-[#A8AAAE] mt-1 pl-4.5 mb-0">Manage and resolve customer support requests, inquiries, and issues</p>
       </div>
-      <div class="tk-header-actions">
-        <div class="tk-view-toggle">
-          <button class="tk-view-btn" :class="{ active: currentView === 'kanban' }" @click="currentView = 'kanban'" title="Kanban">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+
+      <div class="flex items-center gap-3">
+        <!-- View Toggle Buttons -->
+        <div class="flex items-center bg-white p-1 border border-[#DBDADE] rounded-md shadow-2xs">
+          <button
+            class="px-2.5 py-1.5 rounded text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+            :class="currentView === 'kanban' ? 'bg-[#7367F0] text-white shadow-xs' : 'text-[#6F6B7D] hover:text-[#4B465C]'"
+            @click="currentView = 'kanban'"
+            title="Kanban View"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+            <span>Kanban</span>
           </button>
-          <button class="tk-view-btn" :class="{ active: currentView === 'table' }" @click="currentView = 'table'" title="Table">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          <button
+            class="px-2.5 py-1.5 rounded text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+            :class="currentView === 'table' ? 'bg-[#7367F0] text-white shadow-xs' : 'text-[#6F6B7D] hover:text-[#4B465C]'"
+            @click="currentView = 'table'"
+            title="Table View"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <span>Table</span>
           </button>
         </div>
-        <button class="tk-btn-primary" @click="openCreateModal">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          New Ticket
-        </button>
-        <button class="tk-btn-analytics" @click="showWeeklyAnalytics = true">
+
+        <!-- Weekly Analytics Button -->
+        <router-link
+          :to="{ name: 'admin.support.weekly_analytics' }"
+          class="btn-outline px-3.5 py-2 text-xs font-bold flex items-center gap-2 shadow-2xs cursor-pointer"
+        >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          Weekly Analytics
+          <span>Weekly Analytics</span>
+        </router-link>
+
+        <!-- New Ticket Button -->
+        <button
+          @click="openCreateModal"
+          class="btn-primary px-4 py-2 text-xs font-bold flex items-center gap-2 shadow-md cursor-pointer"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>New Ticket</span>
         </button>
       </div>
     </div>
 
-    <!-- SUMMARY CARDS -->
-    <div class="tk-stats-row">
-      <div v-for="card in summaryCards" :key="card.label" class="tk-stat-card" :style="{ borderLeftColor: card.color }" @click="filterBy(card.statusValue)">
-        <div class="tk-stat-icon" :style="{ background: card.bg }" v-html="card.icon"></div>
-        <div class="tk-stat-info">
-          <div class="tk-stat-val" :style="{ color: card.color }">{{ card.value }}</div>
-          <div class="tk-stat-label">{{ card.label }}</div>
+    <!-- Summary KPI Stat Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+      <div
+        v-for="card in summaryCards"
+        :key="card.label"
+        @click="filterBy(card.statusValue)"
+        class="bg-white border border-[#EBE9F1] rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center justify-between group"
+        :class="{ 'ring-2 ring-[#7367F0] border-transparent': statusFilter === card.statusValue }"
+      >
+        <div class="space-y-1">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-[#A8AAAE] block">{{ card.label }}</span>
+          <div class="text-xl font-extrabold" :style="{ color: card.textColor }">
+            {{ card.value }}
+          </div>
+          <span class="text-[10px] text-[#A8AAAE] font-semibold">Tickets</span>
         </div>
+        <div
+          class="w-11 h-11 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110 flex-shrink-0"
+          :style="{ backgroundColor: card.bgLight, color: card.color }"
+          v-html="card.icon"
+        ></div>
       </div>
     </div>
 
     <!-- ====== KANBAN VIEW ====== -->
-    <div v-if="currentView === 'kanban'" class="tk-kanban">
-      <div v-for="col in kanbanColumns" :key="col.status" class="tk-kanban-col">
-        <div class="tk-kanban-hd" :style="{ borderTopColor: col.color }">
-          <span class="tk-kanban-icon" v-html="col.icon"></span>
-          <span class="tk-kanban-title">{{ col.title }}</span>
-          <span class="tk-kanban-count">{{ ticketsByStatus(col.status).length }}</span>
+    <div v-if="currentView === 'kanban'" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div
+        v-for="col in kanbanColumns"
+        :key="col.status"
+        class="bg-white border border-[#EBE9F1] rounded-lg p-3.5 shadow-sm flex flex-col space-y-3"
+      >
+        <!-- Column Header -->
+        <div class="flex items-center justify-between pb-2 border-b border-[#F1F0F2]">
+          <div class="flex items-center space-x-2">
+            <div class="w-2.5 h-2.5 rounded-full" :style="{ backgroundColor: col.color }"></div>
+            <span class="text-xs font-bold text-[#4B465C]">{{ col.title }}</span>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#F8F7FA] text-[#6F6B7D] border border-[#DBDADE]">
+            {{ ticketsByStatus(col.status).length }}
+          </span>
         </div>
-        <div class="tk-kanban-cards" :class="{ 'tk-drag-over': dragCol === col.status }"
+
+        <!-- Column Cards Drop Area -->
+        <div
+          class="space-y-2.5 flex-1 min-h-[260px] transition-colors rounded-lg p-1"
+          :class="{ 'bg-[#7367F0]/5 border-2 border-dashed border-[#7367F0]': dragCol === col.status }"
           @dragover.prevent="dragCol = col.status"
           @dragenter.prevent
           @dragleave="dragCol = null"
-          @drop="onDrop(col.status)">
-          <div v-for="t in ticketsByStatus(col.status)" :key="t.id" class="tk-kanban-card"
+          @drop="onDrop(col.status)"
+        >
+          <div
+            v-for="t in ticketsByStatus(col.status)"
+            :key="t.id"
+            class="bg-[#F8F7FA] border border-[#EBE9F1] hover:border-[#7367F0]/40 rounded-lg p-3 shadow-2xs hover:shadow-sm transition-all space-y-2 cursor-grab active:cursor-grabbing group"
             draggable="true"
             @dragstart="onDragStart(t)"
-            @dragend="dragCol = null">
-            <div class="tk-kc-hd">
-              <span class="tk-pri" :class="priClass(t.priority)">{{ t.priority }}</span>
-              <span class="tk-kc-id">#{{ t.id }}</span>
+            @dragend="dragCol = null"
+          >
+            <!-- Header Badges -->
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold" :class="priClass(t.priority)">
+                {{ t.priority }}
+              </span>
+              <span class="text-[10px] font-mono font-bold text-[#A8AAAE]">#{{ t.id }}</span>
             </div>
-            <div class="tk-kc-title" @click="viewTicket(t)">{{ t.subject }}</div>
-            <div class="tk-kc-meta" v-if="t.contact">{{ t.contact.firstname }} {{ t.contact.lastname }}</div>
-            <div v-if="t.department" class="tk-kc-dept">{{ t.department.name }}</div>
-            <div class="tk-kc-ft">
-              <span class="tk-kc-date">
+
+            <!-- Subject -->
+            <div
+              class="text-xs font-bold text-[#4B465C] group-hover:text-[#7367F0] transition-colors cursor-pointer line-clamp-2 leading-snug"
+              @click="viewTicket(t)"
+            >
+              {{ t.subject }}
+            </div>
+
+            <!-- Contact & Department -->
+            <div class="text-[11px] text-[#6F6B7D] flex items-center gap-1 truncate" v-if="t.contact">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span class="truncate">{{ t.contact.firstname }} {{ t.contact.lastname }}</span>
+            </div>
+
+            <div v-if="t.department" class="text-[10px] font-semibold text-[#A8AAAE]">
+              {{ t.department.name }}
+            </div>
+
+            <!-- Footer Meta -->
+            <div class="flex items-center justify-between pt-1.5 border-t border-[#DBDADE]/50 text-[10px]">
+              <span class="flex items-center gap-1 text-[#A8AAAE]">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 {{ fmtDate(t.created_at) }}
               </span>
-              <div class="tk-kc-avatar" :title="t.assignee?.name || 'Unassigned'">
+
+              <div
+                class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white shadow-2xs"
+                :class="t.assignee ? 'bg-gradient-to-tr from-[#7367F0] to-[#9F8ED6]' : 'bg-[#DBDADE] text-[#6F6B7D]'"
+                :title="t.assignee?.name || 'Unassigned'"
+              >
                 {{ t.assignee ? t.assignee.name.charAt(0).toUpperCase() : '?' }}
               </div>
             </div>
           </div>
-          <div v-if="!ticketsByStatus(col.status).length" class="tk-kanban-empty"
-            @dragover.prevent="dragCol = col.status"
-            @dragenter.prevent
-            @dragleave="dragCol = null"
-            @drop="onDrop(col.status)">Drop here</div>
+
+          <!-- Empty Column State -->
+          <div
+            v-if="!ticketsByStatus(col.status).length"
+            class="h-28 border-2 border-dashed border-[#DBDADE]/60 rounded-lg flex items-center justify-center text-[11px] text-[#A8AAAE] font-semibold"
+          >
+            Drop here
+          </div>
         </div>
-        <button class="tk-kanban-add" @click="openCreateForStatus(col.status)">
+
+        <!-- Quick Add Button -->
+        <button
+          @click="openCreateForStatus(col.status)"
+          class="w-full py-2 rounded-md border border-dashed border-[#DBDADE] hover:border-[#7367F0] hover:bg-[#7367F0]/5 text-[#6F6B7D] hover:text-[#7367F0] text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+        >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add
+          <span>Add Ticket</span>
         </button>
       </div>
     </div>
 
     <!-- ====== TABLE VIEW ====== -->
-    <div v-else>
-      <div class="tk-filters">
-        <div class="tk-filters-left">
-          <select class="tk-filter-select" v-model="perPage" @change="load">
-            <option :value="10">10</option>
-            <option :value="25">25</option>
-            <option :value="50">50</option>
-          </select>
-          <select class="tk-filter-select" v-model="priorityFilter" @change="load">
-            <option value="">All Priority</option>
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-            <option value="Urgent">Urgent</option>
-          </select>
-          <select class="tk-filter-select" v-model="deptFilter" @change="load">
-            <option value="">All Departments</option>
-            <option v-for="d in metadata.departments" :key="d.id" :value="d.id">{{ d.name }}</option>
-          </select>
+    <div v-else class="space-y-4">
+      <!-- Filter Bar -->
+      <div class="bg-white border border-[#EBE9F1] rounded-lg p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <!-- Per Page Select -->
+          <div class="flex items-center space-x-2">
+            <span class="text-xs text-[#A8AAAE] font-medium">Show</span>
+            <div class="relative">
+              <select
+                v-model="perPage"
+                @change="load"
+                class="form-ctrl text-xs h-[36px] pl-3 pr-7 bg-[#F8F7FA] border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer"
+              >
+                <option :value="10">10</option>
+                <option :value="25">25</option>
+                <option :value="50">50</option>
+                <option :value="100">100</option>
+              </select>
+              <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-[#A8AAAE]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Priority Filter -->
+          <div class="relative">
+            <select
+              v-model="priorityFilter"
+              @change="load"
+              class="form-ctrl text-xs h-[36px] pl-3 pr-8 bg-[#F8F7FA] border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer"
+            >
+              <option value="">All Priority</option>
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+              <option value="Urgent">Urgent</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-[#A8AAAE]">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+
+          <!-- Department Filter -->
+          <div class="relative">
+            <select
+              v-model="deptFilter"
+              @change="load"
+              class="form-ctrl text-xs h-[36px] pl-3 pr-8 bg-[#F8F7FA] border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer"
+            >
+              <option value="">All Departments</option>
+              <option v-for="d in metadata.departments" :key="d.id" :value="d.id">{{ d.name }}</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-[#A8AAAE]">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
         </div>
-        <div class="tk-filters-right">
-          <div class="tk-search-wrap">
-            <svg class="tk-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input v-model="search" placeholder="Search tickets..." class="tk-search-input" @input="onSearch" />
+
+        <!-- Search input -->
+        <div class="relative w-full md:w-64">
+          <input
+            v-model="search"
+            @input="onSearch"
+            type="text"
+            placeholder="Search tickets..."
+            class="form-ctrl text-xs h-[36px] pl-9 pr-3.5 bg-[#F8F7FA] border-[#DBDADE] rounded-md transition-all w-full"
+          />
+          <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-[#A8AAAE]">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </div>
         </div>
       </div>
 
-      <div class="tk-table-wrap">
-        <table class="tk-table">
-          <thead>
-            <tr>
-              <th style="width:44px;">#</th>
-              <th>Subject</th>
-              <th>Tags</th>
-              <th>Department</th>
-              <th>Service</th>
-              <th>Contact</th>
-              <th style="width:100px;">Status</th>
-              <th style="width:80px;">Priority</th>
-              <th style="width:100px;">Last Reply</th>
-              <th style="width:100px;">Created</th>
-              <th style="width:140px;"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-if="loading">
-              <td colspan="11" class="tk-empty-cell">
-                <svg class="animate-spin" fill="none" viewBox="0 0 24 24" width="18" height="18"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-              </td>
-            </tr>
-            <tr v-for="(t, idx) in tickets" :key="t.id" class="tk-row">
-              <td class="tk-cell-muted">{{ idx + 1 + (page - 1) * (+perPage) }}</td>
-              <td>
-                <div class="tk-name-cell">
-                  <span class="tk-name">{{ t.subject }}</span>
-                </div>
-              </td>
-              <td>
-                <div class="tk-tags">
-                  <span v-if="!t.tags" class="text-slate-300">—</span>
-                  <span v-for="tag in parseTags(t.tags)" :key="tag" class="tk-tag">{{ tag }}</span>
-                </div>
-              </td>
-              <td class="tk-cell-muted">{{ t.department?.name || '—' }}</td>
-              <td class="tk-cell-muted">{{ getServiceName(t.service_id) }}</td>
-              <td class="tk-cell-muted">{{ t.contact ? (t.contact.firstname + ' ' + (t.contact.lastname || '')) : '—' }}</td>
-              <td><span class="tk-status-badge" :class="statusClass(t.status)">{{ t.status }}</span></td>
-              <td><span class="tk-pri" :class="priClass(t.priority)">{{ t.priority }}</span></td>
-              <td class="tk-cell-muted">{{ fmtDate(t.last_reply_at) }}</td>
-              <td class="tk-cell-muted">{{ fmtDate(t.created_at) }}</td>
-              <td>
-                <div class="tk-row-actions">
-                  <button class="tk-act-btn-icon" @click="viewTicket(t)" title="View">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </button>
-                  <button class="tk-act-btn-icon" @click="editTicket(t)" title="Edit">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
-                  </button>
-                  <button class="tk-act-btn-icon hover:text-rose-600" @click="deleteTicket(t)" title="Delete">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr v-if="!loading && !tickets.length">
-              <td colspan="11" class="tk-empty-cell">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" width="32" height="32"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-                <p class="text-slate-400 text-sm mt-2">No tickets found</p>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="tk-pagination" v-if="totalPages > 1">
-          <span class="tk-pg-info">Showing {{ tickets.length }} of {{ totalPages * (+perPage) }} entries</span>
-          <div class="tk-pg-btns">
-            <button class="tk-pg-btn" :disabled="page <= 1" @click="page--; load()">Previous</button>
-            <button class="tk-pg-btn" :disabled="page >= totalPages" @click="page++; load()">Next</button>
+      <!-- Table Card -->
+      <div class="bg-white border border-[#EBE9F1] rounded-lg shadow-sm overflow-hidden">
+        <div class="overflow-x-auto min-h-[320px]">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-[#F8F7FA] border-b border-[#EBE9F1] text-[11px] font-bold uppercase tracking-wider text-[#6F6B7D]">
+                <th class="py-3 px-3.5 text-center w-12">#</th>
+                <th class="py-3 px-3.5 min-w-[220px]">Subject</th>
+                <th class="py-3 px-3.5">Tags</th>
+                <th class="py-3 px-3.5">Department</th>
+                <th class="py-3 px-3.5">Service</th>
+                <th class="py-3 px-3.5 min-w-[140px]">Contact</th>
+                <th class="py-3 px-3.5">Status</th>
+                <th class="py-3 px-3.5">Priority</th>
+                <th class="py-3 px-3.5 whitespace-nowrap">Last Reply</th>
+                <th class="py-3 px-3.5 whitespace-nowrap">Created</th>
+                <th class="py-3 px-3.5 text-center w-28">Options</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#F1F0F2] text-xs text-[#6F6B7D]">
+              <tr v-if="loading">
+                <td colspan="11" class="text-center py-16 text-[#A8AAAE]">
+                  <div class="flex flex-col items-center justify-center space-y-2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24" class="animate-spin text-[#7367F0]"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    <span class="text-xs font-semibold">Loading tickets...</span>
+                  </div>
+                </td>
+              </tr>
+
+              <tr
+                v-for="(t, idx) in tickets"
+                :key="t.id"
+                class="hover:bg-[#F8F7FA]/70 transition-colors group"
+              >
+                <!-- Index -->
+                <td class="py-3.5 px-3.5 text-center text-[#A8AAAE] font-mono text-[11px]">
+                  {{ idx + 1 + (page - 1) * (+perPage) }}
+                </td>
+
+                <!-- Subject -->
+                <td class="py-3.5 px-3.5">
+                  <span
+                    class="font-bold text-[#4B465C] hover:text-[#7367F0] transition-colors cursor-pointer"
+                    @click="viewTicket(t)"
+                  >
+                    {{ t.subject }}
+                  </span>
+                </td>
+
+                <!-- Tags -->
+                <td class="py-3.5 px-3.5">
+                  <div class="flex items-center gap-1 flex-wrap">
+                    <span v-if="!t.tags || !parseTags(t.tags).length" class="text-[#A8AAAE]">—</span>
+                    <span
+                      v-for="tag in parseTags(t.tags)"
+                      :key="tag"
+                      class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#7367F0]/10 text-[#7367F0] border border-[#7367F0]/20"
+                    >
+                      {{ tag }}
+                    </span>
+                  </div>
+                </td>
+
+                <!-- Department -->
+                <td class="py-3.5 px-3.5 whitespace-nowrap text-[#6F6B7D]">
+                  {{ t.department?.name || '—' }}
+                </td>
+
+                <!-- Service -->
+                <td class="py-3.5 px-3.5 whitespace-nowrap text-[#6F6B7D]">
+                  {{ getServiceName(t.service_id) }}
+                </td>
+
+                <!-- Contact -->
+                <td class="py-3.5 px-3.5">
+                  <span class="font-medium text-[#4B465C]">
+                    {{ t.contact ? (t.contact.firstname + ' ' + (t.contact.lastname || '')) : '—' }}
+                  </span>
+                </td>
+
+                <!-- Status -->
+                <td class="py-3.5 px-3.5 whitespace-nowrap">
+                  <span
+                    class="px-2.5 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 shadow-2xs"
+                    :class="statusBadgeClass(t.status)"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClass(t.status)"></span>
+                    {{ t.status }}
+                  </span>
+                </td>
+
+                <!-- Priority -->
+                <td class="py-3.5 px-3.5 whitespace-nowrap">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase" :class="priClass(t.priority)">
+                    {{ t.priority }}
+                  </span>
+                </td>
+
+                <!-- Last Reply -->
+                <td class="py-3.5 px-3.5 whitespace-nowrap text-[#6F6B7D]">
+                  {{ fmtDate(t.last_reply_at) }}
+                </td>
+
+                <!-- Created Date -->
+                <td class="py-3.5 px-3.5 whitespace-nowrap text-[#6F6B7D]">
+                  {{ fmtDate(t.created_at) }}
+                </td>
+
+                <!-- Actions -->
+                <td class="py-3.5 px-3.5 text-center">
+                  <div class="flex items-center justify-center gap-1">
+                    <button
+                      @click="viewTicket(t)"
+                      class="w-7 h-7 rounded border border-transparent hover:border-[#DBDADE] hover:bg-[#F8F7FA] text-[#A8AAAE] hover:text-[#7367F0] flex items-center justify-center transition-all cursor-pointer bg-transparent"
+                      title="View Conversation"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button
+                      @click="editTicket(t)"
+                      class="w-7 h-7 rounded border border-transparent hover:border-[#DBDADE] hover:bg-[#F8F7FA] text-[#A8AAAE] hover:text-[#7367F0] flex items-center justify-center transition-all cursor-pointer bg-transparent"
+                      title="Edit Ticket"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
+                    </button>
+                    <button
+                      @click="deleteTicket(t)"
+                      class="w-7 h-7 rounded border border-transparent hover:border-rose-200 hover:bg-rose-50 text-[#A8AAAE] hover:text-rose-600 flex items-center justify-center transition-all cursor-pointer bg-transparent"
+                      title="Delete Ticket"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr v-if="!loading && !tickets.length">
+                <td colspan="11" class="text-center py-12 text-[#A8AAAE]">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36" class="mx-auto mb-2 opacity-50"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                  <p class="text-xs font-semibold m-0">No support tickets found</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex items-center justify-between px-5 py-3 border-t border-[#F1F0F2] text-xs text-[#6F6B7D]" v-if="totalPages > 1">
+          <span class="text-[#A8AAAE]">Showing {{ tickets.length }} of {{ totalPages * (+perPage) }} entries</span>
+          <div class="flex items-center space-x-2">
+            <button class="btn-outline px-3 py-1.5 text-xs font-semibold cursor-pointer" :disabled="page <= 1" @click="page--; load()">Previous</button>
+            <button class="btn-outline px-3 py-1.5 text-xs font-semibold cursor-pointer" :disabled="page >= totalPages" @click="page++; load()">Next</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Create/Edit Modal -->
-    <Teleport to="body">
-      <div v-if="showModal" class="tk-modal-overlay" @click.self="closeModal">
-        <div class="tk-modal-box tk-modal-wide">
-          <div class="tk-modal-hd">
-            <div class="tk-modal-hd-left">
-              <div class="tk-modal-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-              </div>
-              <div>
-                <div class="tk-modal-title">{{ editingTicket ? 'Edit Ticket' : 'Ticket Information' }}</div>
-                <div class="tk-modal-sub">Fill in the details below</div>
-              </div>
-            </div>
-            <button class="tk-modal-close" @click="closeModal">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
+    <!-- CREATE / EDIT TICKET RIGHT-SIDE DRAWER -->
+    <a-drawer
+      v-model:open="showModal"
+      placement="right"
+      :width="680"
+      :destroyOnClose="true"
+      class="vuexy-ticket-drawer"
+      @close="closeModal"
+    >
+      <template #title>
+        <div class="flex items-center space-x-3 py-1">
+          <div class="w-2.5 h-6 rounded-full bg-gradient-to-b from-[#7367F0] to-[#9F8ED6]"></div>
+          <div>
+            <h2 class="text-base font-bold text-[#4B465C] m-0">
+              {{ editingTicket ? 'Edit Support Ticket' : 'Create New Ticket' }}
+            </h2>
+            <p class="text-xs text-[#A8AAAE] m-0 mt-0.5">
+              {{ editingTicket ? 'Update ticket properties and message payload' : 'Fill in the customer support ticket details below' }}
+            </p>
+          </div>
+        </div>
+      </template>
+
+      <div class="p-1 space-y-6">
+        <!-- Mode Switcher Pill -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-1.5 flex items-center gap-1 shadow-2xs">
+          <button
+            type="button"
+            class="flex-1 py-2 px-3 text-xs font-bold rounded-md transition-all cursor-pointer text-center"
+            :class="!ticketWithoutContact ? 'bg-[#7367F0] text-white shadow-xs' : 'text-[#6F6B7D] hover:bg-[#F8F7FA]'"
+            @click="ticketWithoutContact = false"
+          >
+            Ticket with Customer Contact
+          </button>
+          <button
+            type="button"
+            class="flex-1 py-2 px-3 text-xs font-bold rounded-md transition-all cursor-pointer text-center"
+            :class="ticketWithoutContact ? 'bg-[#7367F0] text-white shadow-xs' : 'text-[#6F6B7D] hover:bg-[#F8F7FA]'"
+            @click="ticketWithoutContact = true"
+          >
+            Direct / Unlinked Ticket
+          </button>
+        </div>
+
+        <!-- 1. Primary Ticket Info Card -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 space-y-4 shadow-sm">
+          <div class="flex items-center space-x-2 pb-2 border-b border-[#F1F0F2]">
+            <span class="w-2 h-2 rounded-full bg-[#7367F0]"></span>
+            <span class="text-xs font-bold text-[#4B465C] uppercase tracking-wider">Ticket Details</span>
           </div>
 
-          <div class="tk-modal-body">
-            <div class="tk-form-grid">
-              <div class="tk-form-group span-2">
-                <label class="tk-radio-group-label">Ticket Information</label>
-                <div class="tk-radio-group">
-                  <label class="tk-radio-btn" :class="{ active: !ticketWithoutContact }">
-                    <input type="radio" name="ticketMode" :value="false" v-model="ticketWithoutContact" />
-                    <span class="tk-radio-dot"></span>
-                    Ticket to contact
-                  </label>
-                  <label class="tk-radio-btn" :class="{ active: ticketWithoutContact }">
-                    <input type="radio" name="ticketMode" :value="true" v-model="ticketWithoutContact" />
-                    <span class="tk-radio-dot"></span>
-                    Ticket without contact
-                  </label>
-                </div>
-              </div>
+          <div class="space-y-4">
+            <!-- Subject -->
+            <div>
+              <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">
+                Subject <span class="text-rose-500">*</span>
+              </label>
+              <input
+                v-model="form.subject"
+                placeholder="e.g. Server connection timeout error"
+                class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all w-full"
+              />
+            </div>
 
-              <div class="tk-form-group span-2">
-                <label>Subject <span class="tk-req">*</span></label>
-                <input v-model="form.subject" placeholder="Enter ticket subject" class="tk-input" />
-              </div>
-
-              <template v-if="ticketWithoutContact">
-                <div class="tk-form-group">
-                  <label>Contact <span class="tk-req">*</span></label>
-                  <select v-model="form.contact_id" class="tk-input">
-                    <option :value="null">Select Contact</option>
-                    <option v-for="c in metadata.contacts" :key="c.id" :value="c.id">
-                      {{ c.firstname }} {{ c.lastname }}
-                    </option>
+            <!-- Department & Priority -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Department <span class="text-rose-500">*</span></label>
+                <div class="relative">
+                  <select
+                    v-model="form.department_id"
+                    class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer pr-10 w-full"
+                  >
+                    <option :value="null">Select Department</option>
+                    <option v-for="d in metadata.departments" :key="d.id" :value="d.id">{{ d.name }}</option>
                   </select>
-                </div>
-                <div class="tk-form-group">
-                  <label>Email address</label>
-                  <input v-model="form.email" placeholder="contact@example.com" class="tk-input" />
-                </div>
-                <div class="tk-form-group">
-                  <label>Name</label>
-                  <input v-model="form.contact_name" placeholder="Contact name" class="tk-input" />
-                </div>
-                <div class="tk-form-group">
-                  <label>Contact number</label>
-                  <input v-model="form.contact_number" placeholder="Phone number" class="tk-input" />
-                </div>
-              </template>
-              <template v-else>
-                <div class="tk-form-group">
-                  <label>Name</label>
-                  <input :value="selectedContact ? selectedContact.firstname + ' ' + (selectedContact.lastname || '') : ''" class="tk-input tk-input-readonly" readonly placeholder="Auto-filled from contact" />
-                </div>
-                <div class="tk-form-group">
-                  <label>Email address</label>
-                  <input :value="selectedContact ? selectedContact.email : ''" class="tk-input tk-input-readonly" readonly placeholder="Auto-filled from contact" />
-                </div>
-                <div class="tk-form-group">
-                  <label>Contact</label>
-                  <select v-model="form.contact_id" class="tk-input">
-                    <option :value="null">Select Contact</option>
-                    <option v-for="c in metadata.contacts" :key="c.id" :value="c.id">
-                      {{ c.firstname }} {{ c.lastname }}
-                    </option>
-                  </select>
-                </div>
-                <div class="tk-form-group">
-                  <label>Customer (Auto-filled)</label>
-                  <input :value="selectedClient ? selectedClient.company : ''" class="tk-input tk-input-readonly" readonly placeholder="Auto-filled from contact" />
-                </div>
-              </template>
-
-              <div class="tk-form-group">
-                <label>Department <span class="tk-req">*</span></label>
-                <select v-model="form.department_id" class="tk-input">
-                  <option :value="null">Select Department</option>
-                  <option v-for="d in metadata.departments" :key="d.id" :value="d.id">{{ d.name }}</option>
-                </select>
-              </div>
-
-              <div class="tk-form-group">
-                <label>CC</label>
-                <input v-model="form.cc" placeholder="cc@example.com" class="tk-input" />
-              </div>
-
-              <div class="tk-form-group span-2">
-                <label>Tags</label>
-                <div class="tk-tag-input-wrap">
-                  <div class="tk-tag-list">
-                    <span v-for="(tag, i) in form.tagList" :key="i" class="tk-tag-pill">
-                      {{ tag }}
-                      <button class="tk-tag-pill-del" @click="form.tagList.splice(i, 1); form.tags = form.tagList.join(',')">&times;</button>
-                    </span>
-                    <input v-model="tagInput" placeholder="Type tag and press Enter" class="tk-tag-field" @keydown.enter.prevent="addTag" @keydown.,.prevent="addTag" />
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#A8AAAE]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
                   </div>
                 </div>
               </div>
 
-              <div class="tk-form-group">
-                <label>Assign ticket</label>
-                <select v-model="form.assigned_to" class="tk-input">
+              <div>
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Priority</label>
+                <div class="relative">
+                  <select
+                    v-model="form.priority"
+                    class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer pr-10 w-full"
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Urgent">Urgent</option>
+                  </select>
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#A8AAAE]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Service & CC -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Service</label>
+                <div class="relative">
+                  <select
+                    v-model="form.service_id"
+                    class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer pr-10 w-full"
+                  >
+                    <option :value="null">Select Service</option>
+                    <option v-for="s in metadata.services" :key="s.id" :value="s.id">{{ s.name }}</option>
+                  </select>
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#A8AAAE]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">CC</label>
+                <input
+                  v-model="form.cc"
+                  placeholder="cc@example.com"
+                  class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all w-full"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Customer & Contact Details Card -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 space-y-4 shadow-sm">
+          <div class="flex items-center space-x-2 pb-2 border-b border-[#F1F0F2]">
+            <span class="w-2 h-2 rounded-full bg-[#28C76F]"></span>
+            <span class="text-xs font-bold text-[#4B465C] uppercase tracking-wider">Contact & Customer</span>
+          </div>
+
+          <!-- If Without Contact Mode -->
+          <template v-if="ticketWithoutContact">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Contact Name</label>
+                <input
+                  v-model="form.contact_name"
+                  placeholder="e.g. John Doe"
+                  class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all w-full"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Email Address</label>
+                <input
+                  v-model="form.email"
+                  placeholder="john@example.com"
+                  class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all w-full"
+                />
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Contact Number</label>
+                <input
+                  v-model="form.contact_number"
+                  placeholder="+1 555-0199"
+                  class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all w-full"
+                />
+              </div>
+            </div>
+          </template>
+
+          <!-- If Standard Customer Link Mode -->
+          <template v-else>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Contact <span class="text-rose-500">*</span></label>
+                <div class="relative">
+                  <select
+                    v-model="form.contact_id"
+                    class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer pr-10 w-full"
+                  >
+                    <option :value="null">Select Contact</option>
+                    <option v-for="c in metadata.contacts" :key="c.id" :value="c.id">
+                      {{ c.firstname }} {{ c.lastname }}
+                    </option>
+                  </select>
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#A8AAAE]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Customer (Auto-filled)</label>
+                <input
+                  :value="selectedClient ? selectedClient.company : ''"
+                  class="form-ctrl text-xs h-[38px] px-3.5 bg-[#F8F7FA] border-[#DBDADE] text-[#6F6B7D] rounded-md w-full"
+                  readonly
+                  placeholder="Auto-filled from contact"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Contact Email</label>
+                <input
+                  :value="selectedContact ? selectedContact.email : ''"
+                  class="form-ctrl text-xs h-[38px] px-3.5 bg-[#F8F7FA] border-[#DBDADE] text-[#6F6B7D] rounded-md w-full"
+                  readonly
+                  placeholder="Auto-filled from contact"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Project Link</label>
+                <div class="relative">
+                  <select
+                    v-model="form.project_id"
+                    class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer pr-10 w-full"
+                    :disabled="!form.client_id"
+                  >
+                    <option :value="null">Select Project</option>
+                    <option v-for="p in filteredProjects" :key="p.id" :value="p.id">{{ p.name }}</option>
+                  </select>
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#A8AAAE]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- 3. Assignment & Tags Card -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 space-y-4 shadow-sm">
+          <div class="flex items-center space-x-2 pb-2 border-b border-[#F1F0F2]">
+            <span class="w-2 h-2 rounded-full bg-[#FF9F43]"></span>
+            <span class="text-xs font-bold text-[#4B465C] uppercase tracking-wider">Staff Assignment & Tags</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Assign Staff</label>
+              <div class="relative">
+                <select
+                  v-model="form.assigned_to"
+                  class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer pr-10 w-full"
+                >
                   <option :value="null">Select Staff (default: you)</option>
                   <option v-for="s in metadata.staff" :key="s.id" :value="s.id">{{ s.name }}</option>
                 </select>
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#A8AAAE]">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
               </div>
+            </div>
 
-              <div class="tk-form-group">
-                <label>Priority</label>
-                <select v-model="form.priority" class="tk-input">
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                  <option value="Urgent">Urgent</option>
-                </select>
-              </div>
-
-              <div class="tk-form-group" v-if="editingTicket">
-                <label>Status</label>
-                <select v-model="form.status" class="tk-input">
+            <div v-if="editingTicket">
+              <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Status</label>
+              <div class="relative">
+                <select
+                  v-model="form.status"
+                  class="form-ctrl text-xs h-[38px] px-3.5 bg-white border-[#DBDADE] rounded-md transition-all appearance-none cursor-pointer pr-10 w-full"
+                >
                   <option value="Open">Open</option>
                   <option value="In Progress">In Progress</option>
                   <option value="Answered">Answered</option>
                   <option value="On Hold">On Hold</option>
                   <option value="Closed">Closed</option>
                 </select>
-              </div>
-
-              <div class="tk-form-group">
-                <label>Service</label>
-                <select v-model="form.service_id" class="tk-input">
-                  <option :value="null">Select Service</option>
-                  <option v-for="s in metadata.services" :key="s.id" :value="s.id">{{ s.name }}</option>
-                </select>
-              </div>
-
-              <div class="tk-form-group" v-if="!editingTicket">
-                <label>Project</label>
-                <select v-model="form.project_id" class="tk-input" :disabled="!form.client_id">
-                  <option :value="null">Select Project</option>
-                  <option v-for="p in filteredProjects" :key="p.id" :value="p.id">{{ p.name }}</option>
-                </select>
-              </div>
-
-              <div class="tk-form-group span-2">
-                <label>Ticket Body <span class="tk-req">*</span></label>
-                <div class="tk-editor-toolbar">
-                  <select v-model="form.predefined_reply" @change="handlePredefinedReplyChange">
-                    <option value="">Insert predefined reply</option>
-                    <option v-for="r in predefinedReplies" :key="r.id" :value="r.id">{{ r.title }}</option>
-                  </select>
-                  <select v-model="form.kb_link" @change="handleKbLinkChange">
-                    <option value="">Insert knowledge base link</option>
-                    <option v-for="a in kbArticles" :key="a.id" :value="a.id">{{ a.title }}</option>
-                  </select>
-                </div>
-                <textarea v-model="form.message" rows="6" placeholder="Describe the issue in detail..." class="tk-input tk-textarea"></textarea>
-              </div>
-
-              <div class="tk-form-group span-2">
-                <label>Attachments</label>
-                <div class="tk-file-upload">
-                  <input type="file" @change="handleFileChange" class="tk-file-input" id="tk-file-input" />
-                  <label for="tk-file-input" class="tk-file-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    Choose File
-                  </label>
-                  <span class="tk-file-name">{{ attachmentFileName || 'No file chosen' }}</span>
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#A8AAAE]">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div class="tk-modal-ft">
-            <button class="tk-btn-secondary" @click="closeModal">Cancel</button>
-            <button class="tk-btn-primary" @click="saveTicket" :disabled="saving">
-              {{ saving ? 'Saving...' : (editingTicket ? 'Save Changes' : 'Create Ticket') }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
-
-    <!-- View Ticket Modal -->
-    <Teleport to="body">
-      <div v-if="viewingTicket" class="tk-modal-overlay" @click.self="viewingTicket = null">
-        <div class="tk-modal-box tk-modal-wide">
-          <div class="tk-modal-hd">
-            <div class="tk-modal-hd-left">
-              <div class="tk-modal-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-              </div>
-              <div>
-                <div class="tk-modal-title">Ticket #{{ viewingTicket.id }}</div>
-                <div class="tk-modal-sub">{{ viewingTicket.subject }}</div>
-              </div>
-            </div>
-            <button class="tk-modal-close" @click="viewingTicket = null">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
-
-          <div class="tk-modal-body">
-            <div class="tk-view-meta">
-              <span class="tk-pri" :class="priClass(viewingTicket.priority)">{{ viewingTicket.priority }}</span>
-              <span class="tk-status-badge" :class="statusClass(viewingTicket.status)">{{ viewingTicket.status }}</span>
-              <span class="tk-view-meta-item">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                {{ fmtDate(viewingTicket.created_at) }}
-              </span>
-              <span class="tk-view-meta-item">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                {{ viewingTicket.client?.company || 'N/A' }}
-              </span>
-            </div>
-
-            <div class="tk-view-grid">
-              <div class="tk-view-item">
-                <span class="tk-view-lbl">Contact</span>
-                <span class="tk-view-val">{{ viewingTicket.contact ? (viewingTicket.contact.firstname + ' ' + (viewingTicket.contact.lastname || '')) : '—' }}</span>
-              </div>
-              <div class="tk-view-item">
-                <span class="tk-view-lbl">Email</span>
-                <span class="tk-view-val">{{ viewingTicket.contact?.email || '—' }}</span>
-              </div>
-              <div class="tk-view-item">
-                <span class="tk-view-lbl">Department</span>
-                <span class="tk-view-val">{{ viewingTicket.department?.name || '—' }}</span>
-              </div>
-              <div class="tk-view-item">
-                <span class="tk-view-lbl">Assigned To</span>
-                <span class="tk-view-val">{{ viewingTicket.assignee?.name || '—' }}</span>
-              </div>
-              <div class="tk-view-item">
-                <span class="tk-view-lbl">Service</span>
-                <span class="tk-view-val">{{ getServiceName(viewingTicket.service_id) }}</span>
-              </div>
-              <div class="tk-view-item">
-                <span class="tk-view-lbl">CC</span>
-                <span class="tk-view-val">{{ viewingTicket.cc || '—' }}</span>
-              </div>
-              <div class="tk-view-item" v-if="viewingTicket.tags">
-                <span class="tk-view-lbl">Tags</span>
-                <span class="tk-view-val">
-                  <span v-for="tag in parseTags(viewingTicket.tags)" :key="tag" class="tk-tag" style="margin:0 3px 3px 0">{{ tag }}</span>
+            <!-- Tags Field -->
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Tags</label>
+              <div class="p-2 bg-white border border-[#DBDADE] rounded-md flex flex-wrap items-center gap-1.5 min-h-[38px] focus-within:border-[#7367F0]">
+                <span
+                  v-for="(tag, i) in form.tagList"
+                  :key="i"
+                  class="px-2 py-0.5 rounded-full text-xs font-bold bg-[#7367F0]/10 text-[#7367F0] flex items-center gap-1"
+                >
+                  {{ tag }}
+                  <button type="button" @click="form.tagList.splice(i, 1); form.tags = form.tagList.join(',')" class="text-[#7367F0] hover:text-rose-600 cursor-pointer font-bold">&times;</button>
                 </span>
+                <input
+                  v-model="tagInput"
+                  @keydown.enter.prevent="addTag"
+                  @keydown.,.prevent="addTag"
+                  placeholder="Type tag and press Enter..."
+                  class="text-xs border-none outline-none flex-1 min-w-[140px] bg-transparent py-0.5"
+                />
               </div>
             </div>
+          </div>
+        </div>
 
-            <div class="tk-message-bubble tk-message-original">
-              <div class="tk-bubble-hd">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                Original Message
-              </div>
-              <div class="tk-bubble-body">{{ viewingTicket.message }}</div>
+        <!-- 4. Ticket Body & Quick Solutions Card -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 space-y-4 shadow-sm">
+          <div class="flex items-center justify-between pb-2 border-b border-[#F1F0F2]">
+            <div class="flex items-center space-x-2">
+              <span class="w-2 h-2 rounded-full bg-[#00CFE8]"></span>
+              <span class="text-xs font-bold text-[#4B465C] uppercase tracking-wider">Ticket Message & Solution</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <select
+                v-model="form.predefined_reply"
+                @change="handlePredefinedReplyChange"
+                class="text-[11px] font-semibold text-[#6F6B7D] bg-[#F8F7FA] border border-[#DBDADE] rounded-md px-2 py-1 outline-none cursor-pointer"
+              >
+                <option value="">Insert predefined reply</option>
+                <option v-for="r in predefinedReplies" :key="r.id" :value="r.id">{{ r.title }}</option>
+              </select>
+              <select
+                v-model="form.kb_link"
+                @change="handleKbLinkChange"
+                class="text-[11px] font-semibold text-[#6F6B7D] bg-[#F8F7FA] border border-[#DBDADE] rounded-md px-2 py-1 outline-none cursor-pointer"
+              >
+                <option value="">Insert KB article link</option>
+                <option v-for="a in kbArticles" :key="a.id" :value="a.id">{{ a.title }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">
+                Ticket Description / Message <span class="text-rose-500">*</span>
+              </label>
+              <textarea
+                v-model="form.message"
+                rows="5"
+                placeholder="Describe the issue in detail..."
+                class="form-ctrl text-xs p-3 bg-white border-[#DBDADE] rounded-md transition-all min-h-[100px] w-full resize-none leading-relaxed"
+              ></textarea>
             </div>
 
-            <div class="tk-replies-section">
-              <div class="tk-replies-hd">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-                Replies ({{ viewingTicket.replies?.length || 0 }})
-              </div>
-              <div v-for="reply in viewingTicket.replies" :key="reply.id"
-                   class="tk-message-bubble" :class="reply.is_admin_reply ? 'tk-message-admin' : 'tk-message-client'">
-                <div class="tk-bubble-hd">
-                  <span class="tk-bubble-author">{{ reply.name || reply.user?.name || 'Support' }}</span>
-                  <span class="tk-bubble-time">{{ fmtDate(reply.created_at) }}</span>
-                  <span v-if="reply.is_admin_reply" class="tk-bubble-tag">Staff</span>
-                </div>
-                <div class="tk-bubble-body">{{ reply.message }}</div>
-              </div>
-
-              <div class="tk-reply-form">
-                <textarea v-model="replyMessage" rows="3" placeholder="Type your reply..." class="tk-input tk-textarea"></textarea>
-                <button class="tk-btn-primary" @click="sendReply" :disabled="sendingReply">
-                  {{ sendingReply ? 'Sending...' : 'Send Reply' }}
-                </button>
+            <!-- Attachment File -->
+            <div>
+              <label class="block text-xs font-semibold text-[#4B465C] mb-1.5">Attachments</label>
+              <div class="p-3 border border-[#DBDADE] rounded-md bg-[#F8F7FA] flex items-center gap-3">
+                <input type="file" @change="handleFileChange" class="hidden" id="tk-file-input" />
+                <label for="tk-file-input" class="btn-primary px-3.5 py-1.5 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <span>Choose File</span>
+                </label>
+                <span class="text-xs font-medium text-[#6F6B7D] truncate">{{ attachmentFileName || 'No file selected' }}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </Teleport>
 
-    <!-- Weekly Analytics Modal -->
-    <Teleport to="body">
-      <div v-if="showWeeklyAnalytics" class="tk-modal-overlay" @click.self="showWeeklyAnalytics = false">
-        <div class="tk-modal-box tk-modal-narrow">
-          <div class="tk-modal-hd">
-            <div class="tk-modal-hd-left">
-              <div class="tk-modal-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-              </div>
-              <div>
-                <div class="tk-modal-title">Weekly Tickets Analytics</div>
-                <div class="tk-modal-sub">Tickets created per day over the last 7 days</div>
-              </div>
+      <!-- Drawer Footer -->
+      <template #footer>
+        <div class="flex items-center justify-end space-x-3 py-2 px-1">
+          <button
+            type="button"
+            class="btn-outline px-5 py-2.5 text-xs font-semibold cursor-pointer"
+            @click="closeModal"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="btn-primary px-6 py-2.5 text-xs font-bold flex items-center gap-2 cursor-pointer"
+            :disabled="saving"
+            @click="saveTicket"
+          >
+            <svg v-if="saving" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" class="animate-spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            {{ saving ? 'Saving...' : (editingTicket ? 'Save Changes' : 'Create Ticket') }}
+          </button>
+        </div>
+      </template>
+    </a-drawer>
+
+    <!-- VIEW TICKET CONVERSATION DRAWER -->
+    <a-drawer
+      v-model:open="showViewDrawer"
+      placement="right"
+      :width="640"
+      :destroyOnClose="true"
+      class="vuexy-ticket-view-drawer"
+    >
+      <template #title>
+        <div v-if="viewingTicket" class="flex items-center space-x-3 py-1">
+          <div class="w-2.5 h-6 rounded-full bg-gradient-to-b from-[#7367F0] to-[#9F8ED6]"></div>
+          <div>
+            <h2 class="text-base font-bold text-[#4B465C] m-0">Ticket #{{ viewingTicket.id }}</h2>
+            <p class="text-xs text-[#A8AAAE] m-0 mt-0.5 truncate max-w-sm">{{ viewingTicket.subject }}</p>
+          </div>
+        </div>
+      </template>
+
+      <div v-if="viewingTicket" class="p-1 space-y-5">
+        <!-- Ticket Meta Badges Card -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-4 shadow-sm space-y-3">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase" :class="priClass(viewingTicket.priority)">
+                {{ viewingTicket.priority }}
+              </span>
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 shadow-2xs" :class="statusBadgeClass(viewingTicket.status)">
+                <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClass(viewingTicket.status)"></span>
+                {{ viewingTicket.status }}
+              </span>
             </div>
-            <button class="tk-modal-close" @click="showWeeklyAnalytics = false">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <span class="text-xs text-[#A8AAAE] font-medium">{{ fmtDate(viewingTicket.created_at) }}</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 pt-2 border-t border-[#F1F0F2] text-xs">
+            <div>
+              <span class="text-[#A8AAAE] font-medium block">Contact</span>
+              <span class="font-semibold text-[#4B465C]">{{ viewingTicket.contact ? (viewingTicket.contact.firstname + ' ' + (viewingTicket.contact.lastname || '')) : '—' }}</span>
+            </div>
+            <div>
+              <span class="text-[#A8AAAE] font-medium block">Department</span>
+              <span class="font-semibold text-[#4B465C]">{{ viewingTicket.department?.name || '—' }}</span>
+            </div>
+            <div>
+              <span class="text-[#A8AAAE] font-medium block">Customer</span>
+              <span class="font-semibold text-[#4B465C]">{{ viewingTicket.client?.company || 'N/A' }}</span>
+            </div>
+            <div>
+              <span class="text-[#A8AAAE] font-medium block">Assigned Staff</span>
+              <span class="font-semibold text-[#4B465C]">{{ viewingTicket.assignee?.name || 'Unassigned' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Original Message Bubble -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm space-y-2">
+          <div class="flex items-center space-x-2 text-xs font-bold text-[#7367F0] pb-2 border-b border-[#F1F0F2]">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            <span>Original Message</span>
+          </div>
+          <p class="text-xs text-[#4B465C] leading-relaxed whitespace-pre-wrap m-0">
+            {{ viewingTicket.message }}
+          </p>
+        </div>
+
+        <!-- Conversation Replies Thread -->
+        <div class="space-y-3">
+          <h4 class="text-xs font-bold text-[#4B465C] uppercase tracking-wider m-0">
+            Replies ({{ viewingTicket.replies?.length || 0 }})
+          </h4>
+
+          <div
+            v-for="reply in viewingTicket.replies"
+            :key="reply.id"
+            class="p-4 rounded-lg border space-y-1.5 shadow-2xs"
+            :class="reply.is_admin_reply ? 'bg-white border-[#7367F0]/30' : 'bg-[#F8F7FA] border-[#EBE9F1]'"
+          >
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold text-[#4B465C]">{{ reply.name || reply.user?.name || 'Support' }}</span>
+                <span v-if="reply.is_admin_reply" class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#7367F0]/10 text-[#7367F0]">Staff</span>
+              </div>
+              <span class="text-[10px] text-[#A8AAAE]">{{ fmtDate(reply.created_at) }}</span>
+            </div>
+            <p class="text-xs text-[#6F6B7D] leading-relaxed whitespace-pre-wrap m-0">{{ reply.message }}</p>
+          </div>
+        </div>
+
+        <!-- Reply Input Box -->
+        <div class="bg-white border border-[#EBE9F1] rounded-lg p-4 shadow-sm space-y-3">
+          <label class="block text-xs font-bold text-[#4B465C]">Send a Reply</label>
+          <textarea
+            v-model="replyMessage"
+            rows="3"
+            placeholder="Type your response to the customer..."
+            class="form-ctrl text-xs p-3 bg-[#F8F7FA] border-[#DBDADE] rounded-md transition-all min-h-[80px] w-full resize-none leading-relaxed"
+          ></textarea>
+          <div class="flex justify-end">
+            <button
+              class="btn-primary px-5 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
+              @click="sendReply"
+              :disabled="sendingReply"
+            >
+              <svg v-if="sendingReply" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" class="animate-spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              <span>{{ sendingReply ? 'Sending...' : 'Post Reply' }}</span>
             </button>
           </div>
-          <div class="tk-modal-body">
-            <apexchart type="bar" height="260" :options="weeklyChartOptions" :series="weeklyChartSeries"></apexchart>
-          </div>
         </div>
       </div>
-    </Teleport>
+    </a-drawer>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
-import { useRoute } from 'vue-router'
+import { message } from 'ant-design-vue'
 import { useAuthStore } from '../../store/authStore'
-import VueApexCharts from 'vue3-apexcharts'
 
 const BASE = '/api'
-const route = useRoute()
 const authStore = useAuthStore()
 
 const tickets = ref([])
@@ -538,6 +916,7 @@ const priorityFilter = ref('')
 const deptFilter = ref('')
 const statusFilter = ref('')
 const showModal = ref(false)
+const showViewDrawer = ref(false)
 const editingTicket = ref(null)
 const viewingTicket = ref(null)
 const replyMessage = ref('')
@@ -551,39 +930,91 @@ const selectedClient = ref(null)
 const dragCol = ref(null)
 const dragTicketId = ref(null)
 const ticketWithoutContact = ref(false)
-const showWeeklyAnalytics = ref(false)
-const weeklyStats = ref([])
 
 const metadata = ref({
-  departments: [], staff: [], clients: [], contacts: [], projects: [], services: [],
+  departments: [],
+  staff: [],
+  clients: [],
+  contacts: [],
+  projects: [],
+  services: [],
 })
 
 const form = reactive({
-  subject: '', contact_id: null, client_id: null, priority: 'Medium', status: 'Open',
-  department_id: null, message: '', assigned_to: null, tags: '', service_id: null,
-  project_id: null, cc: '', predefined_reply: '', kb_link: '', tagList: [],
-  email: '', contact_name: '', contact_number: '',
+  subject: '',
+  contact_id: null,
+  client_id: null,
+  priority: 'Medium',
+  status: 'Open',
+  department_id: null,
+  message: '',
+  assigned_to: null,
+  tags: '',
+  service_id: null,
+  project_id: null,
+  cc: '',
+  predefined_reply: '',
+  kb_link: '',
+  tagList: [],
+  email: '',
+  contact_name: '',
+  contact_number: '',
 })
 
 const kanbanColumns = [
-  { title: 'Open', status: 'Open', color: '#3b82f6', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/></svg>' },
-  { title: 'In Progress', status: 'In Progress', color: '#f59e0b', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' },
-  { title: 'Answered', status: 'Answered', color: '#10b981', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>' },
-  { title: 'On Hold', status: 'On Hold', color: '#6366f1', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" width="14" height="14"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>' },
-  { title: 'Closed', status: 'Closed', color: '#94a3b8', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>' },
+  { title: 'Open', status: 'Open', color: '#7367F0' },
+  { title: 'In Progress', status: 'In Progress', color: '#00CFE8' },
+  { title: 'Answered', status: 'Answered', color: '#28C76F' },
+  { title: 'On Hold', status: 'On Hold', color: '#FF9F43' },
+  { title: 'Closed', status: 'Closed', color: '#A8AAAE' },
 ]
 
 const summaryCards = computed(() => [
-  { label: 'Open', value: stats.value.open || 0, color: '#3b82f6', bg: '#eff6ff', statusValue: 'Open',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/></svg>' },
-  { label: 'In Progress', value: stats.value.in_progress || 0, color: '#f59e0b', bg: '#fffbeb', statusValue: 'In Progress',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' },
-  { label: 'Answered', value: stats.value.answered || 0, color: '#10b981', bg: '#f0fdf4', statusValue: 'Answered',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>' },
-  { label: 'On Hold', value: stats.value.on_hold || 0, color: '#6366f1', bg: '#f5f3ff', statusValue: 'On Hold',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>' },
-  { label: 'Closed', value: stats.value.closed || 0, color: '#94a3b8', bg: '#f8fafc', statusValue: 'Closed',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg>' },
+  {
+    label: 'Open',
+    value: stats.value.open || 0,
+    color: '#7367F0',
+    textColor: '#7367F0',
+    bgLight: 'rgba(115, 103, 240, 0.12)',
+    statusValue: 'Open',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/></svg>',
+  },
+  {
+    label: 'In Progress',
+    value: stats.value.in_progress || 0,
+    color: '#00CFE8',
+    textColor: '#00CFE8',
+    bgLight: 'rgba(0, 207, 232, 0.12)',
+    statusValue: 'In Progress',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  },
+  {
+    label: 'Answered',
+    value: stats.value.answered || 0,
+    color: '#28C76F',
+    textColor: '#28C76F',
+    bgLight: 'rgba(40, 199, 111, 0.12)',
+    statusValue: 'Answered',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="20 6 9 17 4 12"/></svg>',
+  },
+  {
+    label: 'On Hold',
+    value: stats.value.on_hold || 0,
+    color: '#FF9F43',
+    textColor: '#FF9F43',
+    bgLight: 'rgba(255, 159, 67, 0.12)',
+    statusValue: 'On Hold',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>',
+  },
+  {
+    label: 'Closed',
+    value: stats.value.closed || 0,
+    color: '#A8AAAE',
+    textColor: '#4B465C',
+    bgLight: 'rgba(168, 170, 174, 0.12)',
+    statusValue: 'Closed',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="9 18 15 12 9 6"/></svg>',
+  },
 ])
 
 watch(() => form.contact_id, (newVal) => {
@@ -643,7 +1074,10 @@ function handleKbLinkChange(e) {
 }
 
 async function loadMetadata() {
-  try { const res = await axios.get(`${BASE}/tickets/metadata`); metadata.value = res.data } catch {}
+  try {
+    const res = await axios.get(`${BASE}/tickets/metadata`)
+    metadata.value = res.data
+  } catch {}
 }
 
 async function load() {
@@ -658,24 +1092,11 @@ async function load() {
     totalPages.value = res.data.tickets?.last_page || 1
     stats.value = res.data.stats || {}
   } catch {
-    const departments = [{ id: 1, name: 'Sales' }, { id: 2, name: 'Abuse' }, { id: 3, name: 'Marketing' }]
-    const contacts = [
-      { id: 1, firstname: 'Marcel', lastname: 'Hills', email: 'marcel@example.com', client_id: 1 },
-      { id: 2, firstname: 'Nicholas', lastname: 'Treutel', email: 'nicholas@example.com', client_id: 2 },
-      { id: 3, firstname: 'Justus', lastname: 'Lindgren', email: 'justus@example.com', client_id: 3 },
-    ]
-    const staff = [{ id: 1, name: 'Tre Stamm' }]
-    const deptMap = { 1: departments[0], 2: departments[1], 3: departments[2] }
-    tickets.value = [
-      { id: 1, subject: 'March Hare. Alice was soon.', priority: 'High', status: 'Open', created_at: '2026-06-17T12:00:17', last_reply_at: null, tags: '', cc: '', message: 'Need help with account access.', department: departments[0], department_id: 1, contact: contacts[0], contact_id: 1, client_id: 1, assignee: staff[0], assigned_to: 1, service_id: null, project_id: null, client: { company: 'Beer-Wehner' } },
-      { id: 2, subject: 'But the snail replied "Too far, too far!".', priority: 'Medium', status: 'In Progress', created_at: '2026-06-17T12:00:17', last_reply_at: null, tags: 'bug', cc: '', message: 'Having trouble with the interface.', department: departments[1], department_id: 1, contact: contacts[1], contact_id: 2, client_id: 2, assignee: staff[0], assigned_to: 1, service_id: null, project_id: null, client: { company: 'Beahan Ltd' } },
-      { id: 3, subject: 'So Bill\'s got the other--Bill!.', priority: 'Medium', status: 'Answered', created_at: '2026-06-17T12:00:17', last_reply_at: null, tags: 'feature', cc: '', message: 'Request for new functionality.', department: departments[2], department_id: 3, contact: contacts[2], contact_id: 3, client_id: 3, assignee: staff[0], assigned_to: 1, service_id: null, project_id: null, client: { company: 'Lind-Walsh' } },
-      { id: 4, subject: 'Alice, and she had hoped a fan and.', priority: 'High', status: 'On Hold', created_at: '2026-06-17T12:00:17', last_reply_at: null, tags: '', cc: '', message: 'Waiting for customer response.', department: departments[0], department_id: 1, contact: { id: 4, firstname: 'Vance', lastname: 'Leffler', email: 'vance@example.com' }, contact_id: 4, client_id: 1, assignee: null, assigned_to: null, service_id: null, project_id: null, client: { company: 'McCullough-Hudson' } },
-      { id: 5, subject: 'Alice thought to herself, Now, what.', priority: 'High', status: 'Closed', created_at: '2026-06-17T12:00:17', last_reply_at: null, tags: 'done', cc: '', message: 'Issue has been resolved.', department: departments[0], department_id: 1, contact: { id: 5, firstname: 'Nestor', lastname: 'Steuber', email: 'nestor@example.com' }, contact_id: 5, client_id: 1, assignee: null, assigned_to: null, service_id: null, project_id: null, client: { company: 'Hodkiewicz PLC' } },
-    ]
-    stats.value = { total: 5, open: 1, in_progress: 1, answered: 1, on_hold: 1, closed: 1 }
-    totalPages.value = 1
-  } finally { loading.value = false }
+    tickets.value = []
+    stats.value = { total: 0, open: 0, in_progress: 0, answered: 0, on_hold: 0, closed: 0 }
+  } finally {
+    loading.value = false
+  }
 }
 
 let searchTimer = null
@@ -686,357 +1107,288 @@ function onSearch() {
 
 function handleFileChange(event) {
   const file = event.target.files[0]
-  if (file) { attachmentFile.value = file; attachmentFileName.value = file.name }
-  else { attachmentFile.value = null; attachmentFileName.value = '' }
+  if (file) {
+    attachmentFile.value = file
+    attachmentFileName.value = file.name
+  }
 }
 
 function parseTags(str) {
   if (!str) return []
-  try { return JSON.parse(str) } catch { return str.split(',').map(t => t.trim()).filter(Boolean) }
+  try {
+    const parsed = JSON.parse(str)
+    return Array.isArray(parsed) ? parsed : [parsed]
+  } catch {
+    return str.split(',').map(t => t.trim()).filter(Boolean)
+  }
+}
+
+function ticketsByStatus(status) {
+  return tickets.value.filter(t => t.status === status)
+}
+
+function statusBadgeClass(s) {
+  return {
+    'Open': 'bg-[#7367F0]/10 text-[#7367F0] border border-[#7367F0]/20',
+    'In Progress': 'bg-[#00CFE8]/10 text-[#00CFE8] border border-[#00CFE8]/20',
+    'Answered': 'bg-[#28C76F]/10 text-[#28C76F] border border-[#28C76F]/20',
+    'On Hold': 'bg-[#FF9F43]/10 text-[#FF9F43] border border-[#FF9F43]/20',
+    'Closed': 'bg-[#A8AAAE]/10 text-[#6F6B7D] border border-[#A8AAAE]/20',
+  }[s] || 'bg-[#F8F7FA] text-[#6F6B7D] border border-[#DBDADE]'
+}
+
+function statusDotClass(s) {
+  return {
+    'Open': 'bg-[#7367F0]',
+    'In Progress': 'bg-[#00CFE8]',
+    'Answered': 'bg-[#28C76F]',
+    'On Hold': 'bg-[#FF9F43]',
+    'Closed': 'bg-[#A8AAAE]',
+  }[s] || 'bg-[#6F6B7D]'
+}
+
+function priClass(p) {
+  return {
+    Low: 'bg-[#F1F0F2] text-[#6F6B7D]',
+    Medium: 'bg-[#7367F0]/10 text-[#7367F0] border border-[#7367F0]/20',
+    High: 'bg-[#FF9F43]/10 text-[#FF9F43] border border-[#FF9F43]/20',
+    Urgent: 'bg-rose-50 text-rose-600 border border-rose-200',
+  }[p] || 'bg-[#7367F0]/10 text-[#7367F0]'
+}
+
+function fmtDate(d) {
+  if (!d) return '—'
+  return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+function getServiceName(serviceId) {
+  if (!serviceId) return '—'
+  const service = metadata.value.services?.find(s => s.id === serviceId)
+  return service?.name || '—'
 }
 
 function addTag() {
   const val = tagInput.value.replace(/,/g, '').trim()
-  if (val && !form.tagList.includes(val)) { form.tagList.push(val); form.tags = form.tagList.join(',') }
+  if (val && !form.tagList.includes(val)) {
+    form.tagList.push(val)
+    form.tags = form.tagList.join(',')
+  }
   tagInput.value = ''
 }
 
 function filterBy(status) {
-  if (currentView.value !== 'kanban') {
-    statusFilter.value = status; priorityFilter.value = ''; deptFilter.value = ''
-    page.value = 1
-    load()
-  }
+  statusFilter.value = (statusFilter.value === status) ? '' : status
+  page.value = 1
+  load()
 }
 
-function ticketsByStatus(status) { return tickets.value.filter(t => t.status === status) }
-function statusClass(s) { return { Open: 'open', 'In Progress': 'in-progress', Answered: 'answered', 'On Hold': 'on-hold', Closed: 'closed' }[s] || '' }
-function priClass(p) { return { Low: 'low', Medium: 'med', High: 'high', Urgent: 'urg' }[p] || 'med' }
-function fmtDate(d) { if (!d) return '—'; return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) }
-function getServiceName(id) { if (!id) return '—'; const s = metadata.value.services.find(s => s.id === id); return s ? s.name : '—' }
-
-const weeklyChartOptions = computed(() => ({
-  chart: { type: 'bar', toolbar: { show: false }, animations: { enabled: true } },
-  xaxis: { categories: weeklyStats.value.map(d => d.label), labels: { style: { fontSize: '13px', fontWeight: 600 } } },
-  yaxis: { labels: { style: { fontSize: '13px' } } },
-  colors: ['#6366f1'],
-  plotOptions: { bar: { columnWidth: '55%', borderRadius: 4, dataLabels: { position: 'top' } } },
-  dataLabels: { enabled: true, style: { fontSize: '14px', fontWeight: 700, colors: ['#1e293b'] }, offsetY: -20 },
-  grid: { borderColor: '#f1f5f9' },
-}))
-const weeklyChartSeries = computed(() => [{ name: 'Tickets', data: weeklyStats.value.map(d => d.count) }])
-
-async function loadWeeklyStats() {
-  try { const r = await axios.get(`${BASE}/tickets/weekly-stats`); weeklyStats.value = r.data.days || [] }
-  catch {
-    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
-    const today = new Date()
-    weeklyStats.value = Array.from({length:7}, (_, i) => {
-      const d = new Date(today); d.setDate(d.getDate() - (6 - i))
-      return { date: d.toISOString().slice(0,10), label: days[d.getDay()], count: Math.floor(Math.random() * 5) + 1 }
-    })
-  }
+function onDragStart(t) {
+  dragTicketId.value = t.id
 }
 
-watch(showWeeklyAnalytics, (v) => { if (v) loadWeeklyStats() })
-
-function onDragStart(t) { dragTicketId.value = t.id }
-function onDrop(newStatus) {
+async function onDrop(newStatus) {
   const id = dragTicketId.value
   const ticket = tickets.value.find(t => t.id === id)
   if (id && ticket && ticket.status !== newStatus) {
-    axios.put(`${BASE}/tickets/${id}`, { status: newStatus }).then(() => load()).catch(() => {})
+    try {
+      await axios.put(`${BASE}/tickets/${id}`, { status: newStatus })
+      ticket.status = newStatus
+      message.success(`Ticket #${id} moved to ${newStatus}`)
+    } catch {
+      message.error('Failed to update ticket status')
+    }
   }
-  dragTicketId.value = null; dragCol.value = null
+  dragTicketId.value = null
+  dragCol.value = null
 }
 
 function openCreateModal() {
   editingTicket.value = null
   Object.assign(form, {
     subject: '', contact_id: null, client_id: null, priority: 'Medium', status: 'Open',
-    department_id: null, message: '', assigned_to: authStore.user?.id || null,
-    tags: '', service_id: null, project_id: null, cc: '', tagList: [],
+    department_id: null, message: '', assigned_to: null, tags: '', service_id: null,
+    project_id: null, cc: '', predefined_reply: '', kb_link: '', tagList: [],
     email: '', contact_name: '', contact_number: '',
   })
-  selectedContact.value = null; selectedClient.value = null
-  attachmentFile.value = null; attachmentFileName.value = ''
+  tagInput.value = ''
+  attachmentFile.value = null
+  attachmentFileName.value = ''
+  selectedContact.value = null
+  selectedClient.value = null
   ticketWithoutContact.value = false
   showModal.value = true
 }
 
-function openCreateForStatus(status) { openCreateModal(); form.status = status }
+function openCreateForStatus(status) {
+  openCreateModal()
+  form.status = status
+}
 
-function editTicket(ticket) {
-  editingTicket.value = ticket
+function editTicket(t) {
+  editingTicket.value = t
+  const tagList = parseTags(t.tags)
   Object.assign(form, {
-    subject: ticket.subject, contact_id: ticket.contact_id || null, client_id: ticket.client_id || null,
-    priority: ticket.priority, status: ticket.status, department_id: ticket.department_id || null,
-    message: ticket.message, assigned_to: ticket.assigned_to || null, tags: ticket.tags || '',
-    service_id: ticket.service_id || null, project_id: ticket.project_id || null, cc: ticket.cc || '',
-    tagList: parseTags(ticket.tags), email: ticket.email || '', contact_name: ticket.contact_name || '', contact_number: ticket.contact_number || '',
+    subject: t.subject,
+    contact_id: t.contact_id || null,
+    client_id: t.client_id || null,
+    priority: t.priority || 'Medium',
+    status: t.status || 'Open',
+    department_id: t.department_id || null,
+    message: t.message || '',
+    assigned_to: t.assigned_to || null,
+    tags: t.tags || '',
+    service_id: t.service_id || null,
+    project_id: t.project_id || null,
+    cc: t.cc || '',
+    predefined_reply: '',
+    kb_link: '',
+    tagList,
+    email: t.email || '',
+    contact_name: t.contact_name || '',
+    contact_number: t.contact_number || '',
   })
-  if (ticket.contact_id) {
-    const contact = metadata.value.contacts.find(c => c.id === ticket.contact_id)
-    selectedContact.value = contact || null
-    if (contact) {
-      const client = metadata.value.clients.find(c => c.id === contact.client_id)
-      selectedClient.value = client || null
-    }
-  } else { selectedContact.value = null; selectedClient.value = null }
-  attachmentFile.value = null; attachmentFileName.value = ''
-  ticketWithoutContact.value = false
+  tagInput.value = ''
+  attachmentFile.value = null
+  attachmentFileName.value = ''
+  ticketWithoutContact.value = !t.contact_id
   showModal.value = true
 }
 
-async function viewTicket(ticket) {
-  try {
-    const res = await axios.get(`${BASE}/tickets/${ticket.id}`)
-    viewingTicket.value = res.data
-  } catch { viewingTicket.value = { ...ticket, replies: [], message: ticket.message || 'No message.' } }
-}
-
-async function saveTicket() {
-  if (!form.subject || !form.message || (!form.contact_id && !ticketWithoutContact.value) || !form.department_id) {
-    return alert('Subject, Contact (or ticket without contact), Department, and Message are required')
-  }
-  saving.value = true
-  try {
-    if (editingTicket.value) { await axios.put(`${BASE}/tickets/${editingTicket.value.id}`, form) }
-    else { await axios.post(`${BASE}/tickets`, form) }
-    closeModal(); load()
-  } catch { alert('Failed to save ticket') }
-  finally { saving.value = false }
-}
-
-async function deleteTicket(ticket) {
-  if (!confirm(`Delete ticket "${ticket.subject}"?`)) return
-  try { await axios.delete(`${BASE}/tickets/${ticket.id}`); load() }
-  catch { alert('Failed to delete ticket') }
+function viewTicket(t) {
+  viewingTicket.value = t
+  showViewDrawer.value = true
 }
 
 async function sendReply() {
-  if (!replyMessage.value.trim()) return
+  if (!replyMessage.value.trim()) return message.warning('Please enter a reply message')
   sendingReply.value = true
   try {
-    const res = await axios.post(`${BASE}/tickets/${viewingTicket.value.id}/reply`, {
-      message: replyMessage.value, is_admin_reply: true,
+    const res = await axios.post(`${BASE}/tickets/${viewingTicket.value.id}/replies`, {
+      message: replyMessage.value,
+      is_admin_reply: true,
     })
-    viewingTicket.value.replies = [...(viewingTicket.value.replies || []), res.data]
-    viewingTicket.value.status = 'Answered'
+    if (!viewingTicket.value.replies) viewingTicket.value.replies = []
+    viewingTicket.value.replies.push(res.data.reply || {
+      id: Date.now(),
+      message: replyMessage.value,
+      created_at: new Date().toISOString(),
+      is_admin_reply: true,
+      name: authStore.user?.name || 'Staff Support',
+    })
     replyMessage.value = ''
-    load()
-  } catch { alert('Failed to send reply') }
-  finally { sendingReply.value = false }
+    message.success('Reply posted successfully')
+  } catch {
+    message.error('Failed to post reply')
+  } finally {
+    sendingReply.value = false
+  }
 }
 
-function closeModal() { showModal.value = false; editingTicket.value = null }
+async function saveTicket() {
+  if (!form.subject) return message.error('Subject is required')
+  if (!form.department_id) return message.error('Department is required')
+  if (!form.message) return message.error('Message is required')
 
-onMounted(async () => {
-  await loadMetadata(); await loadKbArticles(); await load()
-  if (route.query.contact_id || route.query.userid) {
-    openCreateModal()
-    if (route.query.contact_id) form.contact_id = parseInt(route.query.contact_id)
-    if (route.query.userid) form.client_id = parseInt(route.query.userid)
+  saving.value = true
+  try {
+    const payload = { ...form }
+    if (editingTicket.value) {
+      await axios.put(`${BASE}/tickets/${editingTicket.value.id}`, payload)
+      message.success('Ticket updated successfully')
+    } else {
+      await axios.post(`${BASE}/tickets`, payload)
+      message.success('Ticket created successfully')
+    }
+    closeModal()
+    load()
+  } catch (err) {
+    message.error('Failed to save ticket')
+  } finally {
+    saving.value = false
   }
-})
+}
 
-watch(currentView, () => { if (currentView.value === 'kanban') statusFilter.value = ''; load() })
+async function deleteTicket(t) {
+  if (!confirm(`Delete ticket "${t.subject}"?`)) return
+  try {
+    await axios.delete(`${BASE}/tickets/${t.id}`)
+    message.success('Ticket deleted successfully')
+    load()
+  } catch {
+    message.error('Failed to delete ticket')
+  }
+}
+
+function closeModal() {
+  showModal.value = false
+  editingTicket.value = null
+}
+
+onMounted(() => {
+  load()
+  loadMetadata()
+  loadKbArticles()
+})
 </script>
 
 <style scoped>
-.tk-page { padding: 24px; font-family: 'Inter', sans-serif; max-width: 1400px; margin: 0 auto; }
+.form-ctrl {
+  border: 1px solid #DBDADE;
+  border-radius: 6px !important;
+  color: #4B465C;
+  font-family: inherit;
+  outline: none;
+}
+.form-ctrl:focus {
+  border-color: #7367F0 !important;
+  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.12) !important;
+}
 
-/* ── HEADER ── */
-.tk-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-.tk-title { font-size: 20px; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -0.3px; }
-.tk-subtitle { font-size: 12.5px; color: #64748b; margin: 2px 0 0; }
-.tk-header-actions { display: flex; align-items: center; gap: 10px; }
-.tk-view-toggle { display: flex; background: #f1f5f9; border-radius: 8px; padding: 3px; gap: 2px; }
-.tk-view-btn { background: none; border: none; padding: 6px 8px; border-radius: 6px; cursor: pointer; color: #94a3b8; transition: all .15s; display: flex; align-items: center; }
-.tk-view-btn:hover { color: #475569; }
-.tk-view-btn.active { background: #fff; color: #6366f1; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.btn-primary {
+  background-color: #7367F0;
+  color: #FFFFFF;
+  border-radius: 6px !important;
+  border: none;
+  transition: all 0.2s ease-in-out;
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: #685DD8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(115, 103, 240, 0.35);
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
-/* ── BUTTONS ── */
-.tk-btn-primary { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg,#6366f1,#4f46e5); color: #fff; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity .15s; white-space: nowrap; }
-.tk-btn-primary:hover { opacity: .9; }
-.tk-btn-primary:disabled { opacity: .5; cursor: not-allowed; }
-.tk-btn-secondary { padding: 9px 18px; border: 1.5px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; font-size: 13px; cursor: pointer; }
-.tk-btn-secondary:hover { background: #f8fafc; }
-.tk-btn-analytics { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border: 1.5px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; font-size: 12.5px; font-weight: 500; cursor: pointer; transition: all .15s; }
-.tk-btn-analytics:hover { border-color: #6366f1; color: #6366f1; background: #f8fafc; }
+.btn-outline {
+  background-color: #FFFFFF;
+  color: #6F6B7D;
+  border: 1px solid #DBDADE;
+  border-radius: 6px !important;
+  transition: all 0.15s ease-in-out;
+}
+.btn-outline:hover:not(:disabled) {
+  background-color: #F8F7FA;
+  border-color: #C4C2C7;
+  color: #4B465C;
+}
 
-/* ── STATS ── */
-.tk-stats-row { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; margin-bottom: 20px; }
-.tk-stat-card { background: #fff; border: 1px solid #f1f5f9; border-left: 3px solid; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all .2s; }
-.tk-stat-card:hover { border-color: #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
-.tk-stat-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.tk-stat-info { flex: 1; min-width: 0; }
-.tk-stat-val { font-size: 22px; font-weight: 800; line-height: 1.1; }
-.tk-stat-label { font-size: 11px; color: #64748b; font-weight: 500; margin-top: 1px; }
-
-/* ── KANBAN ── */
-.tk-kanban { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; }
-.tk-kanban-col { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-height: 300px; }
-.tk-kanban-hd { display: flex; align-items: center; gap: 6px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; border-top: 3px solid transparent; margin-top: -12px; padding-top: 12px; border-radius: 12px 12px 0 0; }
-.tk-kanban-icon { display: flex; }
-.tk-kanban-title { font-weight: 700; font-size: 11.5px; color: #1e293b; flex: 1; text-transform: uppercase; letter-spacing: .3px; }
-.tk-kanban-count { background: #e2e8f0; color: #64748b; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px; }
-.tk-kanban-cards { display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 60px; }
-.tk-kanban-cards.tk-drag-over { background: #eef2ff; border-radius: 8px; outline: 2px dashed #6366f1; outline-offset: -2px; }
-.tk-kanban-empty { text-align: center; color: #cbd5e1; font-size: 11px; padding: 16px; min-height: 40px; display: flex; align-items: center; justify-content: center; cursor: default; }
-
-.tk-kanban-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 5px; transition: all .2s; cursor: grab; }
-.tk-kanban-card:active { cursor: grabbing; }
-.tk-kanban-card:hover { border-color: #6366f1; box-shadow: 0 2px 8px rgba(99,102,241,.08); }
-.tk-kc-hd { display: flex; justify-content: space-between; align-items: center; }
-.tk-kc-id { font-size: 10px; font-weight: 600; color: #94a3b8; }
-.tk-kc-title { font-weight: 600; font-size: 12px; color: #0f172a; cursor: pointer; line-height: 1.4; }
-.tk-kc-title:hover { color: #6366f1; }
-.tk-kc-meta { font-size: 11px; color: #64748b; }
-.tk-kc-dept { font-size: 10px; color: #6366f1; font-weight: 500; }
-.tk-kc-ft { display: flex; justify-content: space-between; align-items: center; margin-top: 2px; }
-.tk-kc-date { display: flex; align-items: center; gap: 3px; font-size: 10px; color: #94a3b8; }
-.tk-kc-avatar { width: 22px; height: 22px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #64748b; }
-.tk-kanban-add { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border: 1px dashed #d1d5db; border-radius: 8px; background: none; color: #94a3b8; font-size: 11px; font-weight: 600; cursor: pointer; transition: all .2s; }
-.tk-kanban-add:hover { border-color: #6366f1; color: #6366f1; background: #eef2ff; }
-
-/* ── FILTERS ── */
-.tk-filters { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
-.tk-filters-left { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.tk-filters-right { margin-left: auto; }
-.tk-search-wrap { position: relative; min-width: 220px; }
-.tk-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px; color: #94a3b8; }
-.tk-search-input { width: 100%; padding: 8px 12px 8px 32px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none; box-sizing: border-box; }
-.tk-search-input:focus { border-color: #6366f1; }
-.tk-filter-select { padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 12.5px; cursor: pointer; background: #fff; outline: none; }
-
-/* ── TABLE ── */
-.tk-table-wrap { background: #fff; border: 1px solid #f1f5f9; border-radius: 12px; overflow: hidden; }
-.tk-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.tk-table th { padding: 10px 12px; text-align: left; background: #f8fafc; color: #475569; font-weight: 600; font-size: 11px; border-bottom: 1.5px solid #e2e8f0; white-space: nowrap; }
-.tk-row { transition: background .15s; }
-.tk-row:hover { background: #f8fafc; }
-.tk-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-.tk-cell-muted { color: #64748b; }
-.tk-name-cell { display: flex; flex-direction: column; }
-.tk-name { font-weight: 600; color: #0f172a; }
-.tk-tags { display: flex; gap: 3px; flex-wrap: wrap; }
-.tk-tag { background: #f1f5f9; color: #475569; font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 500; }
-.tk-status-badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 10.5px; font-weight: 600; }
-.tk-status-badge.open       { background: #eff6ff; color: #3b82f6; }
-.tk-status-badge.in-progress { background: #fffbeb; color: #d97706; }
-.tk-status-badge.answered   { background: #f0fdf4; color: #16a34a; }
-.tk-status-badge.on-hold    { background: #f5f3ff; color: #7c3aed; }
-.tk-status-badge.closed     { background: #f1f5f9; color: #64748b; }
-.tk-pri { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 600; }
-.tk-pri.urg { background: #fef2f2; color: #dc2626; }
-.tk-pri.high { background: #fff7ed; color: #ea580c; }
-.tk-pri.med  { background: #fefce8; color: #ca8a04; }
-.tk-pri.low  { background: #f0fdf4; color: #16a34a; }
-.tk-empty-cell { text-align: center; padding: 40px; color: #94a3b8; }
-.tk-row-actions { display: flex; gap: 4px; }
-.tk-act-btn-icon { background: none; border: none; cursor: pointer; padding: 5px; border-radius: 6px; color: #94a3b8; transition: all .15s; display: flex; }
-.tk-act-btn-icon:hover { background: #f1f5f9; color: #475569; }
-
-/* ── PAGINATION ── */
-.tk-pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; font-size: 12px; color: #64748b; }
-.tk-pg-info { color: #94a3b8; }
-.tk-pg-btns { display: flex; gap: 6px; }
-.tk-pg-btn { padding: 5px 14px; border: 1.5px solid #e2e8f0; border-radius: 6px; background: #fff; cursor: pointer; font-size: 12px; color: #475569; transition: all .15s; }
-.tk-pg-btn:hover:not(:disabled) { border-color: #6366f1; color: #6366f1; }
-.tk-pg-btn:disabled { opacity: .4; cursor: not-allowed; }
-
-/* ── MODAL ── */
-.tk-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 9000; display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
-.tk-modal-box { background: #fff; border-radius: 14px; width: 100%; max-width: 520px; box-shadow: 0 20px 60px rgba(0,0,0,.25); margin: auto; }
-.tk-modal-wide { max-width: 760px; }
-.tk-modal-hd { display: flex; justify-content: space-between; align-items: flex-start; padding: 20px 24px 14px; }
-.tk-modal-hd-left { display: flex; gap: 12px; align-items: flex-start; }
-.tk-modal-icon { width: 38px; height: 38px; background: #eef2ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #6366f1; flex-shrink: 0; }
-.tk-modal-title { font-size: 16px; font-weight: 700; color: #0f172a; }
-.tk-modal-sub { font-size: 12px; color: #64748b; margin-top: 1px; }
-.tk-modal-close { background: none; border: none; cursor: pointer; color: #94a3b8; padding: 4px; border-radius: 6px; }
-.tk-modal-close:hover { background: #f1f5f9; color: #475569; }
-.tk-modal-body { padding: 0 24px 16px; }
-.tk-modal-ft { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 24px 20px; border-top: 1.5px solid #f1f5f9; }
-
-/* ── FORM ── */
-.tk-radio-group-label { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
-.tk-radio-group { display: flex; gap: 0; border-radius: 8px; overflow: hidden; border: 1.5px solid #e2e8f0; }
-.tk-radio-btn { display: flex; align-items: center; gap: 6px; padding: 9px 16px; cursor: pointer; font-size: 12.5px; color: #64748b; background: #fff; transition: all .15s; flex: 1; justify-content: center; }
-.tk-radio-btn:not(:last-child) { border-right: 1px solid #e2e8f0; }
-.tk-radio-btn.active { background: #eef2ff; color: #6366f1; font-weight: 600; }
-.tk-radio-btn input { display: none; }
-.tk-radio-dot { width: 16px; height: 16px; border: 2px solid #d1d5db; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
-.tk-radio-btn.active .tk-radio-dot { border-color: #6366f1; }
-.tk-radio-btn.active .tk-radio-dot::after { content: ''; width: 8px; height: 8px; background: #6366f1; border-radius: 50%; }
-.tk-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.tk-form-group { display: flex; flex-direction: column; gap: 4px; }
-.tk-form-group.span-2 { grid-column: span 2; }
-.tk-form-group label { font-size: 12px; font-weight: 600; color: #374151; }
-.tk-req { color: #ef4444; }
-.tk-input { width: 100%; padding: 9px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none; box-sizing: border-box; transition: border-color .15s; }
-.tk-input:focus { border-color: #6366f1; }
-.tk-input-readonly { background: #f8fafc; color: #64748b; cursor: not-allowed; }
-.tk-textarea { resize: vertical; min-height: 100px; font-family: inherit; line-height: 1.5; }
-
-/* ── TAG INPUT ── */
-.tk-tag-input-wrap { border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 6px 8px; display: flex; flex-wrap: wrap; gap: 4px; min-height: 36px; }
-.tk-tag-list { display: flex; flex-wrap: wrap; gap: 4px; width: 100%; }
-.tk-tag-pill { background: #eef2ff; color: #6366f1; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 5px; display: inline-flex; align-items: center; gap: 4px; }
-.tk-tag-pill-del { background: none; border: none; cursor: pointer; color: #6366f1; font-size: 13px; line-height: 1; padding: 0; }
-.tk-tag-field { border: none; outline: none; font-size: 12.5px; flex: 1; min-width: 80px; padding: 2px 0; }
-
-/* ── FILE UPLOAD ── */
-.tk-file-upload { display: flex; align-items: center; gap: 10px; border: 1.5px dashed #d1d5db; padding: 12px; border-radius: 8px; background: #f8fafc; }
-.tk-file-input { display: none; }
-.tk-file-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border: 1.5px solid #e2e8f0; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; background: #fff; transition: background .15s; }
-.tk-file-btn:hover { background: #f1f5f9; }
-.tk-file-name { font-size: 12px; color: #64748b; }
-
-/* ── EDITOR TOOLBAR ── */
-.tk-editor-toolbar { display: flex; gap: 8px; margin-bottom: 6px; }
-.tk-editor-toolbar select { padding: 5px 10px; border: 1.5px solid #e2e8f0; border-radius: 6px; font-size: 12px; cursor: pointer; background: #fff; outline: none; }
-
-/* ── VIEW MODAL ── */
-.tk-view-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
-.tk-view-meta-item { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #64748b; }
-.tk-view-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 14px; background: #f8fafc; border-radius: 10px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
-.tk-view-item { display: flex; gap: 8px; font-size: 12.5px; }
-.tk-view-lbl { font-weight: 600; color: #64748b; min-width: 90px; white-space: nowrap; }
-.tk-view-val { color: #1e293b; }
-
-/* ── MESSAGE BUBBLES ── */
-.tk-message-bubble { border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; }
-.tk-message-original { background: #f8fafc; border-left: 3px solid #6366f1; }
-.tk-message-admin { background: #eff6ff; border-left: 3px solid #3b82f6; }
-.tk-message-client { background: #f0fdf4; border-left: 3px solid #10b981; }
-.tk-bubble-hd { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; flex-wrap: wrap; }
-.tk-bubble-author { color: #334155; }
-.tk-bubble-time { font-weight: 400; color: #94a3b8; }
-.tk-bubble-tag { background: #e2e8f0; color: #475569; font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 4px; }
-.tk-bubble-body { font-size: 13px; color: #334155; line-height: 1.6; white-space: pre-wrap; }
-
-/* ── REPLIES ── */
-.tk-replies-section { margin-top: 20px; }
-.tk-replies-hd { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 12px; }
-.tk-reply-form { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
-
-/* ── WEEKLY ANALYTICS ── */
-.tk-modal-narrow { max-width: 520px; }
-.tk-modal-body :deep(.apexcharts-canvas) { margin: 0 auto; }
-
-/* ── UTILITY ── */
-.text-slate-300 { color: #cbd5e1; }
-.text-sm { font-size: 12px; }
-.mt-2 { margin-top: 6px; }
-.animate-spin { animation: spin .7s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.opacity-25 { opacity: .25; }
-.opacity-75 { opacity: .75; }
-.hover\:text-rose-600:hover { color: #e11d48; }
-
-@media (max-width: 1200px) { .tk-kanban { grid-template-columns: repeat(3,1fr); } .tk-stats-row { grid-template-columns: repeat(3,1fr); } }
-@media (max-width: 768px) { .tk-kanban { grid-template-columns: repeat(2,1fr); } .tk-stats-row { grid-template-columns: repeat(2,1fr); } }
-@media (max-width: 640px) { .tk-kanban { grid-template-columns: 1fr; } .tk-stats-row { grid-template-columns: 1fr 1fr; } .tk-filters { flex-direction: column; } }
+:deep(.vuexy-ticket-drawer .ant-drawer-header),
+:deep(.vuexy-ticket-view-drawer .ant-drawer-header) {
+  padding: 16px 24px;
+  border-bottom: 1px solid #F1F0F2;
+  background-color: #FFFFFF;
+}
+:deep(.vuexy-ticket-drawer .ant-drawer-body),
+:deep(.vuexy-ticket-view-drawer .ant-drawer-body) {
+  padding: 24px;
+  background-color: #F8F7FA;
+}
+:deep(.vuexy-ticket-drawer .ant-drawer-footer),
+:deep(.vuexy-ticket-view-drawer .ant-drawer-footer) {
+  padding: 12px 24px;
+  border-top: 1px solid #F1F0F2;
+  background-color: #FFFFFF;
+}
 </style>

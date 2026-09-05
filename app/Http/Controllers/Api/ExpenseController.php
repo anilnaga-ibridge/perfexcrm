@@ -11,6 +11,10 @@ class ExpenseController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Expenses.view')) {
+            abort(403, 'Unauthorized. Missing required permission: Expenses.view');
+        }
+
         $query = Expense::with('client:id,company');
 
         if ($request->filled('search')) {
@@ -26,7 +30,7 @@ class ExpenseController extends Controller
         if ($request->filled('category_id')) $query->where('category_id', $request->category_id);
         if ($request->filled('client_id'))   $query->where('client_id', $request->client_id);
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $expenses = $query->orderBy('date', 'desc')->paginate($perPage);
 
         $stats = [
@@ -41,6 +45,10 @@ class ExpenseController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Expenses.create')) {
+            abort(403, 'Unauthorized. Missing required permission: Expenses.create');
+        }
+
         $validated = $request->validate([
             'name'         => 'required|string|max:255',
             'amount'       => 'required|numeric|min:0',
@@ -76,6 +84,10 @@ class ExpenseController extends Controller
 
     public function update(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Expenses.edit')) {
+            abort(403, 'Unauthorized. Missing required permission: Expenses.edit');
+        }
+
         $expense = Expense::find($id);
         if (!$expense) return response()->json(['message' => 'Not found'], 404);
 
@@ -105,8 +117,12 @@ class ExpenseController extends Controller
         return response()->json($expense->load('client'));
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Expenses.delete')) {
+            abort(403, 'Unauthorized. Missing required permission: Expenses.delete');
+        }
+
         $expense = Expense::find($id);
         if (!$expense) return response()->json(['message' => 'Not found'], 404);
         $expense->delete();

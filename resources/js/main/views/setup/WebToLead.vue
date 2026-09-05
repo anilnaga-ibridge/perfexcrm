@@ -227,7 +227,7 @@
     >
       <p class="settings-hint" style="margin-bottom: 12px;">Copy the iframe code block below to embed this lead capture form into your landing pages or websites:</p>
       <div style="background: #1e293b; color: #f8fafc; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 11.5px; margin-top: 8px; word-break: break-all;">
-        &lt;iframe src="http://perfexcrm.test/forms/wtl/{{ selectedFormId }}" style="width: 100%; border: none; min-height: 550px;"&gt;&lt;/iframe&gt;
+        &lt;iframe src="http://ibridgecrm.test/forms/wtl/{{ selectedFormId }}" style="width: 100%; border: none; min-height: 550px;"&gt;&lt;/iframe&gt;
       </div>
     </a-modal>
   </div>

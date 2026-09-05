@@ -40,7 +40,7 @@
               <span class="tax-name">{{ record.name }}</span>
             </template>
             <template v-if="column.key === 'rate'">
-              <span>{{ record.rate.toFixed(2) }}</span>
+              <span>{{ (Number(record.rate) || 0).toFixed(2) }}</span>
             </template>
             <template v-if="column.key === 'options'">
               <div class="row-actions">

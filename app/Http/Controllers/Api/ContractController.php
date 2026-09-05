@@ -18,6 +18,10 @@ class ContractController extends Controller
 
     public function index(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Contracts.view_global') && !$request->user()->hasPermission('Contracts.view_own')) {
+            return response()->json(['message' => 'You do not have permission to view contracts.'], 403);
+        }
+
         $query = Contract::with(['client:id,company', 'contractType:id,name']);
 
         if ($request->filled('client_id')) {
@@ -35,7 +39,7 @@ class ContractController extends Controller
 
         if ($request->filled('status')) $query->where('status', $request->status);
 
-        $perPage = $request->input('per_page', 25);
+        $perPage = min($request->input('per_page', 25), 100);
         $contracts = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         $today = now()->startOfDay();
@@ -54,6 +58,10 @@ class ContractController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Contracts.create')) {
+            return response()->json(['message' => 'You do not have permission to create contracts.'], 403);
+        }
+
         $validated = $request->validate([
             'subject'          => 'required|string|max:255',
             'client_id'        => 'nullable|exists:clients,id',
@@ -83,6 +91,10 @@ class ContractController extends Controller
 
     public function update(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Contracts.edit')) {
+            return response()->json(['message' => 'You do not have permission to edit contracts.'], 403);
+        }
+
         $contract = Contract::find($id);
         if (!$contract) return response()->json(['message' => 'Not found'], 404);
 
@@ -106,8 +118,12 @@ class ContractController extends Controller
         return response()->json($contract->load(['client', 'contractType']));
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Contracts.delete')) {
+            return response()->json(['message' => 'You do not have permission to delete contracts.'], 403);
+        }
+
         $contract = Contract::find($id);
         if (!$contract) return response()->json(['message' => 'Not found'], 404);
         $contract->delete();

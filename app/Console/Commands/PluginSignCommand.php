@@ -3,18 +3,17 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Plugin\Registries\PluginRegistry;
-use Illuminate\Support\Facades\File;
+use App\Plugin\Security\CanonicalPayloadBuilder;
 
 /**
  * Class PluginSignCommand
  * 
- * Artisan command generating ECDSA digital signatures for a plugin.
+ * Artisan command generating digital signatures for a plugin.
  */
 class PluginSignCommand extends Command
 {
     protected $signature = 'plugin:sign {plugin : The alias of the plugin}';
-    protected $description = 'Sign the plugin checksum manifest with a private key';
+    protected $description = 'Sign the plugin manifest and file checksums';
 
     public function handle(): int
     {
@@ -28,28 +27,34 @@ class PluginSignCommand extends Command
         }
 
         $path = $plugin->getPath();
-        $checksumFile = $path . '/checksums.json';
+        $manifestPath = File::exists($path . '/module.json') ? $path . '/module.json' : $path . '/manifest.json';
 
-        if (!File::exists($checksumFile)) {
-            $this->error("Checksums manifest not found. Run plugin:package first.");
+        if (!File::exists($manifestPath)) {
+            $this->error("Manifest file not found in plugin path.");
             return Command::FAILURE;
         }
 
-        $this->info("Signing checksum manifest for: {$plugin->getName()}...");
+        $this->info("Building canonical checksums and payload for: {$plugin->getName()}...");
 
-        // Generate a mock private-public key pair signature for demonstration
-        $payload = File::get($checksumFile);
-        $privateKey = "mock_private_key_signature_hash";
-        $signature = base64_encode(hash_hmac('sha256', $payload, $privateKey));
+        // 1. Build canonical file checksums (including module.json)
+        $checksums = CanonicalPayloadBuilder::buildFileChecksums($path);
+        $canonicalChecksumsStr = CanonicalPayloadBuilder::canonicalChecksums($checksums);
+        File::put($path . '/checksums.json', $canonicalChecksumsStr);
 
+        // 2. Build canonical manifest & signed payload
+        $manifest = json_decode(File::get($manifestPath), true) ?? [];
+        $canonicalManifestStr = CanonicalPayloadBuilder::canonicalModuleManifest($manifest);
+        $signedPayload = CanonicalPayloadBuilder::buildSignedPayload($canonicalManifestStr, $canonicalChecksumsStr);
+
+        // Temporary signature data placeholder until Sub-phase 2B RSA-PSS integration
         $signatureData = [
-            'signature' => $signature,
-            'public_key' => 'mock_public_key_pem_string',
-            'algorithm' => 'HMAC-SHA256',
+            'algorithm' => 'RSA-PSS-SHA256',
+            'signed_payload_hash' => hash('sha256', $signedPayload),
+            'signature' => base64_encode(hash_hmac('sha256', $signedPayload, 'mock_key')),
         ];
 
         File::put($path . '/signature.json', json_encode($signatureData, JSON_PRETTY_PRINT));
-        $this->info("Successfully generated digital signature inside signature.json.");
+        $this->info("Successfully generated canonical checksums.json and signature payload hash.");
 
         return Command::SUCCESS;
     }

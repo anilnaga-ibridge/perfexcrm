@@ -15,7 +15,7 @@ class MailListController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
         return response()->json([
-            'lists' => $query->orderBy('id', 'desc')->paginate($request->per_page ?? 25)
+            'lists' => $query->orderBy('id', 'desc')->paginate(min($request->per_page ?? 25, 100))
         ]);
     }
 

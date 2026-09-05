@@ -201,7 +201,7 @@ const defaultProposals = [
 
 export const useProposalsStore = defineStore('proposals', {
   state: () => {
-    const stored = localStorage.getItem('perfex_proposals');
+    const stored = localStorage.getItem('ibridge_proposals');
     return {
       proposals: stored ? JSON.parse(stored) : defaultProposals,
     };
@@ -209,7 +209,7 @@ export const useProposalsStore = defineStore('proposals', {
   
   actions: {
     saveToStorage() {
-      localStorage.setItem('perfex_proposals', JSON.stringify(this.proposals));
+      localStorage.setItem('ibridge_proposals', JSON.stringify(this.proposals));
     },
     
     addProposal(proposal) {

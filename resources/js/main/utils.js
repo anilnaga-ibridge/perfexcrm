@@ -1,6 +1,6 @@
 export function getFinanceSettings() {
   try {
-    const stored = localStorage.getItem('perfex_settings');
+    const stored = localStorage.getItem('ibridge_settings');
     if (stored) {
       return JSON.parse(stored);
     }
@@ -114,6 +114,60 @@ export function numberToWords(num, isLowercase = false) {
 
 export function applyThemeStyles(settings) {
   if (!settings) return;
+
+  // 0. Dynamic Favicon
+  if (settings.favicon_url) {
+    let faviconUrl = settings.favicon_url;
+    if (!faviconUrl.startsWith('data:') && !faviconUrl.startsWith('http://') && !faviconUrl.startsWith('https://')) {
+      const basePath = (typeof window !== 'undefined' && window.config && window.config.path) ? window.config.path : '';
+      if (faviconUrl.startsWith('/')) {
+        faviconUrl = basePath ? (basePath + faviconUrl) : faviconUrl;
+      } else {
+        faviconUrl = basePath ? (basePath + '/' + faviconUrl) : faviconUrl;
+      }
+    }
+
+    // Remove existing favicon link elements to force browser tab icon update
+    const existingIcons = document.querySelectorAll("link[rel*='icon']");
+    existingIcons.forEach(icon => {
+      if (icon.parentNode) {
+        icon.parentNode.removeChild(icon);
+      }
+    });
+
+    // Create a new icon link element
+    const newLink = document.createElement('link');
+    newLink.id = 'crm-dynamic-favicon';
+    newLink.rel = 'icon';
+
+    if (faviconUrl.startsWith('data:image/svg+xml')) {
+      newLink.type = 'image/svg+xml';
+      newLink.href = faviconUrl;
+    } else if (faviconUrl.startsWith('data:image/png')) {
+      newLink.type = 'image/png';
+      newLink.href = faviconUrl;
+    } else if (faviconUrl.startsWith('data:image/x-icon') || faviconUrl.startsWith('data:image/vnd.microsoft.icon')) {
+      newLink.type = 'image/x-icon';
+      newLink.href = faviconUrl;
+    } else if (faviconUrl.startsWith('data:')) {
+      newLink.type = 'image/png';
+      newLink.href = faviconUrl;
+    } else {
+      newLink.type = faviconUrl.endsWith('.png') ? 'image/png' : faviconUrl.endsWith('.svg') ? 'image/svg+xml' : 'image/x-icon';
+      newLink.href = faviconUrl + (faviconUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
+    }
+
+    document.getElementsByTagName('head')[0].appendChild(newLink);
+  }
+
+  // 0.1 Dynamic Page Title Suffix
+  if (settings.app_page_title) {
+    const currentTitle = document.title || '';
+    const titleParts = currentTitle.split(' - ');
+    const pagePrefix = titleParts.length > 0 && titleParts[0].trim() ? titleParts[0].trim() : 'Dashboard';
+    document.title = `${pagePrefix} - ${settings.app_page_title}`;
+  }
+
   let styleEl = document.getElementById('crm-dynamic-theme-styles');
   if (!styleEl) {
     styleEl = document.createElement('style');
@@ -121,7 +175,86 @@ export function applyThemeStyles(settings) {
     document.head.appendChild(styleEl);
   }
 
+  // If in Vuexy theme template mode, do not inject legacy organic styles
+  const activeTemplate = localStorage.getItem('crm_active_theme_template') || 'vuexy';
+  if (activeTemplate === 'vuexy') {
+    styleEl.textContent = '';
+    return;
+  }
+
   let css = '';
+
+  // 0.2 Typography & Font Controls
+  if (settings.font_family) {
+    css += `
+      body, html, #app, .theme-style-page, .crm-main {
+        font-family: ${settings.font_family} !important;
+      }
+    `;
+  }
+  if (settings.font_base_size) {
+    css += `
+      body, p, td, .crm-main {
+        font-size: ${settings.font_base_size};
+      }
+    `;
+  }
+  if (settings.heading_weight) {
+    css += `
+      h1, h2, h3, h4, h5, h6, .page-title, .tab-title, .welcome-title {
+        font-weight: ${settings.heading_weight} !important;
+      }
+    `;
+  }
+  if (settings.text_heading_color) {
+    css += `
+      h1, h2, h3, h4, h5, h6, .page-title, .tab-title {
+        color: ${settings.text_heading_color} !important;
+      }
+    `;
+  }
+  if (settings.page_title_color) {
+    css += `
+      .page-title, h1.page-title {
+        color: ${settings.page_title_color} !important;
+      }
+    `;
+  }
+  if (settings.page_title_size) {
+    css += `
+      .page-title, h1.page-title {
+        font-size: ${settings.page_title_size} !important;
+      }
+    `;
+  }
+  if (settings.page_title_weight) {
+    css += `
+      .page-title, h1.page-title {
+        font-weight: ${settings.page_title_weight} !important;
+      }
+    `;
+  }
+  if (settings.text_body_color) {
+    css += `
+      body, p, td {
+        color: ${settings.text_body_color} !important;
+      }
+    `;
+  }
+  if (settings.text_muted_color) {
+    css += `
+      .text-muted, .tab-subtitle {
+        color: ${settings.text_muted_color} !important;
+      }
+    `;
+  }
+  if (settings.text_link_color) {
+    css += `
+      a, .crm-header-link {
+        color: ${settings.text_link_color} !important;
+      }
+    `;
+  }
 
   // 1. Admin Area
   if (settings.admin_sidebar_bg) {

@@ -400,7 +400,7 @@ export default defineComponent({
   background: #fff;
   color: #1e293b;
   font-weight: 600;
-  border-top: 3px solid #e11d48; /* Red/Rose color matching Perfex logo brand */
+  border-top: 3px solid #e11d48; /* Red/Rose color matching iBridge logo brand */
   border-bottom: 1px solid #fff;
 }
 
@@ -409,7 +409,7 @@ export default defineComponent({
   padding: 24px;
 }
 
-/* Form layout constraint matching Perfex */
+/* Form layout constraint matching iBridge */
 .form-grid-vertical {
   max-width: 650px;
   display: flex;

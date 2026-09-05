@@ -1,797 +1,796 @@
 <template>
-  <div>
-    <!-- HEADER & TOOLBAR -->
-    <div class="section-toolbar">
-      <h2 class="section-title">GDPR Settings</h2>
-    </div>
-
-    <!-- GDPR READ MORE BANNER -->
-    <div class="gdpr-info-banner">
-      <span class="info-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px; color: #4f46e5;">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.083 1.083l-.04.041a.75.75 0 11-1.083-1.083zM12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5z" />
-        </svg>
-      </span>
-      <a href="https://gdpr-info.eu/" target="_blank" class="gdpr-read-more-link">
-        Click here to read more about GDPR
-      </a>
-    </div>
-
-    <!-- MAIN CARD / TABS CONTAINER -->
-    <div class="settings-card">
-      <a-tabs v-model:activeKey="activeTab" class="gdpr-tabs">
-        
-        <!-- 1. GENERAL TAB -->
-        <a-tab-pane key="general" tab="General">
-          <div class="tab-content-wrap">
-            <h3 class="tab-title">General GDPR Settings</h3>
-            
-            <div class="settings-grid">
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Enable GDPR</span>
-                  <span class="field-desc">Toggle the display of GDPR options and preferences in public and customer portal.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-radio-group v-model:value="settings.enabled" button-style="solid">
-                    <a-radio-button :value="true">Yes</a-radio-button>
-                    <a-radio-button :value="false">No</a-radio-button>
-                  </a-radio-group>
-                </div>
-              </div>
-
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Show GDPR link in customers area navigation</span>
-                  <span class="field-desc">Display GDPR link on customer dashboard main menu header.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-radio-group v-model:value="settings.show_nav_link" button-style="solid">
-                    <a-radio-button :value="true">Yes</a-radio-button>
-                    <a-radio-button :value="false">No</a-radio-button>
-                  </a-radio-group>
-                </div>
-              </div>
-
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Show GDPR link in customers area footer</span>
-                  <span class="field-desc">Display GDPR link on customer dashboard footer.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-radio-group v-model:value="settings.show_footer_link" button-style="solid">
-                    <a-radio-button :value="true">Yes</a-radio-button>
-                    <a-radio-button :value="false">No</a-radio-button>
-                  </a-radio-group>
-                </div>
-              </div>
-
-              <div class="settings-textarea-row">
-                <span class="field-label">GDPR page top information block</span>
-                <span class="field-desc">This text block will be shown at the top of the GDPR page in the customers area.</span>
-                <a-textarea v-model:value="settings.top_info_block" :rows="5" placeholder="Enter top information text block..." />
-              </div>
-            </div>
+  <div class="gdpr-page p-6 max-w-[1500px] mx-auto min-h-screen bg-[#F8F7FA] font-['Public_Sans',sans-serif]">
+    <!-- HEADER -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="p-2 bg-[#7367F0]/10 text-[#7367F0] rounded-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+          </span>
+          <div>
+            <h1 class="text-2xl font-bold text-[#4B465C] tracking-tight m-0">GDPR Compliance &amp; Privacy Controls</h1>
+            <span class="text-xs text-[#82868B] font-medium">Manage data protection policies, subject access rights, consent logs, and data portability</span>
           </div>
-        </a-tab-pane>
-
-        <!-- 2. RIGHT TO DATA PORTABILITY -->
-        <a-tab-pane key="portability" tab="Right to data portability">
-          <div class="tab-content-wrap">
-            <h3 class="tab-title">Right to Data Portability</h3>
-            
-            <div class="settings-grid">
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Enable Right to data portability</span>
-                  <span class="field-desc">Allows contacts and leads to export their data in JSON format.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-radio-group v-model:value="settings.portability_enabled" button-style="solid">
-                    <a-radio-button :value="true">Yes</a-radio-button>
-                    <a-radio-button :value="false">No</a-radio-button>
-                  </a-radio-group>
-                </div>
-              </div>
-
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Allow Contacts to Export</span>
-                  <span class="field-desc">Enables profile data export directly inside customer portal.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-checkbox v-model:checked="settings.allow_contacts_export">Yes, allow contacts</a-checkbox>
-                </div>
-              </div>
-
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Allow Leads to Export</span>
-                  <span class="field-desc">Enables lead details export.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-checkbox v-model:checked="settings.allow_leads_export">Yes, allow leads</a-checkbox>
-                </div>
-              </div>
-
-              <div class="settings-checkbox-group-row">
-                <span class="field-label">Select fields to include in export</span>
-                <span class="field-desc">Choose which data components are extracted into the portability bundle.</span>
-                <div class="checkbox-grid">
-                  <a-checkbox-group v-model:value="settings.export_fields" style="width: 100%">
-                    <div class="grid-columns-3">
-                      <a-checkbox value="contact_info">Contact Details</a-checkbox>
-                      <a-checkbox value="tickets">Support Tickets</a-checkbox>
-                      <a-checkbox value="invoices">Invoices & Bills</a-checkbox>
-                      <a-checkbox value="estimates">Estimates</a-checkbox>
-                      <a-checkbox value="proposals">Proposals</a-checkbox>
-                      <a-checkbox value="projects">Projects</a-checkbox>
-                      <a-checkbox value="tasks">Assigned Tasks</a-checkbox>
-                      <a-checkbox value="consent_history">Consent History</a-checkbox>
-                    </div>
-                  </a-checkbox-group>
-                </div>
-              </div>
-
-              <div class="settings-textarea-row">
-                <span class="field-label">Notice on right to data portability page</span>
-                <a-textarea v-model:value="settings.portability_notice" :rows="4" />
-              </div>
-            </div>
-          </div>
-        </a-tab-pane>
-
-        <!-- 3. RIGHT TO ERASURE -->
-        <a-tab-pane key="erasure" tab="Right to erasure">
-          <div class="tab-content-wrap">
-            <h3 class="tab-title">Right to Erasure (Right to be Forgotten)</h3>
-            
-            <div class="settings-grid">
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Enable Right to erasure</span>
-                  <span class="field-desc">Enable erasure requests from customer area.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-radio-group v-model:value="settings.erasure_enabled" button-style="solid">
-                    <a-radio-button :value="true">Yes</a-radio-button>
-                    <a-radio-button :value="false">No</a-radio-button>
-                  </a-radio-group>
-                </div>
-              </div>
-
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Allowed request sources</span>
-                  <span class="field-desc">Select where the request link is available.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-checkbox-group v-model:value="settings.erasure_sources">
-                    <a-checkbox value="portal">Customer Portal</a-checkbox>
-                    <a-checkbox value="lead_form">Public Lead Form</a-checkbox>
-                  </a-checkbox-group>
-                </div>
-              </div>
-
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Automatically delete data request</span>
-                  <span class="field-desc">If yes, data is deleted immediately upon submission without staff approval.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-radio-group v-model:value="settings.auto_delete" button-style="solid">
-                    <a-radio-button :value="true">Yes</a-radio-button>
-                    <a-radio-button :value="false">No</a-radio-button>
-                  </a-radio-group>
-                </div>
-              </div>
-
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Keep record of deletion request in database</span>
-                  <span class="field-desc">Maintains anonymized log of delete request timestamps.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-radio-group v-model:value="settings.keep_record" button-style="solid">
-                    <a-radio-button :value="true">Yes</a-radio-button>
-                    <a-radio-button :value="false">No</a-radio-button>
-                  </a-radio-group>
-                </div>
-              </div>
-
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Delete customer data completely</span>
-                  <span class="field-desc">Includes removing all associated estimates, contracts, proposals, and logs.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-radio-group v-model:value="settings.delete_completely" button-style="solid">
-                    <a-radio-button :value="true">Yes</a-radio-button>
-                    <a-radio-button :value="false">No</a-radio-button>
-                  </a-radio-group>
-                </div>
-              </div>
-
-              <div class="settings-textarea-row">
-                <span class="field-label">Notice on right to erasure page</span>
-                <a-textarea v-model:value="settings.erasure_notice" :rows="4" />
-              </div>
-            </div>
-          </div>
-        </a-tab-pane>
-
-        <!-- 4. RIGHT TO BE INFORMED -->
-        <a-tab-pane key="informed" tab="Right to be informed">
-          <div class="tab-content-wrap">
-            <h3 class="tab-title">Right to be Informed</h3>
-            
-            <div class="settings-grid">
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Enable terms and conditions agreement</span>
-                  <span class="field-desc">Requires users to explicitly agree to terms & conditions and privacy policies.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-radio-group v-model:value="settings.informed_enabled" button-style="solid">
-                    <a-radio-button :value="true">Yes</a-radio-button>
-                    <a-radio-button :value="false">No</a-radio-button>
-                  </a-radio-group>
-                </div>
-              </div>
-
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Require agreement on Registration</span>
-                  <span class="field-desc">Show checkbox on client registration screen.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-radio-group v-model:value="settings.require_terms_registration" button-style="solid">
-                    <a-radio-button :value="true">Yes</a-radio-button>
-                    <a-radio-button :value="false">No</a-radio-button>
-                  </a-radio-group>
-                </div>
-              </div>
-
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Require agreement on Ticket Submission</span>
-                  <span class="field-desc">Show checkbox before submitting new tickets.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-radio-group v-model:value="settings.require_terms_tickets" button-style="solid">
-                    <a-radio-button :value="true">Yes</a-radio-button>
-                    <a-radio-button :value="false">No</a-radio-button>
-                  </a-radio-group>
-                </div>
-              </div>
-
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Require agreement on Lead Form Submission</span>
-                  <span class="field-desc">Show checkbox on public Web to Lead capture forms.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-radio-group v-model:value="settings.require_terms_leads" button-style="solid">
-                    <a-radio-button :value="true">Yes</a-radio-button>
-                    <a-radio-button :value="false">No</a-radio-button>
-                  </a-radio-group>
-                </div>
-              </div>
-
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Privacy Policy URL</span>
-                  <span class="field-desc">Link to your company Privacy Policy.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-input v-model:value="settings.privacy_policy_url" placeholder="https://..." />
-                </div>
-              </div>
-
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Terms & Conditions URL</span>
-                  <span class="field-desc">Link to your company Terms and Conditions.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-input v-model:value="settings.terms_url" placeholder="https://..." />
-                </div>
-              </div>
-
-              <div class="settings-textarea-row">
-                <span class="field-label">Notice on right to be informed page</span>
-                <a-textarea v-model:value="settings.informed_notice" :rows="4" />
-              </div>
-            </div>
-          </div>
-        </a-tab-pane>
-
-        <!-- 5. RIGHT OF ACCESS/RECTIFICATION -->
-        <a-tab-pane key="access_rectification" tab="Right of access/Right to rectification">
-          <div class="tab-content-wrap">
-            <h3 class="tab-title">Right of Access / Right to Rectification</h3>
-            
-            <div class="settings-grid">
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Enable Right of access/Right to rectification</span>
-                  <span class="field-desc">Enables access details panel in customer portals.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-radio-group v-model:value="settings.rectification_enabled" button-style="solid">
-                    <a-radio-button :value="true">Yes</a-radio-button>
-                    <a-radio-button :value="false">No</a-radio-button>
-                  </a-radio-group>
-                </div>
-              </div>
-
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Allow contacts to edit their personal data</span>
-                  <span class="field-desc">Allows updating profile fields without administrative review.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-radio-group v-model:value="settings.allow_contacts_edit" button-style="solid">
-                    <a-radio-button :value="true">Yes</a-radio-button>
-                    <a-radio-button :value="false">No</a-radio-button>
-                  </a-radio-group>
-                </div>
-              </div>
-
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Allow leads to edit their personal data</span>
-                  <span class="field-desc">Allows public profile updates.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-radio-group v-model:value="settings.allow_leads_edit" button-style="solid">
-                    <a-radio-button :value="true">Yes</a-radio-button>
-                    <a-radio-button :value="false">No</a-radio-button>
-                  </a-radio-group>
-                </div>
-              </div>
-
-              <div class="settings-checkbox-group-row">
-                <span class="field-label">Select allowed fields for rectification</span>
-                <span class="field-desc">Choose which fields contacts/leads can modify.</span>
-                <div class="checkbox-grid">
-                  <a-checkbox-group v-model:value="settings.rectification_fields" style="width: 100%">
-                    <div class="grid-columns-3">
-                      <a-checkbox value="first_name">First Name</a-checkbox>
-                      <a-checkbox value="last_name">Last Name</a-checkbox>
-                      <a-checkbox value="email">Email Address</a-checkbox>
-                      <a-checkbox value="phone">Phone Number</a-checkbox>
-                      <a-checkbox value="company">Company Name</a-checkbox>
-                      <a-checkbox value="address">Address</a-checkbox>
-                      <a-checkbox value="city">City</a-checkbox>
-                      <a-checkbox value="zip">ZIP / Postal Code</a-checkbox>
-                    </div>
-                  </a-checkbox-group>
-                </div>
-              </div>
-
-              <div class="settings-textarea-row">
-                <span class="field-label">Notice on right of access page</span>
-                <a-textarea v-model:value="settings.rectification_notice" :rows="4" />
-              </div>
-            </div>
-          </div>
-        </a-tab-pane>
-
-        <!-- 6. CONSENT -->
-        <a-tab-pane key="consent" tab="Consent">
-          <div class="tab-content-wrap">
-            <div class="consent-tab-header">
-              <h3 class="tab-title">Consent Management</h3>
-              <a-button type="primary" size="small" @click="openNewPurposeDrawer">Add New Consent Purpose</a-button>
-            </div>
-
-            <div class="settings-grid">
-              <div class="settings-field-row">
-                <div class="field-label-desc">
-                  <span class="field-label">Enable Consent purposes</span>
-                  <span class="field-desc">Shows tracking and choices on registration/lead screens.</span>
-                </div>
-                <div class="field-input-wrap">
-                  <a-radio-group v-model:value="settings.consent_enabled" button-style="solid">
-                    <a-radio-button :value="true">Yes</a-radio-button>
-                    <a-radio-button :value="false">No</a-radio-button>
-                  </a-radio-group>
-                </div>
-              </div>
-
-              <!-- CONSENT PURPOSES LIST TABLE -->
-              <div class="consent-purposes-table-wrap">
-                <span class="sub-label">Purposes of Consent</span>
-                <a-table
-                  :dataSource="consentPurposes"
-                  :columns="purposeColumns"
-                  row-key="id"
-                  size="small"
-                  :pagination="false"
-                >
-                  <template #bodyCell="{ column, record }">
-                    <template v-if="column.key === 'id'">
-                      <span class="purpose-id">{{ record.id }}</span>
-                    </template>
-                    <template v-if="column.key === 'name'">
-                      <span class="purpose-name">{{ record.name }}</span>
-                    </template>
-                    <template v-if="column.key === 'required'">
-                      <a-tag :color="record.required ? 'red' : 'blue'">
-                        {{ record.required ? 'Required' : 'Optional' }}
-                      </a-tag>
-                    </template>
-                    <template v-if="column.key === 'active'">
-                      <a-switch v-model:checked="record.active" size="small" />
-                    </template>
-                    <template v-if="column.key === 'options'">
-                      <div class="row-actions">
-                        <a-button size="small" type="link" @click="editPurpose(record)">Edit</a-button>
-                        <a-button size="small" type="link" danger @click="deletePurpose(record.id)">Delete</a-button>
-                      </div>
-                    </template>
-                  </template>
-                </a-table>
-              </div>
-
-              <div class="settings-textarea-row" style="margin-top: 16px;">
-                <span class="field-label">Notice on consent page</span>
-                <a-textarea v-model:value="settings.consent_notice" :rows="4" />
-              </div>
-            </div>
-          </div>
-        </a-tab-pane>
-      </a-tabs>
-
-      <!-- SAVE FOOTER -->
-      <div class="settings-actions">
-        <a-button type="primary" :loading="saving" @click="saveGdprSettings">
-          Save Settings
-        </a-button>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="https://gdpr-info.eu/" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-white border border-[#DBDADE] hover:bg-[#F8F7FA] text-[#4B465C] rounded-lg text-sm font-semibold transition-all shadow-sm">
+          <svg class="w-4 h-4 text-[#7367F0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+          Official GDPR Guide
+        </a>
+        <button class="flex items-center gap-2 px-5 py-2 bg-[#7367F0] hover:bg-[#685dd8] text-white rounded-lg text-sm font-semibold transition-all shadow-sm shadow-[#7367F0]/30" :disabled="saving" @click="saveGdprSettings">
+          <svg v-if="!saving" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+          <div v-else class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          {{ saving ? 'Saving...' : 'Save Settings' }}
+        </button>
       </div>
     </div>
 
-    <!-- CONSENT PURPOSE ADD/EDIT DRAWER -->
+    <!-- GDPR OFFICIAL NOTICE BANNER -->
+    <div class="bg-white border border-[#EBE9F1] rounded-lg p-5 shadow-sm mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-l-4 border-l-[#7367F0]">
+      <div class="flex items-start gap-3.5">
+        <div class="w-10 h-10 rounded-lg bg-[#7367F0]/10 text-[#7367F0] flex items-center justify-center font-bold shrink-0 mt-0.5">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-[#4B465C] m-0">General Data Protection Regulation (Regulation (EU) 2016/679)</h3>
+          <p class="text-xs text-[#82868B] m-0 mt-1">
+            Ensure your organization adheres to European data protection standards, explicit customer consent requirements, and statutory deletion/portability mandates.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold" :class="settings.enabled ? 'bg-[#28C76F]/10 text-[#28C76F]' : 'bg-[#EA5455]/10 text-[#EA5455]'">
+          {{ settings.enabled ? '● GDPR Active' : '○ GDPR Disabled' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- MAIN TABS CONTAINER -->
+    <div class="bg-white border border-[#EBE9F1] rounded-lg shadow-sm overflow-hidden">
+      <!-- Tabs Header Navigation -->
+      <div class="flex flex-wrap border-b border-[#EBE9F1] bg-[#F8F7FA] px-2 pt-2 gap-1">
+        <button 
+          v-for="tab in tabList" 
+          :key="tab.key" 
+          class="flex items-center gap-2 px-4 py-3 rounded-t-lg text-xs font-bold transition-all border-b-2 cursor-pointer"
+          :class="activeTab === tab.key ? 'bg-white text-[#7367F0] border-[#7367F0] shadow-sm' : 'border-transparent text-[#82868B] hover:text-[#4B465C] hover:bg-white/60'"
+          @click="activeTab = tab.key"
+        >
+          <span>{{ tab.icon }}</span>
+          <span>{{ tab.label }}</span>
+        </button>
+      </div>
+
+      <div class="p-6">
+        <!-- ========================================== -->
+        <!-- 1. GENERAL TAB                             -->
+        <!-- ========================================== -->
+        <div v-if="activeTab === 'general'" class="space-y-6">
+          <div class="pb-4 border-b border-[#EBE9F1]">
+            <h3 class="text-base font-bold text-[#4B465C] m-0">General GDPR Configuration</h3>
+            <p class="text-xs text-[#82868B] m-0 mt-1">Control global visibility, public portal menu links, and introductory notice blocks.</p>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Setting: Enable GDPR -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#7367F0]/40 transition-colors">
+              <div>
+                <div class="font-bold text-sm text-[#4B465C]">Enable GDPR Module</div>
+                <div class="text-xs text-[#82868B] mt-0.5">Toggle the display of GDPR options and privacy preference screens across the customer portal.</div>
+              </div>
+              <div class="inline-flex rounded-md shadow-sm" role="group">
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-l-md border transition-all"
+                  :class="settings.enabled ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.enabled = true"
+                >
+                  Yes
+                </button>
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-r-md border border-l-0 transition-all"
+                  :class="!settings.enabled ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.enabled = false"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+
+            <!-- Setting: Show in Navigation -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#7367F0]/40 transition-colors">
+              <div>
+                <div class="font-bold text-sm text-[#4B465C]">Show GDPR link in customer area navigation</div>
+                <div class="text-xs text-[#82868B] mt-0.5">Display a dedicated "GDPR / Privacy" shortcut in the top header navbar of the client portal.</div>
+              </div>
+              <div class="inline-flex rounded-md shadow-sm" role="group">
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-l-md border transition-all"
+                  :class="settings.show_nav_link ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.show_nav_link = true"
+                >
+                  Yes
+                </button>
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-r-md border border-l-0 transition-all"
+                  :class="!settings.show_nav_link ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.show_nav_link = false"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+
+            <!-- Setting: Show in Footer -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#7367F0]/40 transition-colors">
+              <div>
+                <div class="font-bold text-sm text-[#4B465C]">Show GDPR link in customer area footer</div>
+                <div class="text-xs text-[#82868B] mt-0.5">Display privacy and data rights link in the customer portal footer.</div>
+              </div>
+              <div class="inline-flex rounded-md shadow-sm" role="group">
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-l-md border transition-all"
+                  :class="settings.show_footer_link ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.show_footer_link = true"
+                >
+                  Yes
+                </button>
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-r-md border border-l-0 transition-all"
+                  :class="!settings.show_footer_link ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.show_footer_link = false"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+
+            <!-- Setting: Top Info Block -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white space-y-2">
+              <label class="block text-sm font-bold text-[#4B465C]">GDPR page top information notice block</label>
+              <span class="block text-xs text-[#82868B]">This information message is displayed at the top of the GDPR compliance screen in the client portal.</span>
+              <textarea 
+                v-model="settings.top_info_block" 
+                rows="4" 
+                class="w-full px-3 py-2 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] text-[#4B465C] transition-colors"
+                placeholder="Enter privacy disclosure text..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- 2. RIGHT TO DATA PORTABILITY TAB          -->
+        <!-- ========================================== -->
+        <div v-if="activeTab === 'portability'" class="space-y-6">
+          <div class="pb-4 border-b border-[#EBE9F1]">
+            <h3 class="text-base font-bold text-[#4B465C] m-0">Right to Data Portability (Article 20)</h3>
+            <p class="text-xs text-[#82868B] m-0 mt-1">Allows contacts and leads to export their complete personal records in structured JSON / CSV machine-readable format.</p>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Portability Enable -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#7367F0]/40 transition-colors">
+              <div>
+                <div class="font-bold text-sm text-[#4B465C]">Enable Right to Data Portability</div>
+                <div class="text-xs text-[#82868B] mt-0.5">Permits users to request and download their profile data directly from their dashboard.</div>
+              </div>
+              <div class="inline-flex rounded-md shadow-sm" role="group">
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-l-md border transition-all"
+                  :class="settings.portability_enabled ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.portability_enabled = true"
+                >
+                  Yes
+                </button>
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-r-md border border-l-0 transition-all"
+                  :class="!settings.portability_enabled ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.portability_enabled = false"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+
+            <!-- Export Roles -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white space-y-3">
+              <div class="font-bold text-sm text-[#4B465C]">Allowed User Roles for Self-Service Export</div>
+              <div class="flex flex-wrap gap-6 text-xs text-[#4B465C]">
+                <label class="flex items-center gap-2 cursor-pointer font-medium">
+                  <input type="checkbox" v-model="settings.allow_contacts_export" class="rounded text-[#7367F0] focus:ring-0" />
+                  Allow Contacts to export profile data
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer font-medium">
+                  <input type="checkbox" v-model="settings.allow_leads_export" class="rounded text-[#7367F0] focus:ring-0" />
+                  Allow Leads to export lead record data
+                </label>
+              </div>
+            </div>
+
+            <!-- Field Selection Checkbox Grid -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white space-y-3">
+              <div class="font-bold text-sm text-[#4B465C]">Included Data Components in Export Package</div>
+              <p class="text-xs text-[#82868B] m-0">Select which entities are packaged when a user triggers an Article 20 data portability export.</p>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                <div v-for="field in exportFieldOptions" :key="field.key" class="p-3 rounded-lg border border-[#EBE9F1] bg-[#F8F7FA] flex items-center gap-2 hover:border-[#7367F0]/40 transition-colors">
+                  <input 
+                    type="checkbox" 
+                    :id="'exp_' + field.key" 
+                    :value="field.key" 
+                    v-model="settings.export_fields" 
+                    class="rounded text-[#7367F0] focus:ring-0"
+                  />
+                  <label :for="'exp_' + field.key" class="text-xs font-semibold text-[#4B465C] cursor-pointer">{{ field.label }}</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notice Textarea -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white space-y-2">
+              <label class="block text-sm font-bold text-[#4B465C]">Notice on Data Portability Screen</label>
+              <textarea 
+                v-model="settings.portability_notice" 
+                rows="3" 
+                class="w-full px-3 py-2 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] text-[#4B465C] transition-colors"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- 3. RIGHT TO ERASURE (RIGHT TO BE FORGOTTEN)-->
+        <!-- ========================================== -->
+        <div v-if="activeTab === 'erasure'" class="space-y-6">
+          <div class="pb-4 border-b border-[#EBE9F1]">
+            <h3 class="text-base font-bold text-[#4B465C] m-0">Right to Erasure / Right to be Forgotten (Article 17)</h3>
+            <p class="text-xs text-[#82868B] m-0 mt-1">Configure account deletion requests, automatic record purging, and audit logging.</p>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Enable Erasure -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#7367F0]/40 transition-colors">
+              <div>
+                <div class="font-bold text-sm text-[#4B465C]">Enable Right to Erasure Requests</div>
+                <div class="text-xs text-[#82868B] mt-0.5">Enables customers and leads to submit statutory deletion requests through the portal.</div>
+              </div>
+              <div class="inline-flex rounded-md shadow-sm" role="group">
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-l-md border transition-all"
+                  :class="settings.erasure_enabled ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.erasure_enabled = true"
+                >
+                  Yes
+                </button>
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-r-md border border-l-0 transition-all"
+                  :class="!settings.erasure_enabled ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.erasure_enabled = false"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+
+            <!-- Auto Delete vs Admin Review -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#7367F0]/40 transition-colors">
+              <div>
+                <div class="font-bold text-sm text-[#4B465C]">Automatically Delete Data Without Manual Staff Approval</div>
+                <div class="text-xs text-[#82868B] mt-0.5">If enabled, data is wiped immediately upon user submission without waiting for admin sign-off.</div>
+              </div>
+              <div class="inline-flex rounded-md shadow-sm" role="group">
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-l-md border transition-all"
+                  :class="settings.auto_delete ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.auto_delete = true"
+                >
+                  Yes
+                </button>
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-r-md border border-l-0 transition-all"
+                  :class="!settings.auto_delete ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.auto_delete = false"
+                >
+                  No (Manual Review)
+                </button>
+              </div>
+            </div>
+
+            <!-- Keep Record in DB -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#7367F0]/40 transition-colors">
+              <div>
+                <div class="font-bold text-sm text-[#4B465C]">Retain Anonymized Audit Log of Deletion Requests</div>
+                <div class="text-xs text-[#82868B] mt-0.5">Keeps a secure timestamp and hashed identifier log for regulatory compliance proof.</div>
+              </div>
+              <div class="inline-flex rounded-md shadow-sm" role="group">
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-l-md border transition-all"
+                  :class="settings.keep_record ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.keep_record = true"
+                >
+                  Yes
+                </button>
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-r-md border border-l-0 transition-all"
+                  :class="!settings.keep_record ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.keep_record = false"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+
+            <!-- Notice Textarea -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white space-y-2">
+              <label class="block text-sm font-bold text-[#4B465C]">Notice on Erasure Request Screen</label>
+              <textarea 
+                v-model="settings.erasure_notice" 
+                rows="3" 
+                class="w-full px-3 py-2 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] text-[#4B465C] transition-colors"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- 4. RIGHT TO BE INFORMED TAB                -->
+        <!-- ========================================== -->
+        <div v-if="activeTab === 'informed'" class="space-y-6">
+          <div class="pb-4 border-b border-[#EBE9F1]">
+            <h3 class="text-base font-bold text-[#4B465C] m-0">Right to be Informed (Articles 13 &amp; 14)</h3>
+            <p class="text-xs text-[#82868B] m-0 mt-1">Enforce mandatory privacy policy and terms agreements across customer registration, tickets, and lead forms.</p>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Require Agreement on Registration -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#7367F0]/40 transition-colors">
+              <div>
+                <div class="font-bold text-sm text-[#4B465C]">Require Privacy Agreement on Client Registration</div>
+                <div class="text-xs text-[#82868B] mt-0.5">Show mandatory privacy policy checkbox during new customer account creation.</div>
+              </div>
+              <div class="inline-flex rounded-md shadow-sm" role="group">
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-l-md border transition-all"
+                  :class="settings.require_terms_registration ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.require_terms_registration = true"
+                >
+                  Yes
+                </button>
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-r-md border border-l-0 transition-all"
+                  :class="!settings.require_terms_registration ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.require_terms_registration = false"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+
+            <!-- Require Agreement on Tickets -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#7367F0]/40 transition-colors">
+              <div>
+                <div class="font-bold text-sm text-[#4B465C]">Require Privacy Agreement on Ticket Submission</div>
+                <div class="text-xs text-[#82868B] mt-0.5">Prompt users to accept terms before creating a new support ticket.</div>
+              </div>
+              <div class="inline-flex rounded-md shadow-sm" role="group">
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-l-md border transition-all"
+                  :class="settings.require_terms_tickets ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.require_terms_tickets = true"
+                >
+                  Yes
+                </button>
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-r-md border border-l-0 transition-all"
+                  :class="!settings.require_terms_tickets ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.require_terms_tickets = false"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+
+            <!-- Require Agreement on Leads -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#7367F0]/40 transition-colors">
+              <div>
+                <div class="font-bold text-sm text-[#4B465C]">Require Privacy Agreement on Public Web-to-Lead Forms</div>
+                <div class="text-xs text-[#82868B] mt-0.5">Show mandatory consent checkbox on embedded marketing and lead capture forms.</div>
+              </div>
+              <div class="inline-flex rounded-md shadow-sm" role="group">
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-l-md border transition-all"
+                  :class="settings.require_terms_leads ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.require_terms_leads = true"
+                >
+                  Yes
+                </button>
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-r-md border border-l-0 transition-all"
+                  :class="!settings.require_terms_leads ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.require_terms_leads = false"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+
+            <!-- URLs -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white space-y-2">
+                <label class="block text-sm font-bold text-[#4B465C]">Privacy Policy URL</label>
+                <input 
+                  type="url" 
+                  v-model="settings.privacy_policy_url" 
+                  class="w-full px-3 py-2 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] text-[#4B465C]"
+                  placeholder="https://yourcompany.com/privacy"
+                />
+              </div>
+
+              <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white space-y-2">
+                <label class="block text-sm font-bold text-[#4B465C]">Terms &amp; Conditions URL</label>
+                <input 
+                  type="url" 
+                  v-model="settings.terms_url" 
+                  class="w-full px-3 py-2 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] text-[#4B465C]"
+                  placeholder="https://yourcompany.com/terms"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- 5. RIGHT OF ACCESS / RECTIFICATION         -->
+        <!-- ========================================== -->
+        <div v-if="activeTab === 'rectification'" class="space-y-6">
+          <div class="pb-4 border-b border-[#EBE9F1]">
+            <h3 class="text-base font-bold text-[#4B465C] m-0">Right of Access &amp; Rectification (Articles 15 &amp; 16)</h3>
+            <p class="text-xs text-[#82868B] m-0 mt-1">Configure client self-service profile modification permissions and allowed editable fields.</p>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Allow Contacts to Edit -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#7367F0]/40 transition-colors">
+              <div>
+                <div class="font-bold text-sm text-[#4B465C]">Allow Contacts to Edit Profile Data</div>
+                <div class="text-xs text-[#82868B] mt-0.5">Contacts can update their personal information in the customer portal directly.</div>
+              </div>
+              <div class="inline-flex rounded-md shadow-sm" role="group">
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-l-md border transition-all"
+                  :class="settings.allow_contacts_edit ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.allow_contacts_edit = true"
+                >
+                  Yes
+                </button>
+                <button 
+                  type="button" 
+                  class="px-4 py-1.5 text-xs font-bold rounded-r-md border border-l-0 transition-all"
+                  :class="!settings.allow_contacts_edit ? 'bg-[#7367F0] text-white border-[#7367F0]' : 'bg-white text-[#82868B] border-[#DBDADE] hover:bg-[#F8F7FA]'"
+                  @click="settings.allow_contacts_edit = false"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+
+            <!-- Allowed Fields Selection -->
+            <div class="p-4 rounded-lg border border-[#EBE9F1] bg-white space-y-3">
+              <div class="font-bold text-sm text-[#4B465C]">Allowed Editable Fields for Rectification</div>
+              <p class="text-xs text-[#82868B] m-0">Select which fields the user can modify without requiring admin review.</p>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                <div v-for="field in rectificationFieldOptions" :key="field.key" class="p-3 rounded-lg border border-[#EBE9F1] bg-[#F8F7FA] flex items-center gap-2 hover:border-[#7367F0]/40 transition-colors">
+                  <input 
+                    type="checkbox" 
+                    :id="'rec_' + field.key" 
+                    :value="field.key" 
+                    v-model="settings.rectification_fields" 
+                    class="rounded text-[#7367F0] focus:ring-0"
+                  />
+                  <label :for="'rec_' + field.key" class="text-xs font-semibold text-[#4B465C] cursor-pointer">{{ field.label }}</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- 6. CONSENT MANAGEMENT TAB                  -->
+        <!-- ========================================== -->
+        <div v-if="activeTab === 'consent'" class="space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EBE9F1]">
+            <div>
+              <h3 class="text-base font-bold text-[#4B465C] m-0">Consent Purposes Management (Article 7)</h3>
+              <p class="text-xs text-[#82868B] m-0 mt-1">Define specific tracking purposes, marketing opt-ins, and mandatory consent triggers.</p>
+            </div>
+            <button class="flex items-center gap-2 px-4 py-2 bg-[#7367F0] hover:bg-[#685dd8] text-white rounded-lg text-xs font-bold transition-all shadow-sm" @click="openNewPurposeDrawer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+              Add New Purpose
+            </button>
+          </div>
+
+          <!-- Table of Consent Purposes -->
+          <div class="overflow-x-auto border border-[#EBE9F1] rounded-lg">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-[#F8F7FA] border-b border-[#EBE9F1] text-[11px] font-bold uppercase tracking-wider text-[#82868B]">
+                  <th class="py-3 px-4 w-16">ID</th>
+                  <th class="py-3 px-4">Purpose Name</th>
+                  <th class="py-3 px-4">Description</th>
+                  <th class="py-3 px-4 w-28">Type</th>
+                  <th class="py-3 px-4 w-24">Status</th>
+                  <th class="py-3 px-4 w-28 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[#EBE9F1]">
+                <tr v-for="record in consentPurposes" :key="record.id" class="hover:bg-[#F8F7FA]/70">
+                  <td class="py-3 px-4 font-mono font-bold text-[#82868B]">#{{ record.id }}</td>
+                  <td class="py-3 px-4 font-bold text-[#4B465C]">{{ record.name }}</td>
+                  <td class="py-3 px-4 text-[#82868B] max-w-xs truncate">{{ record.description || '—' }}</td>
+                  <td class="py-3 px-4">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold" :class="record.required ? 'bg-[#EA5455]/10 text-[#EA5455]' : 'bg-[#7367F0]/10 text-[#7367F0]'">
+                      {{ record.required ? 'Mandatory' : 'Optional' }}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold" :class="record.active ? 'bg-[#28C76F]/10 text-[#28C76F]' : 'bg-[#82868B]/10 text-[#82868B]'">
+                      {{ record.active ? 'Active' : 'Disabled' }}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 text-right">
+                    <div class="flex items-center justify-end gap-2">
+                      <button class="p-1 text-[#7367F0] hover:bg-[#7367F0]/10 rounded" title="Edit" @click="editPurpose(record)">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                      </button>
+                      <button class="p-1 text-[#EA5455] hover:bg-[#EA5455]/10 rounded" title="Delete" @click="deletePurpose(record.id)">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-if="!consentPurposes.length">
+                  <td colspan="6" class="text-center py-10 text-xs text-[#82868B]">No consent purposes defined yet</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONSENT PURPOSE RIGHT-SIDE DRAWER -->
     <a-drawer
       v-model:open="openPurposeDrawer"
       :title="editingPurposeId ? 'Edit Consent Purpose' : 'Add New Consent Purpose'"
       placement="right"
-      :width="400"
+      :width="520"
       @close="resetPurposeForm"
     >
-      <a-form layout="vertical" :model="purposeForm" @finish="savePurpose">
-        <a-form-item label="* Purpose Name" name="name" :rules="[{ required: true, message: 'Purpose name is required' }]">
-          <a-input v-model:value="purposeForm.name" placeholder="e.g. Email Newsletter" />
-        </a-form-item>
-
-        <a-form-item label="Description" name="description">
-          <a-textarea v-model:value="purposeForm.description" :rows="4" placeholder="Describe what consent is being given for..." />
-        </a-form-item>
-
-        <a-form-item name="required" style="margin-bottom: 8px;">
-          <a-checkbox v-model:checked="purposeForm.required">
-            Required (Users cannot submit/register without checking this)
-          </a-checkbox>
-        </a-form-item>
-
-        <a-form-item name="active" style="margin-bottom: 24px;">
-          <a-checkbox v-model:checked="purposeForm.active">
-            Active
-          </a-checkbox>
-        </a-form-item>
-
-        <div class="drawer-footer">
-          <a-button @click="openPurposeDrawer = false" style="margin-right: 8px;">Cancel</a-button>
-          <a-button type="primary" html-type="submit">
-            {{ editingPurposeId ? 'Update Purpose' : 'Add Purpose' }}
-          </a-button>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-[#4B465C] mb-1">Purpose Name *</label>
+          <input 
+            v-model="purposeForm.name" 
+            type="text" 
+            placeholder="e.g. Email Newsletter / Analytics Cookies" 
+            class="w-full px-3 py-2 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] text-[#4B465C]"
+          />
         </div>
-      </a-form>
+
+        <div>
+          <label class="block text-xs font-bold text-[#4B465C] mb-1">Purpose Description</label>
+          <textarea 
+            v-model="purposeForm.description" 
+            rows="4" 
+            placeholder="Explain what user data is processed and why..." 
+            class="w-full px-3 py-2 text-xs bg-white border border-[#DBDADE] rounded-md focus:outline-none focus:border-[#7367F0] text-[#4B465C]"
+          ></textarea>
+        </div>
+
+        <div class="p-3 bg-[#F8F7FA] border border-[#EBE9F1] rounded-lg space-y-3">
+          <label class="flex items-center gap-2 text-xs font-semibold text-[#4B465C] cursor-pointer">
+            <input type="checkbox" v-model="purposeForm.required" class="rounded text-[#7367F0] focus:ring-0" />
+            Mandatory Requirement (Users must accept to proceed)
+          </label>
+          <label class="flex items-center gap-2 text-xs font-semibold text-[#4B465C] cursor-pointer">
+            <input type="checkbox" v-model="purposeForm.active" class="rounded text-[#7367F0] focus:ring-0" />
+            Active (Display on customer/lead consent forms)
+          </label>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="flex items-center justify-end gap-2">
+          <button class="px-4 py-2 border border-[#DBDADE] text-[#4B465C] hover:bg-[#F8F7FA] text-xs font-semibold rounded-md transition-all" @click="openPurposeDrawer = false">
+            Cancel
+          </button>
+          <button class="px-5 py-2 bg-[#7367F0] hover:bg-[#685dd8] text-white text-xs font-bold rounded-md transition-all shadow-sm shadow-[#7367F0]/30" @click="savePurpose">
+            {{ editingPurposeId ? 'Update Purpose' : 'Save Purpose' }}
+          </button>
+        </div>
+      </template>
     </a-drawer>
   </div>
 </template>
 
-<script>
-import { defineComponent, ref, reactive } from 'vue';
-import { message } from 'ant-design-vue';
+<script setup>
+import { ref, reactive } from 'vue'
+import { message } from 'ant-design-vue'
 
-export default defineComponent({
-  name: 'GdprView',
-  setup() {
-    const activeTab = ref('general');
-    const saving = ref(false);
-    const openPurposeDrawer = ref(false);
-    const editingPurposeId = ref(null);
+const activeTab = ref('general')
+const saving = ref(false)
+const openPurposeDrawer = ref(false)
+const editingPurposeId = ref(null)
 
-    const settings = reactive({
-      enabled: true,
-      show_nav_link: true,
-      show_footer_link: true,
-      top_info_block: 'General Data Protection Regulation (GDPR) settings are configured here. Enable compliance functions, manage user portability parameters, data erasure settings, and handle explicit tracking consents.',
+const tabList = [
+  { key: 'general',       label: 'General',                           icon: '🛡️' },
+  { key: 'portability',   label: 'Right to Data Portability',         icon: '📦' },
+  { key: 'erasure',       label: 'Right to Erasure (Forgotten)',      icon: '🗑️' },
+  { key: 'informed',      label: 'Right to be Informed',              icon: '📜' },
+  { key: 'rectification', label: 'Right of Access / Rectification',   icon: '✏️' },
+  { key: 'consent',       label: 'Consent Management',                icon: '✍️' },
+]
 
-      portability_enabled: true,
-      allow_contacts_export: true,
-      allow_leads_export: false,
-      export_fields: ['contact_info', 'tickets', 'invoices', 'consent_history'],
-      portability_notice: 'In accordance with Article 20 of the GDPR, you have the right to request a copy of your personal data in a structured, machine-readable JSON format.',
+const settings = reactive({
+  enabled: true,
+  show_nav_link: true,
+  show_footer_link: true,
+  top_info_block: 'General Data Protection Regulation (GDPR) compliance is enabled. Manage your personal data, portability archives, deletion requests, and explicit marketing consents directly from this panel.',
 
-      erasure_enabled: true,
-      erasure_sources: ['portal'],
-      auto_delete: false,
-      keep_record: true,
-      delete_completely: false,
-      erasure_notice: 'In accordance with Article 17 of the GDPR, you can request the deletion of your personal data. Your request will be reviewed by our data protection officer.',
+  portability_enabled: true,
+  allow_contacts_export: true,
+  allow_leads_export: true,
+  export_fields: ['contact_info', 'tickets', 'invoices', 'estimates', 'proposals', 'projects', 'consent_history'],
+  portability_notice: 'In accordance with Article 20 of the GDPR, you have the right to receive personal data concerning you in a structured, commonly used and machine-readable format.',
 
-      informed_enabled: true,
-      require_terms_registration: true,
-      require_terms_tickets: false,
-      require_terms_leads: true,
-      privacy_policy_url: 'https://example.com/privacy-policy',
-      terms_url: 'https://example.com/terms-and-conditions',
-      informed_notice: 'In accordance with Articles 13 and 14 of the GDPR, we inform you about how your personal data is collected and processed.',
+  erasure_enabled: true,
+  auto_delete: false,
+  keep_record: true,
+  delete_completely: false,
+  erasure_notice: 'In accordance with Article 17 of the GDPR, you may request the erasure of personal data concerning you without undue delay.',
 
-      rectification_enabled: true,
-      allow_contacts_edit: true,
-      allow_leads_edit: false,
-      rectification_fields: ['first_name', 'last_name', 'email', 'phone', 'address'],
-      rectification_notice: 'In accordance with Articles 15 and 16 of the GDPR, you have the right to access and rectify your personal data if it is inaccurate or incomplete.',
+  require_terms_registration: true,
+  require_terms_tickets: false,
+  require_terms_leads: true,
+  privacy_policy_url: 'https://example.com/privacy-policy',
+  terms_url: 'https://example.com/terms-and-conditions',
 
-      consent_enabled: true,
-      consent_notice: 'We require your explicit consent to process your personal data for specific purposes. You can withdraw your consent at any time.'
-    });
+  allow_contacts_edit: true,
+  allow_leads_edit: false,
+  rectification_fields: ['first_name', 'last_name', 'email', 'phone', 'company', 'address', 'city', 'zip'],
 
-    const consentPurposes = ref([
-      { id: 1, name: 'Email Marketing', description: 'Receive newsletter and marketing updates via email.', required: false, active: true },
-      { id: 2, name: 'SMS Notifications', description: 'Receive transactional and informational SMS messages.', required: false, active: true },
-      { id: 3, name: 'Third-Party Data Sharing', description: 'Allow sharing contact details with verified partners for service delivery.', required: true, active: false }
-    ]);
+  consent_enabled: true
+})
 
-    const purposeForm = reactive({
-      name: '',
-      description: '',
-      required: false,
-      active: true
-    });
+const exportFieldOptions = [
+  { key: 'contact_info',    label: 'Contact Details' },
+  { key: 'tickets',         label: 'Support Tickets' },
+  { key: 'invoices',        label: 'Invoices & Bills' },
+  { key: 'estimates',       label: 'Estimates' },
+  { key: 'proposals',       label: 'Proposals' },
+  { key: 'projects',        label: 'Projects' },
+  { key: 'tasks',           label: 'Assigned Tasks' },
+  { key: 'consent_history', label: 'Consent History' },
+]
 
-    const purposeColumns = [
-      { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
-      { title: 'Purpose', dataIndex: 'name', key: 'name' },
-      { title: 'Required', key: 'required', width: 100 },
-      { title: 'Active', key: 'active', width: 90 },
-      { title: 'Options', key: 'options', width: 120 }
-    ];
+const rectificationFieldOptions = [
+  { key: 'first_name', label: 'First Name' },
+  { key: 'last_name',  label: 'Last Name' },
+  { key: 'email',      label: 'Email Address' },
+  { key: 'phone',      label: 'Phone Number' },
+  { key: 'company',    label: 'Company Name' },
+  { key: 'address',    label: 'Address' },
+  { key: 'city',       label: 'City' },
+  { key: 'zip',        label: 'ZIP / Postal Code' },
+]
 
-    const saveGdprSettings = () => {
-      saving.value = true;
-      setTimeout(() => {
-        saving.value = false;
-        message.success('GDPR settings updated successfully');
-      }, 600);
-    };
+const consentPurposes = ref([
+  { id: 1, name: 'Email Marketing & Newsletters', description: 'Receive regular newsletter updates, promotional discounts, and product announcements.', required: false, active: true },
+  { id: 2, name: 'Transactional SMS Notifications', description: 'Receive instant critical alerts, invoice notifications, and task status updates via SMS.', required: false, active: true },
+  { id: 3, name: 'Third-Party Analytics & Tracking', description: 'Permit anonymized behavioral tracking to improve software performance.', required: false, active: true },
+  { id: 4, name: 'Terms of Service & Core Processing', description: 'Essential data processing required to deliver purchased CRM subscriptions.', required: true, active: true }
+])
 
-    const openNewPurposeDrawer = () => {
-      resetPurposeForm();
-      openPurposeDrawer.value = true;
-    };
+const purposeForm = reactive({
+  name: '',
+  description: '',
+  required: false,
+  active: true
+})
 
-    const editPurpose = (record) => {
-      editingPurposeId.value = record.id;
-      purposeForm.name = record.name;
-      purposeForm.description = record.description || '';
-      purposeForm.required = record.required || false;
-      purposeForm.active = record.active !== undefined ? record.active : true;
-      openPurposeDrawer.value = true;
-    };
+const saveGdprSettings = () => {
+  saving.value = true
+  setTimeout(() => {
+    saving.value = false
+    message.success('GDPR Compliance Settings saved successfully!')
+  }, 600)
+}
 
-    const deletePurpose = (id) => {
-      consentPurposes.value = consentPurposes.value.filter(p => p.id !== id);
-      message.success('Consent purpose deleted');
-    };
+const openNewPurposeDrawer = () => {
+  resetPurposeForm()
+  openPurposeDrawer.value = true
+}
 
-    const savePurpose = () => {
-      if (!purposeForm.name.trim()) return;
+const editPurpose = (record) => {
+  editingPurposeId.value = record.id
+  purposeForm.name = record.name
+  purposeForm.description = record.description || ''
+  purposeForm.required = record.required || false
+  purposeForm.active = record.active !== undefined ? record.active : true
+  openPurposeDrawer.value = true
+}
 
-      if (editingPurposeId.value) {
-        const item = consentPurposes.value.find(p => p.id === editingPurposeId.value);
-        if (item) {
-          item.name = purposeForm.name.trim();
-          item.description = purposeForm.description;
-          item.required = purposeForm.required;
-          item.active = purposeForm.active;
-        }
-        message.success('Consent purpose updated');
-      } else {
-        const maxId = consentPurposes.value.reduce((max, p) => p.id > max ? p.id : max, 0);
-        consentPurposes.value.push({
-          id: maxId + 1,
-          name: purposeForm.name.trim(),
-          description: purposeForm.description,
-          required: purposeForm.required,
-          active: purposeForm.active
-        });
-        message.success('Consent purpose added');
-      }
-      openPurposeDrawer.value = false;
-      resetPurposeForm();
-    };
+const deletePurpose = (id) => {
+  consentPurposes.value = consentPurposes.value.filter(p => p.id !== id)
+  message.success('Consent purpose deleted')
+}
 
-    const resetPurposeForm = () => {
-      editingPurposeId.value = null;
-      Object.assign(purposeForm, {
-        name: '',
-        description: '',
-        required: false,
-        active: true
-      });
-    };
-
-    return {
-      activeTab,
-      saving,
-      settings,
-      consentPurposes,
-      openPurposeDrawer,
-      editingPurposeId,
-      purposeForm,
-      purposeColumns,
-      saveGdprSettings,
-      openNewPurposeDrawer,
-      editPurpose,
-      deletePurpose,
-      savePurpose,
-      resetPurposeForm
-    };
+const savePurpose = () => {
+  if (!purposeForm.name.trim()) {
+    message.error('Please enter a purpose name')
+    return
   }
-});
+
+  if (editingPurposeId.value) {
+    const item = consentPurposes.value.find(p => p.id === editingPurposeId.value)
+    if (item) {
+      item.name = purposeForm.name.trim()
+      item.description = purposeForm.description
+      item.required = purposeForm.required
+      item.active = purposeForm.active
+    }
+    message.success('Consent purpose updated successfully')
+  } else {
+    const maxId = consentPurposes.value.reduce((max, p) => (p.id > max ? p.id : max), 0)
+    consentPurposes.value.push({
+      id: maxId + 1,
+      name: purposeForm.name.trim(),
+      description: purposeForm.description,
+      required: purposeForm.required,
+      active: purposeForm.active
+    })
+    message.success('New consent purpose added')
+  }
+  openPurposeDrawer.value = false
+  resetPurposeForm()
+}
+
+const resetPurposeForm = () => {
+  editingPurposeId.value = null
+  purposeForm.name = ''
+  purposeForm.description = ''
+  purposeForm.required = false
+  purposeForm.active = true
+}
 </script>
 
 <style scoped>
-.section-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
+:deep(.ant-drawer-header) {
+  border-bottom: 1px solid #EBE9F1 !important;
 }
-.section-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0;
-}
-.gdpr-info-banner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #f0f5ff;
-  border: 1px solid #d6e4ff;
-  border-radius: 8px;
-  padding: 10px 16px;
-  margin-bottom: 16px;
-}
-.gdpr-read-more-link {
-  font-size: 13px;
-  font-weight: 600;
-  color: #4f46e5;
-  text-decoration: none;
-  transition: color 0.15s;
-}
-.gdpr-read-more-link:hover {
-  color: #6366f1;
-  text-decoration: underline;
-}
-.settings-card {
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #f1f5f9;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-.gdpr-tabs :deep(.ant-tabs-nav) {
-  margin-bottom: 24px;
-}
-.tab-content-wrap {
-  min-height: 320px;
-}
-.tab-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 20px;
-}
-.settings-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-.settings-field-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f8fafc;
-}
-.field-label-desc {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-width: 60%;
-}
-.field-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1e293b;
-}
-.field-desc {
-  font-size: 12px;
-  color: #64748b;
-}
-.field-input-wrap {
-  display: flex;
-  align-items: center;
-}
-.settings-textarea-row {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.settings-checkbox-group-row {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.checkbox-grid {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 16px;
-}
-.grid-columns-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-.consent-tab-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-.consent-purposes-table-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 8px;
-}
-.sub-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1e293b;
-}
-.purpose-id {
-  font-family: monospace;
-  color: #64748b;
-}
-.purpose-name {
-  font-weight: 600;
-  color: #1e293b;
-}
-.row-actions {
-  display: flex;
-  gap: 4px;
-}
-.settings-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
-}
-.drawer-footer {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
-  margin-top: 16px;
+:deep(.ant-drawer-footer) {
+  border-top: 1px solid #EBE9F1 !important;
+  padding: 12px 16px !important;
 }
 </style>

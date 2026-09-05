@@ -3,7 +3,7 @@
     <!-- Page Header -->
     <div class="page-header">
       <h1 class="page-title">Items Catalog</h1>
-      <button class="btn-primary" @click="openCreateDrawer">
+      <button v-if="canCreate" class="btn-primary" @click="openCreateDrawer">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         New Predefined Item
       </button>
@@ -44,7 +44,7 @@
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'name'">
-            <a class="item-name" @click="openEditDrawer(record)">{{ record.name }}</a>
+            <a class="item-name" :class="{ 'cursor-pointer': canEdit }" @click="canEdit ? openEditDrawer(record) : null">{{ record.name }}</a>
           </template>
 
           <template v-if="column.key === 'description'">
@@ -65,16 +65,16 @@
           </template>
 
           <template v-if="column.key === 'actions'">
-            <div class="row-actions">
+            <div class="row-actions" v-if="canEdit || canDelete">
               <a-dropdown :trigger="['click']">
                 <button class="action-btn">
                   <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
                 </button>
                 <template #overlay>
                   <a-menu>
-                    <a-menu-item key="edit" @click="openEditDrawer(record)">Edit Item</a-menu-item>
-                    <a-menu-divider />
-                    <a-menu-item key="delete" @click="deleteItem(record.id)" danger>Delete</a-menu-item>
+                    <a-menu-item v-if="canEdit" key="edit" @click="openEditDrawer(record)">Edit Item</a-menu-item>
+                    <a-menu-divider v-if="canEdit && canDelete" />
+                    <a-menu-item v-if="canDelete" key="delete" @click="deleteItem(record.id)" danger>Delete</a-menu-item>
                   </a-menu>
                 </template>
               </a-dropdown>
@@ -142,13 +142,18 @@
 </template>
 
 <script>
-import { defineComponent, ref, reactive, onMounted } from 'vue';
+import { defineComponent, ref, reactive, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { message } from 'ant-design-vue';
+import { useAuthStore } from '../../store/authStore';
 
 export default defineComponent({
   name: 'ItemsCatalogPage',
   setup() {
+    const authStore = useAuthStore();
+    const canCreate = computed(() => authStore.hasPermission('Items', 'create'));
+    const canEdit   = computed(() => authStore.hasPermission('Items', 'edit'));
+    const canDelete = computed(() => authStore.hasPermission('Items', 'delete'));
     const loading = ref(false);
     const saving = ref(false);
     const items = ref([]);
@@ -196,6 +201,7 @@ export default defineComponent({
     };
 
     const openCreateDrawer = () => {
+      if (!canCreate.value) return;
       isEdit.value = false;
       editingId.value = null;
       Object.assign(itemForm, {
@@ -209,6 +215,7 @@ export default defineComponent({
     };
 
     const openEditDrawer = (record) => {
+      if (!canEdit.value) return;
       isEdit.value = true;
       editingId.value = record.id;
       Object.assign(itemForm, {
@@ -246,6 +253,7 @@ export default defineComponent({
     };
 
     const deleteItem = async (id) => {
+      if (!canDelete.value) return;
       try {
         await axios.delete(`/api/predefined-items/${id}`);
         message.success('Catalog item deleted');
@@ -292,6 +300,7 @@ export default defineComponent({
     });
 
     return {
+      canCreate, canEdit, canDelete,
       loading, saving, items, filters, pagination, columns,
       itemForm, showDrawer, isEdit,
       openCreateDrawer, openEditDrawer, saveItem, deleteItem, handleTableChange,

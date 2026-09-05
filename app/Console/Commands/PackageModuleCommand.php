@@ -110,6 +110,10 @@ class PackageModuleCommand extends Command
             'composer.lock',
             'package-lock.json',
             'yarn.lock',
+            '__MACOSX',
+            'Thumbs.db',
+            '.gitignore',
+            '.gitattributes',
         ];
 
         $files = new \RecursiveIteratorIterator(
@@ -137,6 +141,22 @@ class PackageModuleCommand extends Command
             }
 
             if ($shouldExclude) {
+                continue;
+            }
+
+            // Exclude hidden files and macOS AppleDouble metadata files (e.g. ._filename)
+            $segments = explode('/', str_replace('\\', '/', $relativePath));
+            $isMetadataOrHidden = false;
+            foreach ($segments as $segment) {
+                if ($segment !== '' && (str_starts_with($segment, '._') || str_starts_with($segment, '.'))) {
+                    if ($segment !== '.htaccess') {
+                        $isMetadataOrHidden = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($isMetadataOrHidden) {
                 continue;
             }
 

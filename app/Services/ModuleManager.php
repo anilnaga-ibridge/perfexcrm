@@ -45,6 +45,34 @@ class ModuleManager
      */
     public static function install(string $zipPath): Module
     {
+        // 1. Fast pre-check: Verify ZIP contains a valid manifest, PHP module file, or nested archive before extracting
+        $zipCheck = new ZipArchive();
+        if ($zipCheck->open($zipPath) !== true) {
+            throw new Exception("Failed to open module ZIP file.");
+        }
+
+        $hasCandidate = false;
+        for ($i = 0; $i < $zipCheck->numFiles; $i++) {
+            $entryName = $zipCheck->getNameIndex($i);
+            $baseName = strtolower(basename($entryName));
+            if ($baseName === 'module.json' || $baseName === 'manifest.json' || str_ends_with($baseName, '.php') || str_ends_with($baseName, '.zip')) {
+                $hasCandidate = true;
+                break;
+            }
+        }
+        $zipCheck->close();
+
+        if (!$hasCandidate) {
+            throw new Exception("Invalid module ZIP: No 'module.json' manifest, legacy PHP module header, or nested package found in archive.");
+        }
+
+        // 2. Verify digital signature first
+        try {
+            resolve(\App\Plugin\Kernel\PackageManager::class)->verifySignature($zipPath);
+        } catch (\Throwable $e) {
+            throw new Exception("Package signature verification failed: " . $e->getMessage());
+        }
+
         $tempDir = storage_path('app/temp_module_extract_' . microtime(true) . '_' . uniqid());
         File::ensureDirectoryExists($tempDir);
 
@@ -56,6 +84,27 @@ class ModuleManager
 
         $zip->extractTo($tempDir);
         $zip->close();
+
+        // Security: validate no files were extracted outside the temp directory (Zip Slip protection)
+        $realTempDir = realpath($tempDir);
+        if ($realTempDir !== false) {
+            $normalizedTempDir = rtrim(str_replace('\\', '/', $realTempDir), '/') . '/';
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($tempDir, \RecursiveDirectoryIterator::SKIP_DOTS)
+            );
+            foreach ($iterator as $file) {
+                if ($file->isDir()) {
+                    continue;
+                }
+                $realPath = realpath($file->getPathname());
+                $normalizedRealPath = $realPath !== false ? str_replace('\\', '/', $realPath) : false;
+
+                if ($normalizedRealPath === false || !str_starts_with($normalizedRealPath, $normalizedTempDir)) {
+                    @unlink($file->getPathname());
+                    Log::warning("Zip Slip detected: file {$file->getPathname()} was outside extraction directory");
+                }
+            }
+        }
 
         // Find module.json inside temp dir or parse PHP comment headers
         $manifestPath = self::findFileInDir($tempDir, 'module.json');
@@ -69,7 +118,7 @@ class ModuleManager
             }
             $moduleDir = dirname($manifestPath);
         } else {
-            // Fallback: search for any PHP file containing WordPress/Perfex style comment headers
+            // Fallback: search for any PHP file containing WordPress/iBridge style comment headers
             $phpFiles = self::findPhpManifestFiles($tempDir);
 
             // If no PHP files found, look for nested ZIP files (CodeCanyon distribution pattern)
@@ -190,9 +239,10 @@ class ModuleManager
                 '--realpath' => false,
             ]);
         }
-
+        try {
+            resolve(\App\Services\PluginBridgeService::class)->clearCache($alias);
+        } catch (\Throwable $e) {}
         ModuleSettingsService::flushSchemaCache($module);
-
         try {
             event(new \App\Events\ModuleInstalled($module));
         } catch (\Exception $e) {
@@ -294,16 +344,21 @@ class ModuleManager
             ];
         }
 
-        // Run legacy CodeIgniter database setup and version migrations if present
-        try {
-            self::runLegacyInstallerAndMigrations($module->alias);
-        } catch (\Exception $legacyEx) {
-            \Illuminate\Support\Facades\Log::warning("Legacy compatibility activator failed for [{$module->alias}]: " . $legacyEx->getMessage());
-        }
-
         // DB mutations in a transaction
         DB::transaction(function () use ($module, $permissions, $menu) {
             $adminRole = Role::where('slug', 'admin')->first();
+
+            // Clean up any existing permission/menu records for this module to prevent duplicates
+            ModuleMenu::where('module_id', $module->id)->delete();
+            $oldPermNames = ModulePermission::where('module_id', $module->id)->pluck('permission_name')->toArray();
+            if (!empty($oldPermNames)) {
+                $oldPermIds = Permission::whereIn('name', $oldPermNames)->pluck('id')->toArray();
+                if (!empty($oldPermIds)) {
+                    DB::table('role_permissions')->whereIn('permission_id', $oldPermIds)->delete();
+                    Permission::whereIn('id', $oldPermIds)->delete();
+                }
+                ModulePermission::where('module_id', $module->id)->delete();
+            }
 
             foreach ($permissions as $perm) {
                 $pName = $perm['key'] ?? $perm['name'] ?? null;
@@ -333,6 +388,16 @@ class ModuleManager
             $module->update(['status' => 'active']);
         });
 
+        // Run migrations and install logic
+        try {
+            self::runLegacyInstallerAndMigrations($module->alias);
+            self::publishAssets($module->alias);
+        } catch (\Throwable $e) {
+            $module->update(['status' => 'error']);
+            \Illuminate\Support\Facades\Log::error("Module activation error for [{$module->alias}]: " . $e->getMessage());
+            throw $e;
+        }
+
         // Fire activation event (best-effort, outside transaction)
         try {
             event(new ModuleActivated($module));
@@ -341,6 +406,28 @@ class ModuleManager
         }
 
         return $module;
+    }
+
+    /**
+     * Automatically publish static assets (CSS, JS, images, fonts, vendor, maps)
+     * from Modules/{alias}/assets to public/modules/{alias}/assets
+     */
+    public static function publishAssets(string $alias): void
+    {
+        $modulePath = self::modulePath($alias);
+        $sourceAssets = "{$modulePath}/assets";
+        if (!is_dir($sourceAssets)) {
+            return;
+        }
+
+        $targetAssets = public_path("modules/{$alias}/assets");
+        File::ensureDirectoryExists(dirname($targetAssets));
+
+        try {
+            File::copyDirectory($sourceAssets, $targetAssets);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Could not publish assets for [{$alias}]: " . $e->getMessage());
+        }
     }
 
     /**
@@ -408,15 +495,29 @@ class ModuleManager
         $zip->close();
 
         $manifestPath = self::findFileInDir($tempDir, 'module.json');
-        if (!$manifestPath) {
-            File::deleteDirectory($tempDir);
-            throw new Exception("Missing 'module.json' manifest in upgrade ZIP.");
-        }
-
-        $info = json_decode(file_get_contents($manifestPath), true);
-        if (!$info) {
-            File::deleteDirectory($tempDir);
-            throw new Exception("Invalid module manifest in upgrade ZIP.");
+        if ($manifestPath) {
+            $info = json_decode(file_get_contents($manifestPath), true);
+            if (!$info) {
+                File::deleteDirectory($tempDir);
+                throw new Exception("Invalid module manifest in upgrade ZIP.");
+            }
+            $moduleDir = dirname($manifestPath);
+        } else {
+            $phpFiles = self::findPhpManifestFiles($tempDir);
+            $info = null;
+            foreach ($phpFiles as $phpFile) {
+                $parsed = self::parsePhpHeaders($phpFile);
+                if ($parsed) {
+                    $info = $parsed;
+                    $manifestPath = $phpFile;
+                    $moduleDir = dirname($manifestPath);
+                    break;
+                }
+            }
+            if (!$info) {
+                File::deleteDirectory($tempDir);
+                throw new Exception("Invalid upgrade ZIP: Missing 'module.json' and no valid PHP module headers found.");
+            }
         }
 
         // Validate manifest (excluding uniqueness check against self)
@@ -447,10 +548,27 @@ class ModuleManager
             self::deactivate($existing->id);
         }
 
-        // Replace codebase directory
-        File::deleteDirectory($targetPath);
-        File::copyDirectory($moduleDir, $targetPath);
-        File::deleteDirectory($tempDir);
+        // Create rollback snapshot
+        $pm = resolve(\App\Plugin\Kernel\PackageManager::class);
+        $snapshotPath = '';
+        try {
+            $snapshotPath = $pm->createSnapshot($existing->alias, $existing->version);
+        } catch (\Throwable $e) {
+            Log::warning("PackageManager: Failed to create snapshot for rollback: " . $e->getMessage());
+        }
+
+        try {
+            // Replace codebase directory
+            File::deleteDirectory($targetPath);
+            File::copyDirectory($moduleDir, $targetPath);
+            File::deleteDirectory($tempDir);
+        } catch (\Throwable $upgradeEx) {
+            if (!empty($snapshotPath) && File::exists($snapshotPath)) {
+                $pm->rollback($existing->alias, $snapshotPath);
+            }
+            File::deleteDirectory($tempDir);
+            throw new Exception("Upgrade directory extraction failed. Rolled back successfully. Error: " . $upgradeEx->getMessage());
+        }
 
         // Run upgrade.php or version upgrade files if available
         $upgradeScript = "{$targetPath}/upgrade.php";
@@ -666,14 +784,17 @@ class ModuleManager
             self::backupAndDropModuleTables($module->alias, $module->name);
         }
 
+        // Remove legacy CI symlink
+        self::removeLegacySymlink($module->alias);
+
         // Delete codebase files
         if (File::exists($modulePath)) {
             File::deleteDirectory($modulePath);
         }
-
-        // Flush schema cache before deleting
+        try {
+            resolve(\App\Services\PluginBridgeService::class)->clearCache($module->alias);
+        } catch (\Throwable $e) {}
         ModuleSettingsService::flushSchemaCache($module);
-
         try {
             event(new \App\Events\ModuleUninstalled($module));
         } catch (\Exception $e) {
@@ -689,27 +810,76 @@ class ModuleManager
      */
     private static function backupAndDropModuleTables(string $moduleAlias, ?string $moduleName = null): void
     {
-        $migrationsDir = base_path("Modules/{$moduleAlias}/Database/Migrations");
-        if (!is_dir($migrationsDir) && $moduleName !== null) {
-            $legacyDir = base_path("Modules/{$moduleName}/Database/Migrations");
-            if (is_dir($legacyDir)) {
-                $migrationsDir = $legacyDir;
-            }
+        $modulePath = base_path("Modules/{$moduleAlias}");
+        if (!is_dir($modulePath) && $moduleName !== null) {
+            $modulePath = base_path("Modules/{$moduleName}");
         }
-        if (!is_dir($migrationsDir)) {
+        if (!is_dir($modulePath)) {
             return;
         }
 
-        // Extract custom tables created by this module by scanning migration files
+        // Collect table names from multiple sources
         $tables = [];
-        $files = glob("{$migrationsDir}/*.php");
-        foreach ($files as $file) {
+
+        // 1. Scan Laravel migration files (Database/Migrations/*.php)
+        $laravelMigrationsDir = "{$modulePath}/Database/Migrations";
+        if (is_dir($laravelMigrationsDir)) {
+            $files = glob("{$laravelMigrationsDir}/*.php");
+            foreach ($files as $file) {
+                $content = File::get($file);
+                if (preg_match_all("/Schema::create\(\s*['\"]([^'\"]+)['\"]/i", $content, $matches)) {
+                    foreach ($matches[1] as $table) {
+                        if (!in_array($table, $tables)) {
+                            $tables[] = $table;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Scan CI-style migration files (migrations/*.php)
+        $ciMigrationsDir = "{$modulePath}/migrations";
+        if (is_dir($ciMigrationsDir)) {
+            $files = glob("{$ciMigrationsDir}/*.php");
+            foreach ($files as $file) {
+                $content = File::get($file);
+                // CI uses: $this->dbforge->create_table('table_name')
+                if (preg_match_all("/create_table\(\s*['\"]([^'\"]+)['\"]/i", $content, $matches)) {
+                    foreach ($matches[1] as $table) {
+                        if (!in_array($table, $tables)) {
+                            $tables[] = $table;
+                        }
+                    }
+                }
+                // Also catch: $this->db->query('CREATE TABLE IF NOT EXISTS `table_name`')
+                if (preg_match_all("/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`'\"]?(\w+)[`'\"]?/i", $content, $matches)) {
+                    foreach ($matches[1] as $table) {
+                        if (!in_array($table, $tables)) {
+                            $tables[] = $table;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Scan all PHP files in the module for table references in models/config
+        // Look for common CI patterns: $this->db->table('name'), from('name'), etc.
+        $allPhpFiles = self::findPhpManifestFiles($modulePath);
+        foreach ($allPhpFiles as $file) {
             $content = File::get($file);
-            // Matches Schema::create('table_name', ...
-            if (preg_match_all("/Schema::create\(\s*['\"]([^'\"]+)['\"]/i", $content, $matches)) {
+            // Pattern: from('table_name') or $this->db->table('table_name')
+            if (preg_match_all("/(?:->from|->table)\(\s*['\"]([^'\"]+)['\"]/i", $content, $matches)) {
                 foreach ($matches[1] as $table) {
-                    if (!in_array($table, $tables)) {
-                        $tables[] = $table;
+                    // Skip CI internal tables and common non-module tables
+                    if (in_array($table, ['users', 'sessions', 'password_resets', 'cache'])) {
+                        continue;
+                    }
+                    // Only include tables that look like they belong to this module
+                    $aliasPrefix = str_replace('-', '_', strtolower($moduleAlias));
+                    if (str_starts_with($table, $aliasPrefix . '_') || str_starts_with($table, $aliasPrefix)) {
+                        if (!in_array($table, $tables)) {
+                            $tables[] = $table;
+                        }
                     }
                 }
             }
@@ -731,16 +901,51 @@ class ModuleManager
                 File::put("{$backupDir}/{$filename}", json_encode($backupData, JSON_PRETTY_PRINT));
             }
 
-            // Roll back the migrations
+            // Roll back Laravel migrations if the directory exists
             $migrationsPath = "Modules/{$moduleAlias}/Database/Migrations";
-            Artisan::call('migrate:rollback', [
-                '--path' => $migrationsPath,
-                '--realpath' => false,
-            ]);
+            if (File::exists(base_path($migrationsPath))) {
+                Artisan::call('migrate:rollback', [
+                    '--path' => $migrationsPath,
+                    '--realpath' => false,
+                ]);
+            }
 
             // Clean drop for any table left behind
             foreach ($tables as $table) {
                 Schema::dropIfExists($table);
+            }
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────────
+    // Legacy CI Compatibility Symlinks
+    // ──────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Create the legacy CodeIgniter-style symlink for a module.
+     *
+     * Old CI modules reference their files with:
+     *   require('modules/hr_payroll/assets/js/...')
+     * which assumes a root-relative path. We create:
+     *   {base_path}/modules/{alias_underscored}/ → Modules/{alias}/
+     * so that chdir(base_path()) + require('modules/...') works for ANY module.
+     */
+    public static function createLegacySymlink(string $alias): void
+    {
+        // No-op: Filesystem symlinks are no longer created because CICompatLayer,
+        // PluginBridgeService, and Asset Streamer resolve aliases dynamically in memory.
+    }
+
+    /**
+     * Remove legacy CI symlinks when a module is uninstalled.
+     */
+    public static function removeLegacySymlink(string $alias): void
+    {
+        $underscoreAlias = str_replace('-', '_', $alias);
+        foreach ([$underscoreAlias, $alias] as $linkName) {
+            $symlinkPath = base_path("Modules/{$linkName}");
+            if (is_link($symlinkPath)) {
+                @unlink($symlinkPath);
             }
         }
     }
@@ -798,7 +1003,7 @@ class ModuleManager
     {
         $objects = scandir($dir);
         foreach ($objects as $object) {
-            if ($object === '.' || $object === '..') {
+            if ($object === '.' || $object === '..' || $object === '__MACOSX' || str_starts_with($object, '.')) {
                 continue;
             }
             $path = "{$dir}/{$object}";
@@ -861,11 +1066,19 @@ class ModuleManager
     }
 
     /**
-     * Parse WordPress/Perfex style PHP comment headers from a PHP file.
+     * Parse WordPress/iBridge style PHP comment headers from a PHP file.
      */
-    private static function parsePhpHeaders(string $filePath): ?array
+    public static function parsePhpHeaders(string $filePathOrContent, ?string $filePath = null): ?array
     {
-        $content = file_get_contents($filePath);
+        if (str_contains($filePathOrContent, "\n") || str_contains($filePathOrContent, "<?php")) {
+            $content = $filePathOrContent;
+        } elseif (is_file($filePathOrContent)) {
+            $filePath = $filePathOrContent;
+            $content = file_get_contents($filePathOrContent);
+        } else {
+            return null;
+        }
+
         if (!$content) {
             return null;
         }
@@ -897,8 +1110,12 @@ class ModuleManager
             return null;
         }
 
-        // Generate alias from filename (excluding .php extension)
-        $info['alias'] = \App\Services\ModuleValidator::normalizeAlias(pathinfo($filePath, PATHINFO_FILENAME));
+        // Generate alias from filename or module name
+        if (!empty($filePath)) {
+            $info['alias'] = \App\Services\ModuleValidator::normalizeAlias(pathinfo($filePath, PATHINFO_FILENAME));
+        } else {
+            $info['alias'] = \App\Services\ModuleValidator::normalizeAlias($info['name'] ?? 'module');
+        }
         $info['name'] = $info['name'] ?? ucfirst($info['alias']);
         $info['version'] = $info['version'] ?? '1.0.0';
         $info['minimum_core_version'] = $info['minimum_core_version'] ?? '1.0.0';
@@ -919,14 +1136,36 @@ class ModuleManager
         if (!defined('BASEPATH')) {
             define('BASEPATH', true);
         }
-        if (!class_exists('App_module_migration')) {
-            eval('class App_module_migration {}');
-        }
+
 
         // Define $CI in local scope for install.php or migrations to reference
         $CI = get_instance();
 
-        // 2. Load helper files from helper directory to define custom helper functions
+        // 2. Pre-load module main entry file to register constants, hooks, and helpers
+        $entryPhp = "{$targetPath}/{$alias}.php";
+        if (File::exists($entryPhp)) {
+            try {
+                include_once $entryPhp;
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Could not pre-load entry file [{$entryPhp}]: " . $e->getMessage());
+            }
+        } else {
+            foreach (glob("{$targetPath}/*.php") as $rootPhp) {
+                $bn = basename($rootPhp);
+                if ($bn !== 'install.php' && $bn !== 'uninstall.php' && $bn !== 'deactivate.php') {
+                    if (str_contains(file_get_contents($rootPhp), 'Module Name:')) {
+                        try {
+                            include_once $rootPhp;
+                        } catch (\Throwable $e) {
+                            // ignore
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 3. Load helper files from helper directory to define custom helper functions
         $helpersDir = "{$targetPath}/helpers";
         if (is_dir($helpersDir)) {
             foreach (glob($helpersDir . '/*.php') as $helperFile) {
@@ -942,7 +1181,7 @@ class ModuleManager
         $installScript = "{$targetPath}/install.php";
         if (File::exists($installScript)) {
             try {
-                include $installScript;
+                include_once $installScript;
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error("Failed executing legacy install.php for plugin [{$alias}]: " . $e->getMessage());
             }

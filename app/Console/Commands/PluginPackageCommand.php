@@ -40,13 +40,57 @@ class PluginPackageCommand extends Command
             // 2. Generate file checksums
             $checksums = [];
             $files = File::allFiles($path);
+            $excludedPaths = [
+                'node_modules',
+                'vendor',
+                '.git',
+                '.github',
+                '.env',
+                '.DS_Store',
+                'composer.lock',
+                'package-lock.json',
+                'yarn.lock',
+                '__MACOSX',
+                'Thumbs.db',
+                '.gitignore',
+                '.gitattributes',
+                'signature.json',
+                'checksums.json',
+                'signature.pem',
+            ];
+
+            $validFiles = [];
             foreach ($files as $file) {
                 $relPath = str_replace($path . '/', '', $file->getPathname());
-                // Skip signature and checksums files
-                if ($relPath === 'signature.json' || $relPath === 'checksums.json' || str_starts_with($relPath, 'plugin-lock.json')) {
+                
+                $shouldExclude = false;
+                foreach ($excludedPaths as $exclude) {
+                    if ($relPath === $exclude || str_starts_with($relPath, $exclude . '/')) {
+                        $shouldExclude = true;
+                        break;
+                    }
+                }
+                if ($shouldExclude) {
                     continue;
                 }
+
+                // Exclude hidden files and macOS AppleDouble metadata files (._*)
+                $segments = explode('/', str_replace('\\', '/', $relPath));
+                $isMetadataOrHidden = false;
+                foreach ($segments as $segment) {
+                    if ($segment !== '' && (str_starts_with($segment, '._') || str_starts_with($segment, '.'))) {
+                        if ($segment !== '.htaccess') {
+                            $isMetadataOrHidden = true;
+                            break;
+                        }
+                    }
+                }
+                if ($isMetadataOrHidden) {
+                    continue;
+                }
+
                 $checksums[$relPath] = hash_file('sha256', $file->getPathname());
+                $validFiles[] = $file;
             }
 
             File::put($path . '/checksums.json', json_encode($checksums, JSON_PRETTY_PRINT));
@@ -58,7 +102,7 @@ class PluginPackageCommand extends Command
 
             $zip = new ZipArchive();
             if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
-                foreach ($files as $file) {
+                foreach ($validFiles as $file) {
                     $relPath = str_replace($path . '/', '', $file->getPathname());
                     $zip->addFile($file->getPathname(), $relPath);
                 }

@@ -117,6 +117,36 @@
           </div>
         </template>
       </a-table>
+
+      <!-- Mobile Responsive Card View -->
+      <div class="mobile-cards-list" v-if="!loading">
+        <div 
+          v-for="cn in creditNotes" 
+          :key="'m-cn-' + cn.id"
+          class="mobile-row-card"
+          @click="$router.push({ name: 'admin.credit-notes.edit', params: { id: cn.id } })"
+        >
+          <div class="flex items-center justify-between">
+            <a-tag :color="statusColor(cn.status)">{{ cn.status }}</a-tag>
+            <span class="font-extrabold text-sm text-slate-800">{{ formatCurrency(cn.amount) }}</span>
+          </div>
+
+          <div class="font-bold text-sm text-indigo-600 pt-1">
+            {{ cn.number }}
+          </div>
+          <div class="text-xs text-slate-500" v-if="cn.client?.company">
+            🏢 {{ cn.client.company }}
+          </div>
+
+          <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-100 text-slate-400">
+            <span>📅 Date: {{ formatDate(cn.date) }}</span>
+          </div>
+        </div>
+
+        <div v-if="!creditNotes.length" class="text-center p-6 text-slate-400 text-xs font-semibold">
+          No credit notes found
+        </div>
+      </div>
     </div>
 
     <!-- Credit Note Drawer -->
@@ -546,5 +576,35 @@ export default defineComponent({
   margin-top: 24px;
   padding-top: 16px;
   border-top: 1px solid #e2e8f0;
+}
+
+/* Mobile Cards List Hidden by Default on Desktop */
+.mobile-cards-list {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .table-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .toolbar-right .ant-input-search {
+    width: 100% !important;
+  }
+  :deep(.ant-table-wrapper) {
+    display: none !important;
+  }
+  .mobile-cards-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
 }
 </style>

@@ -130,9 +130,9 @@ export default defineComponent({
     const imapStatus = ref('');
 
     const departments = ref([
-      { id: 3, name: 'Abuse', email: 'abuse@perfexcrm.com', google_calendar_id: '', hide_from_client: false, imap_username: '', imap_host: '', imap_password: '', imap_encryption: 'tls', imap_folder: 'INBOX', delete_after_import: false },
-      { id: 1, name: 'Marketing', email: 'marketing@perfexcrm.com', google_calendar_id: '', hide_from_client: false, imap_username: '', imap_host: '', imap_password: '', imap_encryption: 'tls', imap_folder: 'INBOX', delete_after_import: false },
-      { id: 2, name: 'Sales', email: 'sales@perfexcrm.com', google_calendar_id: '', hide_from_client: false, imap_username: '', imap_host: '', imap_password: '', imap_encryption: 'tls', imap_folder: 'INBOX', delete_after_import: false },
+      { id: 3, name: 'Abuse', email: 'abuse@ibridgecrm.com', google_calendar_id: '', hide_from_client: false, imap_username: '', imap_host: '', imap_password: '', imap_encryption: 'tls', imap_folder: 'INBOX', delete_after_import: false },
+      { id: 1, name: 'Marketing', email: 'marketing@ibridgecrm.com', google_calendar_id: '', hide_from_client: false, imap_username: '', imap_host: '', imap_password: '', imap_encryption: 'tls', imap_folder: 'INBOX', delete_after_import: false },
+      { id: 2, name: 'Sales', email: 'sales@ibridgecrm.com', google_calendar_id: '', hide_from_client: false, imap_username: '', imap_host: '', imap_password: '', imap_encryption: 'tls', imap_folder: 'INBOX', delete_after_import: false },
     ]);
 
     const form = reactive({

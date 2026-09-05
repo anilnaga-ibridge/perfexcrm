@@ -38,7 +38,7 @@ class ContactController extends Controller
         }
 
         // Pagination
-        $perPage = $request->input('per_page', 10);
+        $perPage = min($request->input('per_page', 10), 100);
         $contacts = $query->orderBy('firstname', 'asc')->paginate($perPage);
 
         // Summary counts

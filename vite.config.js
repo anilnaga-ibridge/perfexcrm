@@ -29,6 +29,10 @@ export default defineConfig({
             ],
         }),
     ],
+    build: {
+        manifest: true,
+        chunkSizeWarningLimit: 5000,
+    },
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './resources/js'),

@@ -20,6 +20,17 @@ class Kernel extends ConsoleKernel
     protected function commands()
     {
         $this->load(__DIR__ . '/Commands');
-        require base_path('routes/console.php');
+        if (file_exists(base_path('routes/console.php'))) {
+            require base_path('routes/console.php');
+        }
+    }
+
+    protected function load($paths)
+    {
+        try {
+            parent::load($paths);
+        } catch (\Throwable $e) {
+            // Safely skip unreadable command directories in constrained environments
+        }
     }
 }

@@ -11,6 +11,10 @@ class TaskController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Tasks.view')) {
+            abort(403, 'Unauthorized. Missing required permission: Tasks.view');
+        }
+
         $query = Task::with('assignee:id,name,email');
 
         // Filter by customer (client_id or related_to_type=Customer with related_to_id)
@@ -54,7 +58,7 @@ class TaskController extends Controller
         if ($request->boolean('all', false)) {
             $tasks = $query->orderBy('due_date', 'asc')->get();
         } else {
-            $perPage = $request->input('per_page', 25);
+            $perPage = min($request->input('per_page', 25), 100);
             $tasks = $query->orderBy('created_at', 'desc')->paginate($perPage);
         }
 
@@ -113,6 +117,10 @@ class TaskController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->user() && !$request->user()->hasPermission('Tasks.create')) {
+            abort(403, 'Unauthorized. Missing required permission: Tasks.create');
+        }
+
         $validated = $request->validate([
             'name'            => 'required|string|max:255',
             'description'     => 'nullable|string',
@@ -148,6 +156,10 @@ class TaskController extends Controller
 
     public function update(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Tasks.edit')) {
+            abort(403, 'Unauthorized. Missing required permission: Tasks.edit');
+        }
+
         $task = Task::find($id);
         if (!$task) return response()->json(['message' => 'Task not found'], 404);
 
@@ -177,8 +189,12 @@ class TaskController extends Controller
         return response()->json($task->load('assignee'));
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if ($request->user() && !$request->user()->hasPermission('Tasks.delete')) {
+            abort(403, 'Unauthorized. Missing required permission: Tasks.delete');
+        }
+
         $task = Task::find($id);
         if (!$task) return response()->json(['message' => 'Task not found'], 404);
         $task->delete();

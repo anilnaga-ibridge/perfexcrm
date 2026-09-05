@@ -500,7 +500,7 @@
               
               <!-- Sender (Right) -->
               <div class="text-right">
-                <strong class="text-slate-800 font-bold block mb-0.5 text-slate-800">Perfex INC</strong>
+                <strong class="text-slate-800 font-bold block mb-0.5 text-slate-800">Ibridge Digital</strong>
                 <div>172 Ivy Club Gottliebfurt</div>
                 <div>New Heaven</div>
                 <div>Canada [CA] 2364</div>
@@ -653,48 +653,60 @@
           </div>
 
           <!-- Invoices Table -->
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Invoice #</th>
-                <th>Amount</th>
-                <th>Total Tax</th>
-                <th>Date</th>
-                <th>Project</th>
-                <th>Tags</th>
-                <th>Due Date</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="inv in paginatedInvoices" :key="inv.id" class="inv-row">
-                <td>
-                  <div class="inv-num-cell">
-                    <router-link :to="{ name: 'admin.invoices.view', params: { id: inv.id } }" class="link-blue font-semibold">{{ inv.number }}</router-link>
-                    <div class="inv-row-actions">
-                      <router-link :to="{ name: 'admin.invoices.view', params: { id: inv.id } }" class="row-action-link">View</router-link>
-                      <span class="row-action-sep">|</span>
-                      <router-link :to="{ name: 'admin.invoices.view', params: { id: inv.id } }" class="row-action-link">Edit</router-link>
+          <div class="data-table-wrap overflow-x-auto">
+            <table class="data-table customer-invoices-data-table">
+              <colgroup>
+                <col style="width: 170px;" />
+                <col style="width: 120px;" />
+                <col style="width: 110px;" />
+                <col style="width: 120px;" />
+                <col style="width: 180px;" />
+                <col style="width: 140px;" />
+                <col style="width: 120px;" />
+                <col style="width: 130px;" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th style="width: 170px; min-width: 170px;">Invoice #</th>
+                  <th style="width: 120px; min-width: 120px;">Amount</th>
+                  <th style="width: 110px; min-width: 110px;">Total Tax</th>
+                  <th style="width: 120px; min-width: 120px;">Date</th>
+                  <th style="width: 180px; min-width: 180px;">Project</th>
+                  <th style="width: 140px; min-width: 140px;">Tags</th>
+                  <th style="width: 120px; min-width: 120px;">Due Date</th>
+                  <th style="width: 130px; min-width: 130px;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="inv in paginatedInvoices" :key="inv.id" class="inv-row">
+                  <td style="width: 170px; min-width: 170px;">
+                    <div class="inv-num-cell">
+                      <router-link :to="{ name: 'admin.invoices.view', params: { id: inv.id } }" class="link-blue font-semibold">{{ inv.number }}</router-link>
+                      <div class="inv-row-actions">
+                        <router-link :to="{ name: 'admin.invoices.view', params: { id: inv.id } }" class="row-action-link">View</router-link>
+                        <span class="row-action-sep">|</span>
+                        <router-link :to="{ name: 'admin.invoices.view', params: { id: inv.id } }" class="row-action-link">Edit</router-link>
+                      </div>
                     </div>
-                  </div>
-                </td>
-                <td class="font-semibold">{{ formatCurrency(inv.total) }}</td>
-                <td>{{ formatCurrency(inv.tax || 0) }}</td>
-                <td>{{ formatDateString(inv.date) }}</td>
-                <td>{{ inv.project?.name || '' }}</td>
-                <td><span v-if="inv.tags" class="tag-badge">{{ inv.tags }}</span></td>
-                <td>{{ formatDateString(inv.duedate) }}</td>
-                <td>
-                  <span class="badge" :class="invoiceStatusClass(inv.status)">
-                    {{ inv.status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) }}
-                  </span>
-                </td>
-              </tr>
-              <tr v-if="filteredInvoices.length === 0">
-                <td colspan="8" class="empty-cell">No invoices found for this customer.</td>
-              </tr>
-            </tbody>
-          </table>
+                  </td>
+                  <td class="font-semibold" style="width: 120px; min-width: 120px;">{{ formatCurrency(inv.total) }}</td>
+                  <td style="width: 110px; min-width: 110px;">{{ formatCurrency(inv.tax || 0) }}</td>
+                  <td style="width: 120px; min-width: 120px;">{{ formatDateString(inv.date) }}</td>
+                  <td style="width: 180px; min-width: 180px;">{{ inv.project?.name || '' }}</td>
+                  <td style="width: 140px; min-width: 140px;"><span v-if="inv.tags" class="tag-badge">{{ inv.tags }}</span></td>
+                  <td style="width: 120px; min-width: 120px;">{{ formatDateString(inv.duedate) }}</td>
+                  <td style="width: 130px; min-width: 130px;">
+                    <span class="badge" :class="invoiceStatusClass(inv.status)">
+                      {{ inv.status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) }}
+                    </span>
+                  </td>
+                </tr>
+                <tr v-if="filteredInvoices.length === 0">
+                  <td colspan="8" class="empty-cell">No invoices found for this customer.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
           <!-- Pagination -->
           <div class="table-pagination" v-if="filteredInvoices.length > 0">
@@ -1161,38 +1173,27 @@
               <table class="sub-table">
                 <thead>
                   <tr>
-                    <th style="width:44px;">#</th>
+                    <th style="width:36px;">#</th>
                     <th>Subscription Name</th>
-                    <th>Customer</th>
                     <th>Project</th>
                     <th>Status</th>
                     <th>Next Billing Cycle</th>
                     <th>Date Subscribed</th>
                     <th>Last Sent</th>
-                    <th style="width:70px;" class="no-print">Options</th>
+                    <th style="width:70px; text-align:right;" class="no-print">Options</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-if="subLoading">
-                    <td colspan="9" class="sub-empty-cell">
+                    <td colspan="8" class="sub-empty-cell">
                       <svg class="animate-spin h-5 w-5 text-slate-300 mx-auto" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                     </td>
                   </tr>
                   <tr v-for="(sub, idx) in paginatedSubscriptions" :key="sub.id" class="sub-row">
                     <td class="sub-cell-muted">{{ subPageStart + idx + 1 }}</td>
                     <td>
-                      <div class="sub-name-cell">
-                        <a class="sub-name-link" @click="openSubscriptionForm(sub)">{{ sub.name }}</a>
-                        <div class="sub-row-actions">
-                          <a @click="openSubscriptionForm(sub)">View Subscription</a>
-                          <span class="sub-action-sep">|</span>
-                          <a @click="openSubscriptionForm(sub)">Edit</a>
-                          <span class="sub-action-sep">|</span>
-                          <a class="sub-action-delete" @click="deleteSubscription(sub.id)">Delete</a>
-                        </div>
-                      </div>
+                      <a class="sub-name-link font-semibold text-indigo-600 hover:text-indigo-700" @click="openSubscriptionForm(sub)">{{ sub.name }}</a>
                     </td>
-                    <td class="sub-cell-muted">{{ sub.client?.company || '—' }}</td>
                     <td class="sub-cell-muted">{{ sub.project?.name || '—' }}</td>
                     <td>
                       <span class="sub-badge" :class="'sub-badge--' + (sub.status || 'inactive')">{{ subStatusLabel(sub.status) }}</span>
@@ -1200,8 +1201,8 @@
                     <td class="sub-cell-muted">{{ nextBillingCycle(sub) }}</td>
                     <td class="sub-cell-muted">{{ formatDateString(sub.start_date) }}</td>
                     <td class="sub-cell-muted">{{ sub.last_sent ? formatDateString(sub.last_sent) : '—' }}</td>
-                    <td class="no-print">
-                      <div class="sub-action-group">
+                    <td class="no-print" style="text-align:right;">
+                      <div class="sub-action-group" style="justify-content: flex-end;">
                         <button @click="openSubscriptionForm(sub)" class="sub-action-icon" title="Edit Subscription">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
                         </button>
@@ -1212,7 +1213,7 @@
                     </td>
                   </tr>
                   <tr v-if="!subLoading && filteredSubscriptions.length === 0">
-                    <td colspan="9" class="sub-empty-cell">
+                    <td colspan="8" class="sub-empty-cell">
                       <svg viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" width="36" height="36" class="mb-2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67"/></svg>
                       <p class="text-slate-400 text-sm">No subscriptions found</p>
                       <p class="text-slate-300 text-xs mt-0.5">Click "New Subscription" to create one</p>
@@ -3855,28 +3856,7 @@ export default defineComponent({
       };
     });
 
-    // 19 left sidebar items as requested by UI check
-    const menuItems = computed(() => [
-      { key: 'profile',       label: 'Profile',         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`, badge: null },
-      { key: 'contacts',      label: 'Contacts',        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`, badge: String(customer.value?.contacts?.length || 1) },
-      { key: 'notes',         label: 'Notes',           icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`, badge: String(customerNotes.value.length) },
-      { key: 'statement',     label: 'Statement',       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`, badge: null },
-      { key: 'invoices',      label: 'Invoices',        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`, badge: String(clientInvoices.value.length || 2) },
-      { key: 'payments',      label: 'Payments',        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>`, badge: null },
-      { key: 'proposals',     label: 'Proposals',       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>`, badge: null },
-      { key: 'credit_notes',  label: 'Credit Notes',    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>`, badge: null },
-      { key: 'estimates',     label: 'Estimates',       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>`, badge: null },
-      { key: 'subscriptions', label: 'Subscriptions',   icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>`, badge: null },
-      { key: 'expenses',      label: 'Expenses',        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>`, badge: null },
-      { key: 'contracts',     label: 'Contracts',       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M16 11l2 2 4-4"></path></svg>`, badge: String(customerContracts.value.length) },
-      { key: 'projects',      label: 'Projects',        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`, badge: String(customerProjects.value.length) },
-      { key: 'tasks',         label: 'Tasks',           icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>`, badge: null },
-      { key: 'tickets',       label: 'Tickets',         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`, badge: String(customerTicketList.value.length) },
-      { key: 'files',         label: 'Files',           icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>`, badge: null },
-      { key: 'vault',         label: 'Vault',           icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`, badge: null },
-      { key: 'reminders',     label: 'Reminders',       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`, badge: null },
-      { key: 'map',           label: 'Map',             icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`, badge: null },
-    ]);
+    // Reactive refs for customer data
 
     const customerContracts = ref([]);
     const customerProjects = ref([]);
@@ -6276,7 +6256,28 @@ export default defineComponent({
         },
       });
     };
-    // ────────────────────────────────────────────────────────────────────────
+    // 19 left sidebar items with safe dynamic badge counts
+    const menuItems = computed(() => [
+      { key: 'profile',       label: 'Profile',         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`, badge: null },
+      { key: 'contacts',      label: 'Contacts',        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`, badge: customer.value?.contacts?.length ? String(customer.value.contacts.length) : null },
+      { key: 'notes',         label: 'Notes',           icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`, badge: customerNotes.value?.length ? String(customerNotes.value.length) : null },
+      { key: 'statement',     label: 'Statement',       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`, badge: null },
+      { key: 'invoices',      label: 'Invoices',        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`, badge: clientInvoices.value?.length ? String(clientInvoices.value.length) : null },
+      { key: 'payments',      label: 'Payments',        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>`, badge: clientPayments.value?.length ? String(clientPayments.value.length) : null },
+      { key: 'proposals',     label: 'Proposals',       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>`, badge: proposalsStore.proposals?.length ? String(proposalsStore.proposals.length) : null },
+      { key: 'credit_notes',  label: 'Credit Notes',    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>`, badge: clientCreditNotes.value?.length ? String(clientCreditNotes.value.length) : null },
+      { key: 'estimates',     label: 'Estimates',       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rx></svg>`, badge: filteredEstimates.value?.length ? String(filteredEstimates.value.length) : null },
+      { key: 'subscriptions', label: 'Subscriptions',   icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>`, badge: subscriptions.value?.length ? String(subscriptions.value.length) : null },
+      { key: 'expenses',      label: 'Expenses',        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>`, badge: clientExpenses.value?.length ? String(clientExpenses.value.length) : null },
+      { key: 'contracts',     label: 'Contracts',       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M16 11l2 2 4-4"></path></svg>`, badge: customerContracts.value?.length ? String(customerContracts.value.length) : null },
+      { key: 'projects',      label: 'Projects',        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`, badge: customerProjects.value?.length ? String(customerProjects.value.length) : null },
+      { key: 'tasks',         label: 'Tasks',           icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>`, badge: customerTasks.value?.length ? String(customerTasks.value.length) : null },
+      { key: 'tickets',       label: 'Tickets',         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`, badge: customerTicketList.value?.length ? String(customerTicketList.value.length) : null },
+      { key: 'files',         label: 'Files',           icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>`, badge: clientFiles.value?.length ? String(clientFiles.value.length) : null },
+      { key: 'vault',         label: 'Vault',           icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`, badge: clientVaults.value?.length ? String(clientVaults.value.length) : null },
+      { key: 'reminders',     label: 'Reminders',       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`, badge: clientReminders.value?.length ? String(clientReminders.value.length) : null },
+      { key: 'map',           label: 'Map',             icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`, badge: null },
+    ]);
 
     return {
       customer,
@@ -6639,73 +6640,101 @@ export default defineComponent({
 }
 
 .profile-sidebar {
-  background: #fff;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,.02);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.sidebar-header {
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .sidebar-menu {
   display: flex;
   flex-direction: column;
+  padding: 6px;
+  gap: 2px;
 }
 
 .sidebar-menu-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 14px;
+  padding: 9px 12px;
   font-size: 13px;
   font-weight: 500;
   color: #475569;
   cursor: pointer;
-  border-left: 3px solid transparent;
-  transition: all 0.12s;
-  border-bottom: 1px solid #f8fafc;
+  border-radius: 9px;
+  border-left: none;
+  border-bottom: none;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .sidebar-menu-item:last-child {
   border-bottom: none;
 }
+
 .sidebar-menu-item:hover {
-  background: #f8fafc;
-  color: #1e293b;
+  background: #f1f5f9;
+  color: #0f172a;
+  transform: translateX(2px);
 }
+
 .sidebar-menu-item--active {
-  color: #2563eb;
-  border-left-color: #2563eb;
+  background: #eef2ff !important;
+  color: #4f46e5 !important;
   font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.15);
 }
+
 .sidebar-menu-item--active .menu-label {
-  color: #2563eb;
+  color: #4f46e5;
 }
 
 .menu-item-left {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
 }
+
 .menu-icon {
   font-size: 14px;
   color: #94a3b8;
   display: flex;
   align-items: center;
+  transition: color 0.18s;
 }
-.sidebar-menu-item--active .menu-icon { color: #2563eb; }
+
+.sidebar-menu-item--active .menu-icon {
+  color: #4f46e5;
+}
+
+.sidebar-menu-item:hover .menu-icon {
+  color: #6366f1;
+}
+
 .menu-badge {
-  background: #e2e8f0;
+  background: #f1f5f9;
   color: #64748b;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 1px 6px;
-  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
   margin-left: auto;
-  min-width: 18px;
+  min-width: 20px;
   text-align: center;
+  transition: all 0.18s;
 }
+
 .sidebar-menu-item--active .menu-badge {
-  background: #dbeafe;
-  color: #2563eb;
+  background: #4f46e5;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
 }
 
 
@@ -7296,24 +7325,43 @@ export default defineComponent({
   margin: 0;
 }
 .data-table {
-  width: 100%;
-  border-collapse: collapse;
+  width: 100% !important;
+  table-layout: auto !important;
+  border-collapse: collapse !important;
   margin-top: 16px;
   font-size: 13px;
 }
+.customer-invoices-data-table {
+  width: 100% !important;
+  min-width: 1010px !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+}
+.customer-invoices-data-table th,
+.customer-invoices-data-table td {
+  display: table-cell !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  padding: 12px 14px !important;
+  vertical-align: middle !important;
+}
 .data-table th {
   background: #f8fafc;
-  padding: 10px 12px;
+  padding: 10px 14px !important;
   font-weight: 600;
   color: #475569;
   border-bottom: 2px solid #e2e8f0;
   text-align: left;
+  white-space: nowrap !important;
 }
 .data-table td {
-  padding: 12px;
+  padding: 12px 14px !important;
   border-bottom: 1px solid #f1f5f9;
   color: #475569;
   vertical-align: middle;
+  white-space: nowrap !important;
 }
 .empty-cell {
   padding: 32px 12px;
@@ -7458,25 +7506,31 @@ export default defineComponent({
   background: transparent;
 }
 
-/* Invoice row actions (View | Edit) */
+/* Invoice row actions (View | Edit inline) */
 .inv-num-cell {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
 }
 .inv-row-actions {
-  display: none;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 11.5px;
+  font-size: 11px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
 }
-.inv-row:hover .inv-row-actions {
-  display: flex;
+.inv-row:hover .inv-row-actions,
+tr:hover .inv-row-actions {
+  opacity: 1;
+  visibility: visible;
 }
 .row-action-link {
   color: #3b82f6;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
 }
 .row-action-link:hover { text-decoration: underline; }
 .row-action-sep { color: #cbd5e1; }

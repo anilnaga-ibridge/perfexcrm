@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Perfex CRM</title>
+    <title>iBridge CRM</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     
     <!-- Google Fonts -->
@@ -19,6 +19,7 @@
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc;
             height: 100%;
+            overflow: hidden;
         }
 
         .loading-app-container {
@@ -48,7 +49,7 @@
     </style>
 </head>
 <body>
-    <div id="app">
+    <div id="app" style="height: 100%; overflow: hidden;">
         <div class="loading-app-container">
             <div class="loader"></div>
         </div>
@@ -58,7 +59,7 @@
         window.config = {
             'path': '{{ url('/') }}',
             'perPage': 10,
-            'product_name': 'Perfex CRM Clone',
+            'product_name': 'iBridge CRM Clone',
             'product_version': '1.0.0',
             'theme_mode': 'light',
             'app_env': '{{ app()->environment() }}',
